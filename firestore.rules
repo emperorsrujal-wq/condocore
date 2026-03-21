@@ -91,5 +91,11 @@ service cloud.firestore {
     match /keys/{keyId} {
       allow read, write: if isAuth() && isManagerOrLandlord();
     }
+
+    // Packages
+    match /packages/{pkgId} {
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.tenantId == uid());
+      allow write: if isAuth() && isManagerOrLandlord();
+    }
   }
 }

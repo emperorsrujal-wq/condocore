@@ -28,7 +28,8 @@ const translations = {
     lang_en: 'English',
     lang_es: 'Español',
     lang_fr: 'Français',
-    keys_access: 'Keys & Access'
+    keys_access: 'Keys & Access',
+    packages: 'Packages & Deliveries'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -57,7 +58,8 @@ const translations = {
     lang_en: 'Inglés',
     lang_es: 'Español',
     lang_fr: 'Francés',
-    keys_access: 'Llaves y Acceso'
+    keys_access: 'Llaves y Acceso',
+    packages: 'Paquetes y Entregas'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -86,7 +88,8 @@ const translations = {
     lang_en: 'Anglais',
     lang_es: 'Espagnol',
     lang_fr: 'Français',
-    keys_access: 'Clés et Accès'
+    keys_access: 'Clés et Accès',
+    packages: 'Colis et Livraisons'
   }
 };
 

@@ -191,4 +191,26 @@ export const updateKey = (id, data) =>
 
 export const deleteKey = (id) => deleteDoc(doc(db, 'keys', id));
 
+// Packages
+export const subscribePackages = (callback) =>
+  onSnapshot(query(collection(db, 'packages'), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const subscribeTenantPackages = (tenantId, callback) =>
+  onSnapshot(query(collection(db, 'packages'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addPackage = async (data) => {
+  const docRef = await addDoc(collection(db, 'packages'), { ...data, createdAt: serverTimestamp() });
+  if (data.tenantId) {
+    await createNotification({ userId: data.tenantId, title: 'Package Delivered', body: `A new package from ${data.courier} is waiting for you at the front desk.`, link: 'packages' });
+  }
+  return docRef;
+};
+
+export const updatePackage = (id, data) =>
+  updateDoc(doc(db, 'packages', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deletePackage = (id) => deleteDoc(doc(db, 'packages', id));
+
 export default app;
