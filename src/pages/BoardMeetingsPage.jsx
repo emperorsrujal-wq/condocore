@@ -72,9 +72,13 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
   const [generating, setGenerating] = useState(null);
 
   useEffect(() => {
+    if (!userProfile) return;
+    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
+    if (!isPrivileged) { setLoading(false); return; }
+
     const unsub = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
-    return () => unsub();
-  }, []);
+    return () => unsub && unsub();
+  }, [userProfile]);
 
   const filtered = meetings.filter(m => {
     const q = search.toLowerCase();

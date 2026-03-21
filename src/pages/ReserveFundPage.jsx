@@ -32,9 +32,13 @@ export default function ReserveFundPage({ userProfile, onToast }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!userProfile) return;
+    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
+    if (!isPrivileged) { setLoading(false); return; }
+
     const unsub = subscribeReserveFund(data => { setEntries(data); setLoading(false); });
-    return () => unsub();
-  }, []);
+    return () => unsub && unsub();
+  }, [userProfile]);
 
   const totalContributions = entries.filter(e => e.category === 'Contribution' || e.category === 'Special Levy' || e.category === 'Interest').reduce((a, e) => a + (Number(e.amount) || 0), 0);
   const totalExpenditures  = entries.filter(e => e.category === 'Expenditure').reduce((a, e) => a + (Number(e.amount) || 0), 0);

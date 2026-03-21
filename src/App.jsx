@@ -237,11 +237,15 @@ export default function App() {
   }, [currentUser, userProfile?.role]);
 
   // Load tenants for payment page
+  // Load tenants for payment page (Manager/Landlord only)
   useEffect(() => {
-    if (!currentUser) return;
+    if (!currentUser || !userProfile) return;
+    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
+    if (!isPrivileged) return;
+    
     const unsub = subscribeTenants(data => setTenants(data));
     return () => unsub && unsub();
-  }, [currentUser]);
+  }, [currentUser, userProfile]);
 
   const showToast = (message, type = 'success') => setToast({ message, type });
   const handleLogout = () => logout();

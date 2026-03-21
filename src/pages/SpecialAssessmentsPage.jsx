@@ -26,10 +26,18 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!userProfile) return;
+    // Assessments are readable by all but subscribeTenants is restricted
     const u1 = subscribeAssessments(data => { setAssessments(data); setLoading(false); });
-    const u2 = subscribeTenants(data => setOwners(data));
-    return () => { u1(); u2(); };
-  }, []);
+    
+    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
+    let u2;
+    if (isPrivileged) {
+      u2 = subscribeTenants(data => setOwners(data));
+    }
+    
+    return () => { u1 && u1(); u2 && u2(); };
+  }, [userProfile]);
 
   // Calculate per-unit levy: split total by number of active owners
   const calcPerUnit = (totalAmount) => {

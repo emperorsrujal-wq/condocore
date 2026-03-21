@@ -86,10 +86,14 @@ export default function ViolationsPage({ userProfile, onToast }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
+    if (!userProfile) return;
+    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
+    if (!isPrivileged) { setLoading(false); return; }
+
     const u1 = subscribeViolations(data => { setViolations(data); setLoading(false); });
     const u2 = subscribeTenants(data => setOwners(data));
-    return () => { u1(); u2(); };
-  }, []);
+    return () => { u1 && u1(); u2 && u2(); };
+  }, [userProfile]);
 
   const filtered = violations.filter(v => {
     const q = search.toLowerCase();

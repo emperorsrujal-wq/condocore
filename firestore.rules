@@ -5,9 +5,11 @@ service cloud.firestore {
     // Helper functions
     function isAuth() { return request.auth != null; }
     function uid() { return request.auth.uid; }
+    function isAdminEmail() { return request.auth.token.email == 'emperorsrujal@gmail.com'; }
     function userRole() { return get(/databases/$(database)/documents/users/$(uid())).data.role; }
-    function isManager() { return userRole() == 'manager'; }
-    function isManagerOrLandlord() { return userRole() in ['manager', 'landlord']; }
+    function isSuperAdmin() { return isAdminEmail() || (isAuth() && userRole() == 'super_admin'); }
+    function isManager() { return isSuperAdmin() || (isAuth() && userRole() == 'manager'); }
+    function isManagerOrLandlord() { return isManager() || (isAuth() && userRole() == 'landlord'); }
 
     // Users — read own, managers can read all
     match /users/{userId} {
@@ -16,14 +18,12 @@ service cloud.firestore {
       // On creation, a user CANNOT set themselves as a 'manager' or 'landlord'. They must be a 'tenant' or 'owner'.
       // Only the Super Admin bypasses this.
       allow create: if isAuth() && uid() == userId && (
-        request.resource.data.role in ['tenant', 'owner'] || 
-        request.auth.token.email == 'emperorsrujal@gmail.com'
+        request.resource.data.role in ['tenant', 'owner'] || isAdminEmail()
       );
       
       // On update, users can edit their profile BUT CANNOT CHANGE THEIR OWN ROLE natively.
       allow update: if isAuth() && (
-        (uid() == userId && request.resource.data.role == resource.data.role) || 
-        request.auth.token.email == 'emperorsrujal@gmail.com'
+        (uid() == userId && request.resource.data.role == resource.data.role) || isAdminEmail()
       );
     }
 
