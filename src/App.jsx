@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare, Key, Package, AlertTriangle, PiggyBank } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { getTenantByUserId, subscribeTenants } from './firebase';
 import { P, ROLE_COLORS, Toast, Spinner } from './components/UI';
@@ -22,6 +22,8 @@ import PackagesPage      from './pages/PackagesPage';
 import DepositsPage      from './pages/DepositsPage';
 import LegalFormsPage    from './pages/LegalFormsPage';
 import EvictionsPage     from './pages/EvictionsPage';
+import ViolationsPage    from './pages/ViolationsPage';
+import ReserveFundPage   from './pages/ReserveFundPage';
 import AnonymousReportPage from './pages/AnonymousReportPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
@@ -44,6 +46,8 @@ const ALL_PAGES = [
   { id: 'packages',      label: 'packages',         icon: Package },
   { id: 'legal-forms',   label: 'legal_forms',      icon: FileText },
   { id: 'evictions',     label: 'evictions',        icon: Shield },
+  { id: 'violations',    label: 'violations',       icon: AlertTriangle },
+  { id: 'reserve-fund',  label: 'reserve_fund',     icon: PiggyBank },
   { id: 'reports',       label: 'reports',          icon: PieChart },
   { id: 'settings',      label: 'settings',         icon: Shield },
   { id: 'super-admin',   label: 'admin_panel',      icon: Shield },
@@ -60,8 +64,8 @@ const ROLE_GROUPS = {
   manager: [
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
-    { label: 'finance',       pages: ['rent', 'deposits', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'legal-forms', 'evictions', 'keys', 'packages', 'documents'] },
+    { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'reports'] },
+    { label: 'operations',    pages: ['maintenance', 'legal-forms', 'evictions', 'violations', 'keys', 'packages', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
@@ -69,8 +73,8 @@ const ROLE_GROUPS = {
   landlord: [
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
-    { label: 'finance',       pages: ['rent', 'deposits', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'legal-forms', 'evictions', 'keys', 'packages', 'documents'] },
+    { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'reports'] },
+    { label: 'operations',    pages: ['maintenance', 'legal-forms', 'evictions', 'violations', 'keys', 'packages', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
   ],
@@ -92,6 +96,7 @@ const PAGE_TITLES = {
   dashboard: 'dashboard', properties: 'properties', tenants: 'tenants', rent: 'rent',
   'my-payments': 'my_payments', deposits: 'deposits', maintenance: 'maintenance', documents: 'documents',
   'my-documents': 'my_documents', announcements: 'announcements', 'legal-forms': 'legal_forms', evictions: 'evictions',
+  violations: 'violations', 'reserve-fund': 'reserve_fund',
   messages: 'messages', keys: 'keys_access', packages: 'packages', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
 };
 
@@ -274,6 +279,8 @@ export default function App() {
       case 'packages':      return <PackagesPage      {...props} />;
       case 'legal-forms':   return <LegalFormsPage    {...props} />;
       case 'evictions':     return <EvictionsPage     {...props} />;
+      case 'violations':    return <ViolationsPage    {...props} />;
+      case 'reserve-fund':  return <ReserveFundPage   {...props} />;
       case 'deposits':      return <DepositsPage      {...props} />;
       case 'reports':       return <ReportsPage       {...props} />;
       case 'settings':      return <SettingsPage      {...props} />;

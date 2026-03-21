@@ -32,7 +32,9 @@ const translations = {
     packages: 'Packages & Deliveries',
     deposits: 'Escrow & Deposits',
     legal_forms: 'Legal Forms',
-    evictions: 'Eviction Timelines'
+    evictions: 'Eviction Timelines',
+    violations: 'Bylaw Violations',
+    reserve_fund: 'Reserve Fund'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -65,7 +67,9 @@ const translations = {
     packages: 'Paquetes y Entregas',
     deposits: 'Depósitos de Garantía',
     legal_forms: 'Formularios Legales',
-    evictions: 'Desalojos y Plazos'
+    evictions: 'Desalojos y Plazos',
+    violations: 'Violaciones de Normas',
+    reserve_fund: 'Fondo de Reserva'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -98,7 +102,9 @@ const translations = {
     packages: 'Colis et Livraisons',
     deposits: 'Cautions Hautes',
     legal_forms: 'Formulaires Légaux',
-    evictions: 'Chronologies d\'Éviction'
+    evictions: 'Chronologies d\'Éviction',
+    violations: 'Violations des Règlements',
+    reserve_fund: 'Fonds de Réserve'
   }
 };
 

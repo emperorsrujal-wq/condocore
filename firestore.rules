@@ -108,5 +108,15 @@ service cloud.firestore {
     match /evictions/{evId} {
       allow read, write: if isAuth() && isManagerOrLandlord();
     }
+
+    // HOA: Bylaw Violations
+    match /violations/{vId} {
+      allow read, write: if isAuth() && isManagerOrLandlord();
+    }
+
+    // HOA: Reserve Fund
+    match /reserve_fund/{rfId} {
+      allow read, write: if isAuth() && isManagerOrLandlord();
+    }
   }
 }
