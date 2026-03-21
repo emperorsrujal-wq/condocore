@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
-import { getFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
+import { getFirestore, initializeFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
   getDoc, getDocs, onSnapshot, query, where, orderBy, serverTimestamp, setDoc } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
@@ -16,7 +16,9 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
+export const db = initializeFirestore(app, {
+  experimentalForceLongPolling: true,
+});
 export const storage = getStorage(app);
 
 // ─── Firestore Helpers ─────────────────────────────────────────────────────

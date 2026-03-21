@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
-import { getTenantByUserId } from './firebase';
+import { getTenantByUserId, subscribeTenants } from './firebase';
 import { P, ROLE_COLORS, Toast, Spinner } from './components/UI';
 
 import LoginPage         from './pages/LoginPage';
@@ -13,6 +13,9 @@ import DocumentsPage     from './pages/DocumentsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import SuperAdminPage    from './pages/SuperAdminPage';
 import PropertiesPage    from './pages/PropertiesPage';
+import SettingsPage      from './pages/SettingsPage';
+import ReportsPage       from './pages/ReportsPage';
+import MessagesPage      from './pages/MessagesPage';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
 
@@ -27,40 +30,47 @@ const ALL_PAGES = [
   { id: 'documents',     label: 'Documents',          icon: FileText },
   { id: 'my-documents',  label: 'My Documents',       icon: FileText },
   { id: 'announcements', label: 'Announcements',      icon: Paperclip },
+  { id: 'messages',      label: 'Messages',           icon: MessageSquare },
+  { id: 'reports',       label: 'Reports',            icon: PieChart },
+  { id: 'settings',      label: 'Settings',           icon: Shield },
   { id: 'super-admin',   label: 'Admin Panel',        icon: Shield },
 ];
 
 const ROLE_NAV = {
-  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements'],
-  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements'],
-  tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements'],
-  owner:    ['dashboard', 'announcements'],
+  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings'],
+  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings'],
+  tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings'],
+  owner:    ['dashboard', 'announcements', 'messages', 'settings'],
 };
 
 const ROLE_GROUPS = {
   manager: [
     { label: 'Overview',      pages: ['dashboard'] },
     { label: 'Tenants',       pages: ['tenants', 'properties'] },
-    { label: 'Finance',       pages: ['rent'] },
+    { label: 'Finance',       pages: ['rent', 'reports'] },
     { label: 'Operations',    pages: ['maintenance', 'documents'] },
-    { label: 'Communication', pages: ['announcements'] },
+    { label: 'Communication', pages: ['messages', 'announcements'] },
+    { label: 'Account',       pages: ['settings'] },
     { label: 'System',        pages: ['super-admin'] },
   ],
   landlord: [
     { label: 'Overview',      pages: ['dashboard'] },
     { label: 'Tenants',       pages: ['tenants', 'properties'] },
-    { label: 'Finance',       pages: ['rent'] },
+    { label: 'Finance',       pages: ['rent', 'reports'] },
     { label: 'Operations',    pages: ['maintenance', 'documents'] },
-    { label: 'Communication', pages: ['announcements'] },
+    { label: 'Communication', pages: ['messages', 'announcements'] },
+    { label: 'Account',       pages: ['settings'] },
   ],
   tenant: [
     { label: 'Home',      pages: ['dashboard'] },
     { label: 'Services',  pages: ['maintenance', 'my-documents'] },
-    { label: 'Building',  pages: ['announcements'] },
+    { label: 'Building',  pages: ['messages', 'announcements'] },
+    { label: 'Account',   pages: ['settings'] },
   ],
   owner: [
-    { label: 'Home',     pages: ['dashboard'] },
-    { label: 'Building', pages: ['announcements'] },
+    { label: 'Overview', pages: ['dashboard'] },
+    { label: 'Building', pages: ['messages', 'announcements'] },
+    { label: 'Account',  pages: ['settings'] },
   ],
 };
 
@@ -68,6 +78,9 @@ const PAGE_TITLES = {
   dashboard: 'Dashboard', properties: 'Properties', tenants: 'Tenants & Leases', rent: 'Rent & Payments',
   'my-payments': 'My Payments', maintenance: 'Maintenance', documents: 'Documents',
   'my-documents': 'My Documents', announcements: 'Announcements',
+  messages: 'Direct Messages',
+  reports: 'Advanced Reporting',
+  settings: 'Settings',
   'super-admin': '👑 Super Admin Panel',
 };
 
@@ -192,19 +205,12 @@ export default function App() {
   // Load tenants for payment page
   useEffect(() => {
     if (!currentUser) return;
-    import('./firebase').then(({ subscribeTenants }) => {
-      const unsub = subscribeTenants(data => setTenants(data));
-      return () => unsub();
-    });
+    const unsub = subscribeTenants(data => setTenants(data));
+    return () => unsub && unsub();
   }, [currentUser]);
 
   const showToast = (message, type = 'success') => setToast({ message, type });
-
-  const handleLogout = async () => {
-    await logout();
-    setTab('dashboard');
-  };
-
+  const handleLogout = () => logout();
   const navigate = (id) => setTab(id);
 
   // Auth guard
@@ -236,6 +242,9 @@ export default function App() {
       case 'documents':     return <DocumentsPage  {...props} />;
       case 'my-documents':  return <DocumentsPage  {...props} />;
       case 'announcements': return <AnnouncementsPage {...props} />;
+      case 'messages':      return <MessagesPage      {...props} />;
+      case 'reports':       return <ReportsPage       {...props} />;
+      case 'settings':      return <SettingsPage      {...props} />;
       case 'super-admin':   return <SuperAdminPage    {...props} currentUser={currentUser} />;
       default:              return <DashboardPage {...props} onNavigate={navigate} />;
     }

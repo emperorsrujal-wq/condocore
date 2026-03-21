@@ -30,7 +30,7 @@ service cloud.firestore {
 
     // Payments — managers/landlords full access, tenants read their own
     match /payments/{payId} {
-      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.tenantId == get(/databases/$(database)/documents/tenants/{tenantId}).data.id);
+      allow read: if isAuth() && (isManagerOrLandlord() || get(/databases/$(database)/documents/tenants/$(resource.data.tenantId)).data.userId == uid());
       allow create, update: if isAuth() && isManagerOrLandlord();
       // Tenants can create own payment records
       allow create: if isAuth() && userRole() == 'tenant';
@@ -60,7 +60,8 @@ service cloud.firestore {
 
     // Threads / Messages
     match /threads/{threadId} {
-      allow read, create: if isAuth() && uid() in resource.data.participants;
+      allow read: if isAuth() && uid() in resource.data.participants;
+      allow create: if isAuth() && uid() in request.resource.data.participants;
       allow update: if isAuth() && uid() in resource.data.participants;
 
       match /messages/{msgId} {

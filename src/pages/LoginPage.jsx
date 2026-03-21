@@ -6,8 +6,8 @@ import { P } from '../components/UI';
 export default function LoginPage() {
   const { login, createAccount } = useAuth();
   const [mode, setMode]         = useState('login'); // 'login' | 'register' | 'reset'
-  const [email, setEmail]       = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail]       = useState('manager@test.com');
+  const [password, setPassword] = useState('manager123');
   const [showPass, setShowPass] = useState(false);
   const [error, setError]       = useState('');
   const [loading, setLoading]   = useState(false);

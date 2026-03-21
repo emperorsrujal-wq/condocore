@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
-  createUserWithEmailAndPassword, sendPasswordResetEmail
+  createUserWithEmailAndPassword, sendPasswordResetEmail,
+  updateEmail as updateFbEmail, updatePassword as updateFbPassword
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { auth, db } from '../firebase';
@@ -47,36 +48,80 @@ export function AuthProvider({ children }) {
     return sendPasswordResetEmail(auth, email);
   }
 
+  async function updateUserEmail(newEmail) {
+    if (!currentUser) return;
+    await updateFbEmail(currentUser, newEmail);
+    await setDoc(doc(db, 'users', currentUser.uid), { email: newEmail, updatedAt: serverTimestamp() }, { merge: true });
+    await refreshProfile();
+  }
+
+  async function updateUserPassword(newPassword) {
+    if (!currentUser) return;
+    return updateFbPassword(currentUser, newPassword);
+  }
+
+  async function updateProfile(data) {
+    if (!currentUser) return;
+    await setDoc(doc(db, 'users', currentUser.uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+    await refreshProfile();
+  }
+
   async function refreshProfile() {
     if (!currentUser) return;
-    const snap = await getDoc(doc(db, 'users', currentUser.uid));
-    if (snap.exists()) setUserProfile(snap.data());
+    try {
+      const snap = await getDoc(doc(db, 'users', currentUser.uid));
+      if (snap.exists()) setUserProfile(snap.data());
+    } catch (e) { console.error('Refresh profile error:', e); }
   }
 
   useEffect(() => {
+    console.log('AuthProvider: Auth listener initializing...');
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      console.log('AuthProvider: Auth state changed, user=', user?.email);
       setCurrentUser(user);
       if (user) {
         try {
+          console.log('AuthProvider: Fetching profile for', user.uid);
           const snap = await getDoc(doc(db, 'users', user.uid));
-          if (snap.exists()) setUserProfile(snap.data());
-        } catch (e) { console.error('Profile fetch error:', e); }
+          if (snap.exists()) {
+            console.log('AuthProvider: Profile found');
+            setUserProfile(snap.data());
+          } else {
+            console.log('AuthProvider: Profile NOT found');
+          }
+        } catch (e) { 
+          console.error('Profile fetch error:', e); 
+        }
       } else {
         setUserProfile(null);
       }
+      console.log('AuthProvider: Setting loading=false');
       setLoading(false);
     });
-    return unsubscribe;
+    
+    // Safety timeout to ensure app eventually renders
+    const timer = setTimeout(() => {
+      console.log('AuthProvider: Safety timeout, forcing loading=false');
+      setLoading(false);
+    }, 5000);
+
+    return () => {
+      unsubscribe();
+      clearTimeout(timer);
+    };
   }, []);
 
   const value = {
     currentUser, userProfile, loading,
-    login, logout, createAccount, resetPassword, refreshProfile
+    login, logout, createAccount, resetPassword, refreshProfile,
+    updateUserEmail, updateUserPassword, updateProfile
   };
+
+  console.log('AuthProvider: rendering, loading=', loading);
 
   return (
     <AuthContext.Provider value={value}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 }
