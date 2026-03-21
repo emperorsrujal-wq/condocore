@@ -3,6 +3,7 @@ import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, 
 import { useAuth } from './contexts/AuthContext';
 import { getTenantByUserId, subscribeTenants } from './firebase';
 import { P, ROLE_COLORS, Toast, Spinner } from './components/UI';
+import { useLanguage } from './contexts/LanguageContext';
 
 import LoginPage         from './pages/LoginPage';
 import DashboardPage     from './pages/DashboardPage';
@@ -22,19 +23,19 @@ const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
 
 // ─── Nav Config ───────────────────────────────────────────────────────────────
 const ALL_PAGES = [
-  { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboard },
-  { id: 'properties',    label: 'Properties',       icon: Building2 },
-  { id: 'tenants',       label: 'Tenants & Leases',  icon: Users },
-  { id: 'rent',          label: 'Rent & Payments',   icon: DollarSign },
-  { id: 'my-payments',   label: 'My Payments',        icon: DollarSign },
-  { id: 'maintenance',   label: 'Maintenance',        icon: Wrench },
-  { id: 'documents',     label: 'Documents',          icon: FileText },
-  { id: 'my-documents',  label: 'My Documents',       icon: FileText },
-  { id: 'announcements', label: 'Announcements',      icon: Paperclip },
-  { id: 'messages',      label: 'Messages',           icon: MessageSquare },
-  { id: 'reports',       label: 'Reports',            icon: PieChart },
-  { id: 'settings',      label: 'Settings',           icon: Shield },
-  { id: 'super-admin',   label: 'Admin Panel',        icon: Shield },
+  { id: 'dashboard',     label: 'dashboard',        icon: LayoutDashboard },
+  { id: 'properties',    label: 'properties',       icon: Building2 },
+  { id: 'tenants',       label: 'tenants',          icon: Users },
+  { id: 'rent',          label: 'rent',             icon: DollarSign },
+  { id: 'my-payments',   label: 'my_payments',      icon: DollarSign },
+  { id: 'maintenance',   label: 'maintenance',      icon: Wrench },
+  { id: 'documents',     label: 'documents',        icon: FileText },
+  { id: 'my-documents',  label: 'my_documents',     icon: FileText },
+  { id: 'announcements', label: 'announcements',    icon: Paperclip },
+  { id: 'messages',      label: 'messages',         icon: MessageSquare },
+  { id: 'reports',       label: 'reports',          icon: PieChart },
+  { id: 'settings',      label: 'settings',         icon: Shield },
+  { id: 'super-admin',   label: 'admin_panel',      icon: Shield },
 ];
 
 const ROLE_NAV = {
@@ -46,47 +47,45 @@ const ROLE_NAV = {
 
 const ROLE_GROUPS = {
   manager: [
-    { label: 'Overview',      pages: ['dashboard'] },
-    { label: 'Tenants',       pages: ['tenants', 'properties'] },
-    { label: 'Finance',       pages: ['rent', 'reports'] },
-    { label: 'Operations',    pages: ['maintenance', 'documents'] },
-    { label: 'Communication', pages: ['messages', 'announcements'] },
-    { label: 'Account',       pages: ['settings'] },
-    { label: 'System',        pages: ['super-admin'] },
+    { label: 'overview',      pages: ['dashboard'] },
+    { label: 'tenants',       pages: ['tenants', 'properties'] },
+    { label: 'finance',       pages: ['rent', 'reports'] },
+    { label: 'operations',    pages: ['maintenance', 'documents'] },
+    { label: 'communication', pages: ['messages', 'announcements'] },
+    { label: 'account',       pages: ['settings'] },
+    { label: 'system',        pages: ['super-admin'] },
   ],
   landlord: [
-    { label: 'Overview',      pages: ['dashboard'] },
-    { label: 'Tenants',       pages: ['tenants', 'properties'] },
-    { label: 'Finance',       pages: ['rent', 'reports'] },
-    { label: 'Operations',    pages: ['maintenance', 'documents'] },
-    { label: 'Communication', pages: ['messages', 'announcements'] },
-    { label: 'Account',       pages: ['settings'] },
+    { label: 'overview',      pages: ['dashboard'] },
+    { label: 'tenants',       pages: ['tenants', 'properties'] },
+    { label: 'finance',       pages: ['rent', 'reports'] },
+    { label: 'operations',    pages: ['maintenance', 'documents'] },
+    { label: 'communication', pages: ['messages', 'announcements'] },
+    { label: 'account',       pages: ['settings'] },
   ],
   tenant: [
-    { label: 'Home',      pages: ['dashboard'] },
-    { label: 'Services',  pages: ['maintenance', 'my-documents'] },
-    { label: 'Building',  pages: ['messages', 'announcements'] },
-    { label: 'Account',   pages: ['settings'] },
+    { label: 'home',      pages: ['dashboard'] },
+    { label: 'services',  pages: ['maintenance', 'my-documents'] },
+    { label: 'building',  pages: ['messages', 'announcements'] },
+    { label: 'account',   pages: ['settings'] },
   ],
   owner: [
-    { label: 'Overview', pages: ['dashboard'] },
-    { label: 'Building', pages: ['messages', 'announcements'] },
-    { label: 'Account',  pages: ['settings'] },
+    { label: 'overview', pages: ['dashboard'] },
+    { label: 'building', pages: ['messages', 'announcements'] },
+    { label: 'account',  pages: ['settings'] },
   ],
 };
 
 const PAGE_TITLES = {
-  dashboard: 'Dashboard', properties: 'Properties', tenants: 'Tenants & Leases', rent: 'Rent & Payments',
-  'my-payments': 'My Payments', maintenance: 'Maintenance', documents: 'Documents',
-  'my-documents': 'My Documents', announcements: 'Announcements',
-  messages: 'Direct Messages',
-  reports: 'Advanced Reporting',
-  settings: 'Settings',
-  'super-admin': '👑 Super Admin Panel',
+  dashboard: 'dashboard', properties: 'properties', tenants: 'tenants', rent: 'rent',
+  'my-payments': 'my_payments', maintenance: 'maintenance', documents: 'documents',
+  'my-documents': 'my_documents', announcements: 'announcements',
+  messages: 'messages', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
 };
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
 function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLogout }) {
+  const { t } = useLanguage();
   const roleColor = ROLE_COLORS[userProfile?.role] || P.gold;
   const groups    = ROLE_GROUPS[userProfile?.role] || [];
   const navLookup = Object.fromEntries(ALL_PAGES.map(p => [p.id, p]));
@@ -132,7 +131,7 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
       <nav style={{ flex: 1, padding: '4px 6px', overflowY: 'auto' }}>
         {groups.map((g, gi) => (
           <div key={gi} style={{ marginBottom: 2 }}>
-            {!collapsed && <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.22)', textTransform: 'uppercase', letterSpacing: 1.2, padding: '8px 6px 3px' }}>{g.label}</div>}
+            {!collapsed && <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.22)', textTransform: 'uppercase', letterSpacing: 1.2, padding: '8px 6px 3px' }}>{t(g.label)}</div>}
             {collapsed && gi > 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 3px' }} />}
             {g.pages.map(id => {
               const nav = navLookup[id];
@@ -141,12 +140,12 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
               if (id === 'super-admin' && user?.email !== SUPER_ADMIN_EMAIL) return null;
               const active = tab === id;
               return (
-                <button key={id} onClick={() => onNavigate(id)} title={collapsed ? nav.label : ''}
+                <button key={id} onClick={() => onNavigate(id)} title={collapsed ? t(nav.label) : ''}
                   style={{ width: '100%', display: 'flex', alignItems: 'center', gap: 8, padding: '8px 7px', borderRadius: 8, border: 'none', background: active ? P.gold : 'transparent', color: active ? P.navy : 'rgba(255,255,255,0.55)', cursor: 'pointer', marginBottom: 1, textAlign: 'left', transition: 'all 0.12s', fontFamily: "'DM Sans', sans-serif", fontWeight: active ? 700 : 500, fontSize: 13 }}
                   onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
                   <nav.icon size={15} style={{ flexShrink: 0 }} />
-                  {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{nav.label}</span>}
+                  {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t(nav.label)}</span>}
                 </button>
               );
             })}
@@ -161,7 +160,7 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
           onMouseEnter={e => { e.currentTarget.style.background = 'rgba(192,57,43,0.12)'; e.currentTarget.style.color = '#FF8A80'; }}
           onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.3)'; }}>
           <LogOut size={14} style={{ flexShrink: 0 }} />
-          {!collapsed && <span>Sign out</span>}
+          {!collapsed && <span>{t('sign_out')}</span>}
         </button>
       </div>
     </div>
@@ -170,13 +169,22 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
 
 // ─── TopBar ───────────────────────────────────────────────────────────────────
 function TopBar({ userProfile, tab, onLogout, onNavigate }) {
+  const { t, locale, setLocale } = useLanguage();
   const roleColor = ROLE_COLORS[userProfile?.role] || P.gold;
-  const title     = PAGE_TITLES[tab] || 'CondoCore';
+  const title     = PAGE_TITLES[tab] || 'dashboard';
 
   return (
     <div style={{ background: P.card, borderBottom: `1px solid ${P.border}`, padding: '0 22px', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: P.text }}>{title}</div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+      <div style={{ fontSize: 16, fontWeight: 700, color: P.text }}>{t(title)}</div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+        
+        {/* Language Selector */}
+        <select value={locale} onChange={e => setLocale(e.target.value)} style={{ padding: '6px 12px', borderRadius: 8, background: P.bg, border: `1px solid ${P.border}`, color: P.textMuted, fontSize: 12, outline: 'none', cursor: 'pointer', fontWeight: 600 }}>
+          <option value="en">🇺🇸 EN</option>
+          <option value="es">🇪🇸 ES</option>
+          <option value="fr">🇫🇷 FR</option>
+        </select>
+
         <NotificationsMenu userProfile={userProfile} onNavigate={onNavigate} />
         <div style={{ padding: '3px 10px', borderRadius: 20, background: roleColor + '18', border: `1px solid ${roleColor}35`, fontSize: 11, fontWeight: 700, color: roleColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>
           {userProfile?.role}
