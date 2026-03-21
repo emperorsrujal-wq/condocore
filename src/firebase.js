@@ -178,4 +178,17 @@ export const markNotificationRead = (id) => updateDoc(doc(db, 'notifications', i
 export const createNotification = (data) =>
   addDoc(collection(db, 'notifications'), { ...data, read: false, createdAt: serverTimestamp() });
 
+// Keys & Access
+export const subscribeKeys = (callback) =>
+  onSnapshot(collection(db, 'keys'), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addKey = (data) =>
+  addDoc(collection(db, 'keys'), { ...data, createdAt: serverTimestamp() });
+
+export const updateKey = (id, data) =>
+  updateDoc(doc(db, 'keys', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteKey = (id) => deleteDoc(doc(db, 'keys', id));
+
 export default app;

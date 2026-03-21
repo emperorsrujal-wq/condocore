@@ -17,6 +17,7 @@ import PropertiesPage    from './pages/PropertiesPage';
 import SettingsPage      from './pages/SettingsPage';
 import ReportsPage       from './pages/ReportsPage';
 import MessagesPage      from './pages/MessagesPage';
+import KeysPage          from './pages/KeysPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
@@ -33,6 +34,7 @@ const ALL_PAGES = [
   { id: 'my-documents',  label: 'my_documents',     icon: FileText },
   { id: 'announcements', label: 'announcements',    icon: Paperclip },
   { id: 'messages',      label: 'messages',         icon: MessageSquare },
+  { id: 'keys',          label: 'keys_access',      icon: Key },
   { id: 'reports',       label: 'reports',          icon: PieChart },
   { id: 'settings',      label: 'settings',         icon: Shield },
   { id: 'super-admin',   label: 'admin_panel',      icon: Shield },
@@ -50,7 +52,7 @@ const ROLE_GROUPS = {
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'documents'] },
+    { label: 'operations',    pages: ['maintenance', 'keys', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
@@ -59,7 +61,7 @@ const ROLE_GROUPS = {
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'documents'] },
+    { label: 'operations',    pages: ['maintenance', 'keys', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
   ],
@@ -80,7 +82,7 @@ const PAGE_TITLES = {
   dashboard: 'dashboard', properties: 'properties', tenants: 'tenants', rent: 'rent',
   'my-payments': 'my_payments', maintenance: 'maintenance', documents: 'documents',
   'my-documents': 'my_documents', announcements: 'announcements',
-  messages: 'messages', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
+  messages: 'messages', keys: 'keys_access', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
 };
 
 // ─── Sidebar ──────────────────────────────────────────────────────────────────
@@ -253,6 +255,7 @@ export default function App() {
       case 'my-documents':  return <DocumentsPage  {...props} />;
       case 'announcements': return <AnnouncementsPage {...props} />;
       case 'messages':      return <MessagesPage      {...props} />;
+      case 'keys':          return <KeysPage          {...props} />;
       case 'reports':       return <ReportsPage       {...props} />;
       case 'settings':      return <SettingsPage      {...props} />;
       case 'super-admin':   return <SuperAdminPage    {...props} currentUser={currentUser} />;

@@ -86,5 +86,10 @@ service cloud.firestore {
       allow read, update: if isAuth() && resource.data.userId == uid();
       allow create: if isAuth();
     }
+
+    // Keys
+    match /keys/{keyId} {
+      allow read, write: if isAuth() && isManagerOrLandlord();
+    }
   }
 }

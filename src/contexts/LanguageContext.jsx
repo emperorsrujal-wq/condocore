@@ -27,7 +27,8 @@ const translations = {
     sign_out: 'Sign Out',
     lang_en: 'English',
     lang_es: 'Español',
-    lang_fr: 'Français'
+    lang_fr: 'Français',
+    keys_access: 'Keys & Access'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -55,7 +56,8 @@ const translations = {
     sign_out: 'Cerrar Sesión',
     lang_en: 'Inglés',
     lang_es: 'Español',
-    lang_fr: 'Francés'
+    lang_fr: 'Francés',
+    keys_access: 'Llaves y Acceso'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -83,7 +85,8 @@ const translations = {
     sign_out: 'Déconnexion',
     lang_en: 'Anglais',
     lang_es: 'Espagnol',
-    lang_fr: 'Français'
+    lang_fr: 'Français',
+    keys_access: 'Clés et Accès'
   }
 };
 
