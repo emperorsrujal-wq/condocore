@@ -1,0 +1,72 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper functions
+    function isAuth() { return request.auth != null; }
+    function uid() { return request.auth.uid; }
+    function userRole() { return get(/databases/$(database)/documents/users/$(uid())).data.role; }
+    function isManager() { return userRole() == 'manager'; }
+    function isManagerOrLandlord() { return userRole() in ['manager', 'landlord']; }
+
+    // Users — read own, managers can read all
+    match /users/{userId} {
+      allow read: if isAuth() && (uid() == userId || isManager());
+      allow create: if isAuth() && uid() == userId;
+      allow update: if isAuth() && (uid() == userId || isManager());
+    }
+
+    // Properties — managers can do everything, others can read
+    match /properties/{propId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrLandlord();
+    }
+
+    // Tenants — managers/landlords full access, tenants read their own
+    match /tenants/{tenantId} {
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
+      allow create, update, delete: if isAuth() && isManagerOrLandlord();
+    }
+
+    // Payments — managers/landlords full access, tenants read their own
+    match /payments/{payId} {
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.tenantId == get(/databases/$(database)/documents/tenants/{tenantId}).data.id);
+      allow create, update: if isAuth() && isManagerOrLandlord();
+      // Tenants can create own payment records
+      allow create: if isAuth() && userRole() == 'tenant';
+    }
+
+    // Maintenance — managers full access, tenants read/create their own
+    match /maintenance/{reqId} {
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
+      allow create: if isAuth();
+      allow update: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
+      allow delete: if isAuth() && isManager();
+    }
+
+    // Documents — managers full access, tenants read their own
+    match /documents/{docId} {
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.tenantId == null || resource.data.userId == uid());
+      allow create: if isAuth();
+      allow update: if isAuth() && (isManagerOrLandlord() || resource.data.uploadedById == uid());
+      allow delete: if isAuth() && isManagerOrLandlord();
+    }
+
+    // Announcements — managers can write, everyone can read
+    match /announcements/{annId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrLandlord();
+    }
+
+    // Threads / Messages
+    match /threads/{threadId} {
+      allow read, create: if isAuth() && uid() in resource.data.participants;
+      allow update: if isAuth() && uid() in resource.data.participants;
+
+      match /messages/{msgId} {
+        allow read: if isAuth();
+        allow create: if isAuth();
+      }
+    }
+  }
+}
