@@ -20,6 +20,7 @@ import MessagesPage      from './pages/MessagesPage';
 import KeysPage          from './pages/KeysPage';
 import PackagesPage      from './pages/PackagesPage';
 import DepositsPage      from './pages/DepositsPage';
+import LegalFormsPage    from './pages/LegalFormsPage';
 import AnonymousReportPage from './pages/AnonymousReportPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
@@ -40,6 +41,7 @@ const ALL_PAGES = [
   { id: 'messages',      label: 'messages',         icon: MessageSquare },
   { id: 'keys',          label: 'keys_access',      icon: Key },
   { id: 'packages',      label: 'packages',         icon: Package },
+  { id: 'legal-forms',   label: 'legal_forms',      icon: FileText },
   { id: 'reports',       label: 'reports',          icon: PieChart },
   { id: 'settings',      label: 'settings',         icon: Shield },
   { id: 'super-admin',   label: 'admin_panel',      icon: Shield },
@@ -57,7 +59,7 @@ const ROLE_GROUPS = {
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'keys', 'packages', 'documents'] },
+    { label: 'operations',    pages: ['maintenance', 'keys', 'packages', 'documents', 'legal-forms'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
@@ -66,7 +68,7 @@ const ROLE_GROUPS = {
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'keys', 'packages', 'documents'] },
+    { label: 'operations',    pages: ['maintenance', 'keys', 'packages', 'documents', 'legal-forms'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
   ],
@@ -87,7 +89,7 @@ const ROLE_GROUPS = {
 const PAGE_TITLES = {
   dashboard: 'dashboard', properties: 'properties', tenants: 'tenants', rent: 'rent',
   'my-payments': 'my_payments', deposits: 'deposits', maintenance: 'maintenance', documents: 'documents',
-  'my-documents': 'my_documents', announcements: 'announcements',
+  'my-documents': 'my_documents', announcements: 'announcements', 'legal-forms': 'legal_forms',
   messages: 'messages', keys: 'keys_access', packages: 'packages', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
 };
 
@@ -268,6 +270,7 @@ export default function App() {
       case 'messages':      return <MessagesPage      {...props} />;
       case 'keys':          return <KeysPage          {...props} />;
       case 'packages':      return <PackagesPage      {...props} />;
+      case 'legal-forms':   return <LegalFormsPage    {...props} />;
       case 'deposits':      return <DepositsPage      {...props} />;
       case 'reports':       return <ReportsPage       {...props} />;
       case 'settings':      return <SettingsPage      {...props} />;

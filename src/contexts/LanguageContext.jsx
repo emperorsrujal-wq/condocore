@@ -30,7 +30,8 @@ const translations = {
     lang_fr: 'Français',
     keys_access: 'Keys & Access',
     packages: 'Packages & Deliveries',
-    deposits: 'Escrow & Deposits'
+    deposits: 'Escrow & Deposits',
+    legal_forms: 'Legal Forms'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -61,7 +62,8 @@ const translations = {
     lang_fr: 'Francés',
     keys_access: 'Llaves y Acceso',
     packages: 'Paquetes y Entregas',
-    deposits: 'Depósitos de Garantía'
+    deposits: 'Depósitos de Garantía',
+    legal_forms: 'Formularios Legales'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -92,7 +94,8 @@ const translations = {
     lang_fr: 'Français',
     keys_access: 'Clés et Accès',
     packages: 'Colis et Livraisons',
-    deposits: 'Cautions Hautes'
+    deposits: 'Cautions Hautes',
+    legal_forms: 'Formulaires Légaux'
   }
 };
 
