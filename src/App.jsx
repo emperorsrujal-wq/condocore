@@ -18,6 +18,7 @@ import SettingsPage      from './pages/SettingsPage';
 import ReportsPage       from './pages/ReportsPage';
 import MessagesPage      from './pages/MessagesPage';
 import KeysPage          from './pages/KeysPage';
+import AnonymousReportPage from './pages/AnonymousReportPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
@@ -224,6 +225,11 @@ export default function App() {
   const showToast = (message, type = 'success') => setToast({ message, type });
   const handleLogout = () => logout();
   const navigate = (id) => setTab(id);
+
+  // Public Route Bypass
+  if (window.location.pathname === '/report') {
+    return <AnonymousReportPage />;
+  }
 
   // Auth guard
   if (loading) {
