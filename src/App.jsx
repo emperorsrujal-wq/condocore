@@ -12,12 +12,14 @@ import MaintenancePage   from './pages/MaintenancePage';
 import DocumentsPage     from './pages/DocumentsPage';
 import AnnouncementsPage from './pages/AnnouncementsPage';
 import SuperAdminPage    from './pages/SuperAdminPage';
+import PropertiesPage    from './pages/PropertiesPage';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
 
 // ─── Nav Config ───────────────────────────────────────────────────────────────
 const ALL_PAGES = [
   { id: 'dashboard',     label: 'Dashboard',        icon: LayoutDashboard },
+  { id: 'properties',    label: 'Properties',       icon: Building2 },
   { id: 'tenants',       label: 'Tenants & Leases',  icon: Users },
   { id: 'rent',          label: 'Rent & Payments',   icon: DollarSign },
   { id: 'my-payments',   label: 'My Payments',        icon: DollarSign },
@@ -29,8 +31,8 @@ const ALL_PAGES = [
 ];
 
 const ROLE_NAV = {
-  manager:  ['dashboard', 'tenants', 'rent', 'maintenance', 'documents', 'announcements'],
-  landlord: ['dashboard', 'tenants', 'rent', 'maintenance', 'documents', 'announcements'],
+  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements'],
+  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements'],
   tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements'],
   owner:    ['dashboard', 'announcements'],
 };
@@ -38,7 +40,7 @@ const ROLE_NAV = {
 const ROLE_GROUPS = {
   manager: [
     { label: 'Overview',      pages: ['dashboard'] },
-    { label: 'Tenants',       pages: ['tenants'] },
+    { label: 'Tenants',       pages: ['tenants', 'properties'] },
     { label: 'Finance',       pages: ['rent'] },
     { label: 'Operations',    pages: ['maintenance', 'documents'] },
     { label: 'Communication', pages: ['announcements'] },
@@ -46,7 +48,7 @@ const ROLE_GROUPS = {
   ],
   landlord: [
     { label: 'Overview',      pages: ['dashboard'] },
-    { label: 'Tenants',       pages: ['tenants'] },
+    { label: 'Tenants',       pages: ['tenants', 'properties'] },
     { label: 'Finance',       pages: ['rent'] },
     { label: 'Operations',    pages: ['maintenance', 'documents'] },
     { label: 'Communication', pages: ['announcements'] },
@@ -63,7 +65,7 @@ const ROLE_GROUPS = {
 };
 
 const PAGE_TITLES = {
-  dashboard: 'Dashboard', tenants: 'Tenants & Leases', rent: 'Rent & Payments',
+  dashboard: 'Dashboard', properties: 'Properties', tenants: 'Tenants & Leases', rent: 'Rent & Payments',
   'my-payments': 'My Payments', maintenance: 'Maintenance', documents: 'Documents',
   'my-documents': 'My Documents', announcements: 'Announcements',
   'super-admin': '👑 Super Admin Panel',
@@ -226,6 +228,7 @@ export default function App() {
     const props = { onToast: showToast, userProfile, tenantData, onNavigate: navigate };
     switch (tab) {
       case 'dashboard':     return <DashboardPage {...props} onNavigate={navigate} />;
+      case 'properties':    return <PropertiesPage  {...props} />;
       case 'tenants':       return <TenantsPage   {...props} />;
       case 'rent':          return <PaymentsPage  {...props} tenants={tenants} />;
       case 'my-payments':   return <PaymentsPage  {...props} tenants={tenants} myOnly />;

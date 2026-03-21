@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Mail, Phone, Home, Calendar, DollarSign } from 'lucide-react';
-import { subscribeTenants, addTenant, updateTenant, deleteTenant } from '../firebase';
+import { subscribeTenants, addTenant, updateTenant, deleteTenant, subscribeProperties } from '../firebase';
 import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, Avatar } from '../components/UI';
 
 const FORM_DEFAULT = { name: '', email: '', phone: '', unit: '', property: '', leaseStart: '', leaseEnd: '', rent: '', status: 'active', type: 'Condo' };
@@ -15,10 +15,12 @@ export default function TenantsPage({ onToast }) {
   const [editing, setEditing]   = useState(null);
   const [form, setForm]         = useState(FORM_DEFAULT);
   const [saving, setSaving]     = useState(false);
+  const [properties, setProperties] = useState([]);
 
   useEffect(() => {
-    const unsub = subscribeTenants(data => { setTenants(data); setLoading(false); });
-    return unsub;
+    const unsubT = subscribeTenants(data => { setTenants(data); setLoading(false); });
+    const unsubP = subscribeProperties(data => setProperties(data));
+    return () => { unsubT(); unsubP(); };
   }, []);
 
   const filtered = tenants.filter(t => {
@@ -138,7 +140,7 @@ export default function TenantsPage({ onToast }) {
             <Input label="Email *" type="email" {...F('email')} />
             <Input label="Phone" {...F('phone')} />
             <Input label="Unit Number *" {...F('unit')} placeholder="e.g. 1204" />
-            <Input label="Property Name" {...F('property')} placeholder="e.g. Harborview" />
+            <Select label="Property Name" {...F('property')} options={['', ...properties.map(p => p.name)]} />
             <Input label="Monthly Rent ($)" type="number" {...F('rent')} />
             <Input label="Lease Start" type="date" {...F('leaseStart')} />
             <Input label="Lease End" type="date" {...F('leaseEnd')} />

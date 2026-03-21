@@ -33,6 +33,11 @@ export const subscribeProperties = (callback) =>
 export const addProperty = (data) =>
   addDoc(collection(db, 'properties'), { ...data, createdAt: serverTimestamp() });
 
+export const updateProperty = (id, data) =>
+  updateDoc(doc(db, 'properties', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteProperty = (id) => deleteDoc(doc(db, 'properties', id));
+
 // Tenants
 export const subscribeTenants = (callback) =>
   onSnapshot(query(collection(db, 'tenants'), orderBy('createdAt', 'desc')), snap =>
