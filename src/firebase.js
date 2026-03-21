@@ -29,6 +29,13 @@ export const storage = getStorage(app);
 export const getUserProfile = (uid) => getDoc(doc(db, 'users', uid));
 export const setUserProfile = (uid, data) => setDoc(doc(db, 'users', uid), { ...data, updatedAt: serverTimestamp() }, { merge: true });
 
+export const subscribeAllUsers = (callback) =>
+  onSnapshot(collection(db, 'users'), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const updateUserRole = (uid, role) =>
+  updateDoc(doc(db, 'users', uid), { role, updatedAt: serverTimestamp() });
+
 // Properties
 export const subscribeProperties = (callback) =>
   onSnapshot(collection(db, 'properties'), snap =>

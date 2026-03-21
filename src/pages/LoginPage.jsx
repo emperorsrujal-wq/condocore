@@ -52,6 +52,8 @@ export default function LoginPage() {
     { role: 'tenant',   label: 'Tenant',            desc: 'View lease, pay rent, submit requests',   color: '#82C9A5' },
     { role: 'owner',    label: 'Unit Owner',         desc: 'Condo fees, amenities, board matters',    color: '#B08FE0' },
   ];
+  
+  const PUBLIC_ROLES = ROLE_INFO.filter(r => r.role === 'tenant' || r.role === 'owner');
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', fontFamily: "'DM Sans', sans-serif" }}>
@@ -176,7 +178,7 @@ export default function LoginPage() {
                   <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>Role</label>
                   <select value={regRole} onChange={e => setRegRole(e.target.value)}
                     style={{ width: '100%', padding: '11px 13px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text }}>
-                    {ROLE_INFO.map(r => <option key={r.role} value={r.role}>{r.label}</option>)}
+                    {PUBLIC_ROLES.map(r => <option key={r.role} value={r.role}>{r.label}</option>)}
                   </select>
                 </div>
                 {(regRole === 'tenant' || regRole === 'owner') && (

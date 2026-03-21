@@ -11,9 +11,20 @@ service cloud.firestore {
 
     // Users — read own, managers can read all
     match /users/{userId} {
-      allow read: if isAuth() && (uid() == userId || isManager());
-      allow create: if isAuth() && uid() == userId;
-      allow update: if isAuth() && (uid() == userId || isManager());
+      allow read: if isAuth() && (uid() == userId || isManager() || request.auth.token.email == 'emperorsrujal@gmail.com');
+      
+      // On creation, a user CANNOT set themselves as a 'manager' or 'landlord'. They must be a 'tenant' or 'owner'.
+      // Only the Super Admin bypasses this.
+      allow create: if isAuth() && uid() == userId && (
+        request.resource.data.role in ['tenant', 'owner'] || 
+        request.auth.token.email == 'emperorsrujal@gmail.com'
+      );
+      
+      // On update, users can edit their profile BUT CANNOT CHANGE THEIR OWN ROLE natively.
+      allow update: if isAuth() && (
+        (uid() == userId && request.resource.data.role == resource.data.role) || 
+        request.auth.token.email == 'emperorsrujal@gmail.com'
+      );
     }
 
     // Properties — managers can do everything, others can read
