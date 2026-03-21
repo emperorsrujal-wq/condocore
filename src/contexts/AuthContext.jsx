@@ -2,10 +2,11 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import {
   signInWithEmailAndPassword, signOut, onAuthStateChanged,
   createUserWithEmailAndPassword, sendPasswordResetEmail,
-  updateEmail as updateFbEmail, updatePassword as updateFbPassword
+  updateEmail as updateFbEmail, updatePassword as updateFbPassword,
+  signInWithPopup
 } from 'firebase/auth';
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { auth, db } from '../firebase';
+import { auth, db, googleProvider, appleProvider } from '../firebase';
 
 const AuthContext = createContext();
 
@@ -43,6 +44,31 @@ export function AuthProvider({ children }) {
     setUserProfile(profile);
     return user;
   }
+
+  async function handleProviderLogin(provider) {
+    const { user } = await signInWithPopup(auth, provider);
+    const userRef = doc(db, 'users', user.uid);
+    const snap = await getDoc(userRef);
+    
+    if (!snap.exists()) {
+      const profile = {
+        name: user.displayName || 'OAuth User',
+        email: user.email,
+        role: 'tenant', // Default to basic tenant access
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        initials: (user.displayName || 'O U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+      };
+      await setDoc(userRef, profile);
+      setUserProfile(profile);
+    } else {
+      setUserProfile(snap.data());
+    }
+    return user;
+  }
+
+  const loginWithGoogle = () => handleProviderLogin(googleProvider);
+  const loginWithApple = () => handleProviderLogin(appleProvider);
 
   async function resetPassword(email) {
     return sendPasswordResetEmail(auth, email);
@@ -114,7 +140,8 @@ export function AuthProvider({ children }) {
   const value = {
     currentUser, userProfile, loading,
     login, logout, createAccount, resetPassword, refreshProfile,
-    updateUserEmail, updateUserPassword, updateProfile
+    updateUserEmail, updateUserPassword, updateProfile,
+    loginWithGoogle, loginWithApple
   };
 
   console.log('AuthProvider: rendering, loading=', loading);

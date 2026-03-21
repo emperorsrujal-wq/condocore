@@ -4,7 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { P } from '../components/UI';
 
 export default function LoginPage() {
-  const { login, createAccount } = useAuth();
+  const { login, createAccount, loginWithGoogle, loginWithApple } = useAuth();
   const [mode, setMode]         = useState('login'); // 'login' | 'register' | 'reset'
   const [email, setEmail]       = useState('manager@test.com');
   const [password, setPassword] = useState('manager123');
@@ -130,6 +130,23 @@ export default function LoginPage() {
                   {loading ? <><span className="spinning" style={{ width: 18, height: 18, border: '2px solid rgba(255,255,255,0.3)', borderTopColor: '#fff', borderRadius: '50%', display: 'inline-block' }} />Signing in...</> : <><Lock size={16} />Sign In</>}
                 </button>
               </form>
+              
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, margin: '24px 0' }}>
+                <div style={{ flex: 1, height: 1, background: P.border }} />
+                <div style={{ fontSize: 12, color: P.textMuted, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Or</div>
+                <div style={{ flex: 1, height: 1, background: P.border }} />
+              </div>
+
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button type="button" onClick={async () => { setError(''); setLoading(true); try { await loginWithGoogle(); } catch(e){ setError(e.message); } setLoading(false); }}
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1.5px solid ${P.border}`, background: '#fff', color: P.navy, cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="G" style={{ width: 18, height: 18 }} /> Google
+                </button>
+                <button type="button" onClick={async () => { setError(''); setLoading(true); try { await loginWithApple(); } catch(e){ setError(e.message); } setLoading(false); }}
+                  style={{ flex: 1, padding: '11px', borderRadius: 10, border: `1.5px solid ${P.border}`, background: '#000', color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 13, fontFamily: "'DM Sans', sans-serif", display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+                  <svg viewBox="0 0 384 512" style={{ width: 16, height: 16, fill: '#fff' }}><path d="M318.7 268.7c-.2-36.7 16.4-64.4 50-84.8-18.8-26.9-47.2-41.7-84.7-44.6-35.5-2.8-74.3 20.7-88.5 20.7-15 0-49.4-19.7-76.4-19.7C63.3 141.2 4 184.8 4 273.5q0 39.3 14.4 81.2c12.8 36.7 59 126.7 107.2 125.2 25.2-.6 43-17.9 75.8-17.9 31.8 0 48.3 17.9 76.4 17.9 48.6-.7 90.4-82.5 102.6-119.3-65.2-30.7-61.7-90-61.7-91.9zm-56.6-164.2c27.3-32.4 24.8-61.9 24-72.5-24.1 1.4-52 16.4-67.9 34.9-17.5 19.8-27.8 44.3-25.6 71.9 26.1 2 49.9-11.4 69.5-34.3z"/></svg> Apple
+                </button>
+              </div>
               <div style={{ textAlign: 'center', marginTop: 22, fontSize: 14, color: P.textMuted }}>
                 Don't have an account? <button onClick={() => setMode('register')} style={{ background: 'none', border: 'none', cursor: 'pointer', color: P.navy, fontWeight: 700, fontSize: 14 }}>Register</button>
               </div>
