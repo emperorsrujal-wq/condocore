@@ -103,5 +103,10 @@ service cloud.firestore {
       allow read: if isAuth() && (isManagerOrLandlord() || resource.data.tenantId == uid());
       allow write: if isAuth() && isManagerOrLandlord();
     }
+
+    // Evictions
+    match /evictions/{evId} {
+      allow read, write: if isAuth() && isManagerOrLandlord();
+    }
   }
 }

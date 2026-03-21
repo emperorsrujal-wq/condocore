@@ -31,7 +31,8 @@ const translations = {
     keys_access: 'Keys & Access',
     packages: 'Packages & Deliveries',
     deposits: 'Escrow & Deposits',
-    legal_forms: 'Legal Forms'
+    legal_forms: 'Legal Forms',
+    evictions: 'Eviction Timelines'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -63,7 +64,8 @@ const translations = {
     keys_access: 'Llaves y Acceso',
     packages: 'Paquetes y Entregas',
     deposits: 'Depósitos de Garantía',
-    legal_forms: 'Formularios Legales'
+    legal_forms: 'Formularios Legales',
+    evictions: 'Desalojos y Plazos'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -95,7 +97,8 @@ const translations = {
     keys_access: 'Clés et Accès',
     packages: 'Colis et Livraisons',
     deposits: 'Cautions Hautes',
-    legal_forms: 'Formulaires Légaux'
+    legal_forms: 'Formulaires Légaux',
+    evictions: 'Chronologies d\'Éviction'
   }
 };
 

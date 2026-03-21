@@ -230,4 +230,17 @@ export const updateDeposit = (id, data) =>
 
 export const deleteDeposit = (id) => deleteDoc(doc(db, 'deposits', id));
 
+// Evictions Phase 15
+export const subscribeEvictions = (callback) =>
+  onSnapshot(query(collection(db, 'evictions'), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addEviction = (data) =>
+  addDoc(collection(db, 'evictions'), { ...data, createdAt: serverTimestamp() });
+
+export const updateEviction = (id, data) =>
+  updateDoc(doc(db, 'evictions', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteEviction = (id) => deleteDoc(doc(db, 'evictions', id));
+
 export default app;
