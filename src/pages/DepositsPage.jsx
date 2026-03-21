@@ -2,8 +2,39 @@ import { useState, useEffect } from 'react';
 import { PiggyBank, Plus, Search, ChevronRight } from 'lucide-react';
 import { subscribeDeposits, subscribeTenantDeposits, addDeposit, updateDeposit, deleteDeposit, subscribeTenants } from '../firebase';
 import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { generateLMRStatementPDF } from '../utils/pdfGenerator';
+import { uploadFile, addDocument } from '../firebase';
 
 const FORM_DEFAULT = { tenantId: '', property: '', type: 'Security Deposit', amount: '', status: 'Held in Escrow', dateCollected: '', notes: '' };
+
+// Ontario Rent Increase Guideline (User specified 0% for 2024-25)
+const ONTARIO_LMR_RATES = {
+  2019: 0.018,
+  2020: 0.022,
+  2021: 0.000,
+  2022: 0.012,
+  2023: 0.025,
+  2024: 0.000,
+  2025: 0.000
+};
+
+const calculateLMRInterest = (amount, dateCollectedStr) => {
+  if (!dateCollectedStr || !amount) return { totalInterest: 0, breakdown: [] };
+  const _amt = Number(amount);
+  const startY = Number(dateCollectedStr.split('-')[0]);
+  const currentY = new Date().getFullYear();
+  let totalInterest = 0;
+  const breakdown = [];
+
+  for (let y = startY; y < currentY; y++) {
+    // Treat unknown historical rates as 0% for MVP simplicity
+    const rate = ONTARIO_LMR_RATES[y] || 0;
+    const earned = _amt * rate;
+    totalInterest += earned;
+    breakdown.push({ year: y, rate, earned });
+  }
+  return { totalInterest, breakdown };
+};
 
 export default function DepositsPage({ userProfile, onToast }) {
   const isTenant = userProfile?.role === 'tenant' || userProfile?.role === 'owner';
@@ -60,6 +91,48 @@ export default function DepositsPage({ userProfile, onToast }) {
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
 
+  const handleGenerateStatement = async (deposit) => {
+    const tenant = tenants.find(t => t.id === deposit.tenantId);
+    if (!tenant) return onToast('Tenant data missing', 'error');
+    
+    setLoading(true);
+    try {
+      const interestCalculations = calculateLMRInterest(deposit.amount, deposit.dateCollected);
+      const blob = await generateLMRStatementPDF(tenant, deposit, interestCalculations, userProfile?.name);
+      
+      const filename = `LMR_Interest_Statement_${tenant.name.replace(/\s+/g, '_')}_${new Date().getFullYear()}.pdf`;
+      const path = `documents/${filename}`;
+      const url = await uploadFile(blob, path);
+
+      await addDocument({
+        name: `LMR Annual Interest Statement`,
+        type: 'Report',
+        unit: tenant.unit,
+        tenantId: tenant.id,
+        url,
+        storagePath: path,
+        size: (blob.size / 1024).toFixed(1) + ' KB',
+        ext: 'PDF',
+        uploadedBy: userProfile?.name || 'System'
+      });
+
+      const localUrl = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = localUrl;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(localUrl);
+
+      onToast('LMR Statement Generated & Saved to Tenant Documents!');
+    } catch (e) {
+      console.error(e);
+      onToast(e.message, 'error');
+    }
+    setLoading(false);
+  };
+
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner size={32} /></div>;
 
   return (
@@ -104,6 +177,9 @@ export default function DepositsPage({ userProfile, onToast }) {
                 <TD>
                   {!isTenant && (
                     <div style={{ display: 'flex', gap: 6 }}>
+                      {d.type === 'Last Month Rent (LMR)' && d.dateCollected && (
+                        <button onClick={() => handleGenerateStatement(d)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#EAF7F2', color: P.success, cursor: 'pointer' }}>Print LMR Statement</button>
+                      )}
                       <button onClick={() => openEdit(d)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer' }}>Edit</button>
                       <button onClick={() => handleDelete(d.id)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer' }}>Del</button>
                     </div>

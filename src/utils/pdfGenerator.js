@@ -169,3 +169,48 @@ Landlord / Agent Signature                      Date
 
   return doc.output('blob');
 }
+
+export async function generateLMRStatementPDF(tenant, deposit, interestData, landlordName = 'Management') {
+  const doc = new jsPDF();
+  const dateStr = new Date().toLocaleDateString();
+  
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(16);
+  doc.text("ANNUAL LAST MONTH RENT (LMR) INTEREST STATEMENT", 105, 20, null, null, "center");
+
+  doc.setFontSize(11);
+  doc.setFont("helvetica", "normal");
+  
+  const textContent = `
+Date of Issue: ${dateStr}
+Landlord / Management: ${landlordName}
+
+Tenant(s): ${tenant.name}
+Rental Unit: Unit ${tenant.unit}, ${tenant.property || 'Property'}
+
+DEPOSIT DETAILS:
+Original LMR Deposit Amount: $${(Number(deposit.amount) || 0).toFixed(2)}
+Date Collected: ${deposit.dateCollected || 'Unknown'}
+
+INTEREST CALCULATION SUMMARY:
+Ontario law requires landlords to pay interest on the Last Month's Rent deposit annually.
+The interest rate is equal to the provincial rent increase guideline for that specific year.
+
+${interestData.breakdown.map(b => `Year: ${b.year} | Mandated Rate: ${(b.rate * 100).toFixed(1)}% | Accrued: $${b.earned.toFixed(2)}`).join('\n')}
+
+------------------------------------------------------
+TOTAL ACCRUED INTEREST OUTSTANDING: $${interestData.totalInterest.toFixed(2)}
+------------------------------------------------------
+
+This notice serves as the official financial statement of Trust Capital held on your behalf.
+Interest payments not remitted directly to the tenant may be implicitly applied toward future rent increases or capital deductions per RTA legislation.
+
+___________________________________             _________________
+Landlord / Agent Signature                      Date
+  `;
+
+  const splitBody = doc.splitTextToSize(textContent, 180);
+  doc.text(splitBody, 15, 35);
+
+  return doc.output('blob');
+}
