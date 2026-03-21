@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
-import { ClipboardList, Plus, Search, ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Minus, FileText } from 'lucide-react';
-import { subscribeMeetings, addMeeting, updateMeeting, deleteMeeting, uploadFile, addDocument } from '../firebase';
+import { subscribeMeetings, addMeeting, updateMeeting, deleteMeeting, uploadFile, addDocument, subscribeProperties, subscribeTenants, subscribeVotes } from '../firebase';
 import { P, Btn, Modal, Input, Select, PageHeader, Spinner, EmptyState } from '../components/UI';
+import { Vote } from 'lucide-react';
+import { useHOAMode } from '../contexts/HOAModeContext';
 import { jsPDF } from 'jspdf';
 
 const MEETING_TYPES = ['AGM (Annual General Meeting)', 'Special Meeting', 'Board Meeting', 'Emergency Meeting'];
@@ -55,13 +55,17 @@ Chairperson Signature                  Secretary Signature
 const FORM_DEFAULT = {
   title: '', type: 'Board Meeting', date: new Date().toISOString().split('T')[0],
   location: '', startTime: '', endTime: '', chairperson: '', secretary: '',
-  attendeeCount: '', quorumAchieved: true, notes: '', motions: []
+  attendeeCount: '', quorumAchieved: false, notes: '', motions: [],
+  propertyId: '', propertyName: ''
 };
 
 const MOTION_DEFAULT = { text: '', movedBy: '', secondedBy: '', result: 'Carried', votesFor: 0, votesAgainst: 0, votesAbstain: 0 };
 
 export default function BoardMeetingsPage({ userProfile, onToast }) {
+  const { label, isHOAMode } = useHOAMode();
   const [meetings, setMeetings] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [expanded, setExpanded] = useState(null);
@@ -70,22 +74,46 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(null);
+  const [meetingVotes, setMeetingVotes] = useState({}); // { meetingId: [votes] }
 
   useEffect(() => {
     if (!userProfile) return;
     const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
     if (!isPrivileged) { setLoading(false); return; }
 
-    const unsub = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
-    return () => unsub && unsub();
+    const u1 = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
+    const u2 = subscribeProperties(data => setProperties(data));
+    const u3 = subscribeTenants(data => setTenants(data));
+    
+    return () => { u1 && u1(); u2 && u2(); u3 && u3(); };
   }, [userProfile]);
+
+  useEffect(() => {
+    if (!expanded) return;
+    const unsub = subscribeVotes(expanded, data => {
+      setMeetingVotes(prev => ({ ...prev, [expanded]: data }));
+    });
+    return () => unsub();
+  }, [expanded]);
 
   const filtered = meetings.filter(m => {
     const q = search.toLowerCase();
     return m.title?.toLowerCase().includes(q) || m.type?.toLowerCase().includes(q);
   });
 
-  const F = (k) => ({ value: form[k] ?? '', onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
+  const F = (k) => ({ value: form[k] ?? '', onChange: e => setForm(f => {
+    const next = { ...f, [k]: e.target.value };
+    // Auto-quorum check
+    if (k === 'attendeeCount' || k === 'propertyId') {
+      const propId = k === 'propertyId' ? e.target.value : f.propertyId;
+      const attCount = k === 'attendeeCount' ? parseInt(e.target.value) || 0 : parseInt(f.attendeeCount) || 0;
+      const totalUnits = tenants.filter(t => t.propertyId === propId).length;
+      if (totalUnits > 0) {
+        next.quorumAchieved = attCount >= (totalUnits * 0.25);
+      }
+    }
+    return next;
+  }) });
 
   const updateMotion = (idx, key, val) => {
     const updated = [...(form.motions || [])];
@@ -99,7 +127,7 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
   const openEdit = (m) => { setForm(m); setEditing(m); setShowForm(true); };
 
   const handleSave = async () => {
-    if (!form.title || !form.date) return onToast('Title and date required.', 'error');
+    if (!form.title || !form.date || !form.propertyId) return onToast('Title, date, and building are required.', 'error');
     setSaving(true);
     try {
       if (editing) { await updateMeeting(editing.id, form); onToast('Meeting updated.'); }
@@ -135,7 +163,7 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
 
   return (
     <div>
-      <PageHeader title="Board Meeting Minutes" subtitle={`${meetings.length} meetings on record`}
+      <PageHeader title={isHOAMode ? "Board Meeting Minutes" : "Management Meetings"} subtitle={`${meetings.length} meetings on record`}
         action={<Btn onClick={openAdd}><Plus size={15} /> Log Meeting</Btn>} />
 
       <div style={{ marginBottom: 16, position: 'relative' }}>
@@ -164,6 +192,7 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
                     <div style={{ fontSize: 12, color: P.textMuted, marginTop: 2 }}>
                       {meeting.date} · {meeting.type} · {motions.length} motion{motions.length !== 1 ? 's' : ''}
                       {meeting.quorumAchieved ? <span style={{ color: P.success, marginLeft: 8 }}>✓ Quorum</span> : <span style={{ color: P.danger, marginLeft: 8 }}>✗ No Quorum</span>}
+                      {meeting.status === 'Active' && <span style={{ color: P.gold, marginLeft: 8, fontWeight: 700 }}>● Live Poll Open</span>}
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
@@ -193,23 +222,38 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
                       <>
                         <div style={{ fontSize: 13, fontWeight: 700, color: P.text, marginBottom: 10 }}>Motions ({motions.length})</div>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                          {motions.map((m, idx) => (
-                            <div key={idx} style={{ padding: '12px 14px', borderRadius: 10, background: P.bg, border: `1px solid ${P.border}` }}>
-                              <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Motion {idx + 1}: {m.text}</div>
-                              <div style={{ display: 'flex', gap: 16, fontSize: 12, color: P.textMuted, flexWrap: 'wrap' }}>
-                                <span>Moved: <b style={{ color: P.text }}>{m.movedBy || '—'}</b></span>
-                                <span>Seconded: <b style={{ color: P.text }}>{m.secondedBy || '—'}</b></span>
-                                <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                                  <ThumbsUp size={12} color={P.success} /> <b style={{ color: P.success }}>{m.votesFor}</b>
-                                  <ThumbsDown size={12} color={P.danger} style={{ marginLeft: 6 }} /> <b style={{ color: P.danger }}>{m.votesAgainst}</b>
-                                  <Minus size={12} color={P.textMuted} style={{ marginLeft: 6 }} /> <b>{m.votesAbstain}</b>
-                                </span>
-                                <span style={{ fontWeight: 700, color: m.result === 'Carried' ? P.success : m.result === 'Defeated' ? P.danger : P.textMuted }}>
-                                  → {m.result}
-                                </span>
+                          {motions.map((m, idx) => {
+                            const poll = (meetingVotes[meeting.id] || []).filter(v => v.motionIndex === idx);
+                            const pollYes = poll.filter(v => v.vote === 'Yes').length;
+                            const pollNo = poll.filter(v => v.vote === 'No').length;
+                            const pollAbs = poll.filter(v => v.vote === 'Abstain').length;
+
+                            return (
+                              <div key={idx} style={{ padding: '12px 14px', borderRadius: 10, background: P.bg, border: `1px solid ${P.border}` }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                  <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 6 }}>Motion {idx + 1}: {m.text}</div>
+                                  {poll.length > 0 && (
+                                    <div style={{ fontSize: 10, background: '#FFF9E6', padding: '2px 8px', borderRadius: 6, border: `1px solid ${P.gold}44`, display: 'flex', alignItems: 'center', gap: 4 }}>
+                                      <Vote size={10} color={P.gold} /> <b style={{ color: P.gold }}>Homeowner Poll: {pollYes}Y / {pollNo}N</b>
+                                    </div>
+                                  )}
+                                </div>
+                                <div style={{ display: 'flex', gap: 16, fontSize: 12, color: P.textMuted, flexWrap: 'wrap' }}>
+                                  <span>Moved: <b style={{ color: P.text }}>{m.movedBy || '—'}</b></span>
+                                  <span>Seconded: <b style={{ color: P.text }}>{m.secondedBy || '—'}</b></span>
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                                    <b style={{ color: P.text }}>Board:</b>
+                                    <ThumbsUp size={12} color={P.success} /> <b style={{ color: P.success }}>{m.votesFor}</b>
+                                    <ThumbsDown size={12} color={P.danger} style={{ marginLeft: 6 }} /> <b style={{ color: P.danger }}>{m.votesAgainst}</b>
+                                    <Minus size={12} color={P.textMuted} style={{ marginLeft: 6 }} /> <b>{m.votesAbstain}</b>
+                                  </span>
+                                  <span style={{ fontWeight: 700, color: m.result === 'Carried' ? P.success : m.result === 'Defeated' ? P.danger : P.textMuted }}>
+                                    → {m.result}
+                                  </span>
+                                </div>
                               </div>
-                            </div>
-                          ))}
+                            );
+                          })}
                         </div>
                       </>
                     )}
@@ -233,6 +277,19 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
               <div style={{ gridColumn: '1 / -1' }}><Input label="Meeting Title *" {...F('title')} placeholder="e.g. Q1 2025 Board Meeting" /></div>
               <Select label="Meeting Type" {...F('type')} options={MEETING_TYPES} />
+              <Select label="Status" {...F('status')} options={['Draft', 'Active', 'Completed']} />
+              <Select label="Building *" value={form.propertyId} onChange={e => {
+                const p = properties.find(prop => prop.id === e.target.value);
+                setForm(f => {
+                  const next = { ...f, propertyId: e.target.value, propertyName: p?.name || '' };
+                  // Re-calc quorum
+                  const totalUnits = tenants.filter(t => t.propertyId === e.target.value).length;
+                  if (totalUnits > 0) {
+                    next.quorumAchieved = (parseInt(f.attendeeCount) || 0) >= (totalUnits * 0.25);
+                  }
+                  return next;
+                });
+              }} options={[{ label: 'Select Building', value: '' }, ...properties.map(p => ({ label: p.name, value: p.id }))]} />
               <Input label="Date *" type="date" {...F('date')} />
               <Input label="Location" {...F('location')} placeholder="e.g. Building Lobby, Zoom" />
               <Input label="Chairperson" {...F('chairperson')} placeholder="Name of chair" />
@@ -240,7 +297,14 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
               <Input label="Start Time" type="time" {...F('startTime')} />
               <Input label="End Time" type="time" {...F('endTime')} />
               <Input label="Members Present" type="number" {...F('attendeeCount')} placeholder="0" />
-              <Select label="Quorum Achieved?" value={form.quorumAchieved ? 'yes' : 'no'} onChange={e => setForm(f => ({ ...f, quorumAchieved: e.target.value === 'yes' }))} options={[{ value: 'yes', label: 'Yes' }, { value: 'no', label: 'No' }]} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 14px', borderRadius: 9, background: form.quorumAchieved ? '#EAF7F2' : '#FDECEA', border: `1px solid ${form.quorumAchieved ? P.success : P.danger}`, marginTop: 24 }}>
+                <div style={{ fontWeight: 700, fontSize: 13, color: form.quorumAchieved ? P.success : P.danger }}>
+                  {form.quorumAchieved ? '✓ Quorum Achieved' : '✗ Quorum Not Met'}
+                </div>
+                <div style={{ fontSize: 11, color: P.textMuted }}>
+                  Required: {Math.ceil(tenants.filter(t => t.propertyId === form.propertyId).length * 0.25)} (25% of {tenants.filter(t => t.propertyId === form.propertyId).length} units)
+                </div>
+              </div>
             </div>
 
             <div style={{ marginTop: 12 }}><Input label="General Notes / Action Items" {...F('notes')} placeholder="Agenda items, follow-ups..." /></div>

@@ -1,15 +1,16 @@
 import { useState, useEffect } from 'react';
-import { Plus, Wrench } from 'lucide-react';
-import { subscribeMaintenance, subscribeTenantMaintenance, addMaintenanceRequest, updateMaintenanceRequest } from '../firebase';
+import { Plus, Wrench, User, Phone } from 'lucide-react';
+import { subscribeMaintenance, subscribeTenantMaintenance, addMaintenanceRequest, updateMaintenanceRequest, subscribeVendors } from '../firebase';
 import { P, StatusBadge, Btn, Modal, Input, Select, Textarea, PageHeader, Spinner, EmptyState } from '../components/UI';
 
-const FORM_DEFAULT = { title: '', unit: '', tenantName: '', tenantId: '', propertyName: '', category: 'Plumbing', priority: 'medium', notes: '' };
+const FORM_DEFAULT = { title: '', unit: '', tenantName: '', tenantId: '', propertyName: '', category: 'Plumbing', priority: 'medium', notes: '', vendorId: '' };
 
 export default function MaintenancePage({ onToast, userProfile, tenantData }) {
   const [requests, setRequests] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [filter, setFilter]     = useState('all');
   const [showAdd, setShowAdd]   = useState(false);
+  const [vendors, setVendors]   = useState([]);
   const [expanded, setExpanded] = useState(null);
   const [form, setForm]         = useState(FORM_DEFAULT);
   const [saving, setSaving]     = useState(false);
@@ -22,7 +23,8 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
     } else {
       unsub = subscribeMaintenance(data => { setRequests(data); setLoading(false); });
     }
-    return () => unsub && unsub();
+    const unsubV = subscribeVendors(data => setVendors(data));
+    return () => { if (unsub) unsub(); unsubV(); };
   }, [isTenant, tenantData?.id]);
 
   const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);
@@ -104,6 +106,27 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
                         <div style={{ marginTop: 14, padding: '10px 14px', background: P.bg, borderRadius: 9, borderLeft: `3px solid ${P.gold}`, fontSize: 13, color: P.textMuted }}>{r.notes}</div>
                       )}
 
+                      {/* Vendor Info */}
+                      {r.vendorId && (
+                        <div style={{ marginTop: 14, padding: '12px 16px', background: P.navy + '08', borderRadius: 10, border: `1px solid ${P.navy}15` }}>
+                          <div style={{ fontSize: 11, fontWeight: 700, color: P.navyLight, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Assigned Vendor</div>
+                          {vendors.find(v => v.id === r.vendorId) ? (
+                            (() => {
+                              const v = vendors.find(vend => vend.id === r.vendorId);
+                              return (
+                                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                  <div style={{ fontWeight: 700, fontSize: 14, color: P.navy }}>{v.name}</div>
+                                  <div style={{ display: 'flex', gap: 12 }}>
+                                    <a href={`tel:${v.phone}`} style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: P.info, textDecoration: 'none', fontWeight: 600 }}><Phone size={12} /> {v.phone}</a>
+                                    {v.contact && <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12, color: P.textMuted }}><User size={12} /> {v.contact}</div>}
+                                  </div>
+                                </div>
+                              );
+                            })()
+                          ) : <div style={{ fontSize: 12, color: P.textMuted }}>Vendor information unavailable.</div>}
+                        </div>
+                      )}
+
                       {/* Timeline */}
                       {r.updates?.length > 0 && (
                         <div style={{ marginTop: 16 }}>
@@ -127,7 +150,13 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
                       {!isTenant && r.status !== 'resolved' && (
                         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                           {r.status === 'open' && (
-                            <button onClick={() => handleStatusChange(r.id, 'in-progress')} style={{ fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: 'none', background: '#EAF0FB', color: P.info, cursor: 'pointer' }}>→ In Progress</button>
+                            <div style={{ display: 'flex', gap: 8 }}>
+                              <Select value={r.vendorId || ''} onChange={e => {
+                                updateMaintenanceRequest(r.id, { vendorId: e.target.value, status: 'in-progress', updates: [...(r.updates || []), { date: new Date().toLocaleDateString(), text: 'Vendor assigned and work in progress.' }] });
+                                onToast('Vendor assigned and status updated!');
+                              }} options={[{ value: '', label: 'Assign Vendor...' }, ...vendors.map(v => ({ value: v.id, label: v.name }))]} style={{ marginBottom: 0, minWidth: 200 }} />
+                              <button onClick={() => handleStatusChange(r.id, 'in-progress')} style={{ fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: 'none', background: '#EAF0FB', color: P.info, cursor: 'pointer' }}>Just In Progress</button>
+                            </div>
                           )}
                           <button onClick={() => handleStatusChange(r.id, 'resolved')} style={{ fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: 'none', background: '#EAF7F2', color: P.success, cursor: 'pointer' }}>✓ Mark Resolved</button>
                         </div>

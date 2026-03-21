@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { PiggyBank, Plus, Search, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
-import { subscribeReserveFund, addReserveFundEntry, updateReserveFundEntry, deleteReserveFundEntry } from '../firebase';
+import { subscribeReserveFund, addReserveFundEntry, updateReserveFundEntry, deleteReserveFundEntry, subscribeReserveProjects, addReserveProject, updateReserveProject, deleteReserveProject } from '../firebase';
 import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
 
 const CATEGORY_COLORS = {
@@ -11,24 +11,20 @@ const CATEGORY_COLORS = {
 };
 
 const FUND_CATEGORIES = ['Contribution', 'Expenditure', 'Special Levy', 'Interest'];
-
-const PLANNED_ITEMS = [
-  { item: 'Roof Replacement', year: 2028, estimatedCost: 180000 },
-  { item: 'Elevator Modernization', year: 2027, estimatedCost: 95000 },
-  { item: 'Parking Garage Repaving', year: 2026, estimatedCost: 45000 },
-  { item: 'Window Replacement', year: 2030, estimatedCost: 220000 },
-  { item: 'Lobby Renovation', year: 2029, estimatedCost: 60000 },
-];
+const PROJECT_DEFAULT = { item: '', year: new Date().getFullYear() + 1, estimatedCost: '' };
 
 const FORM_DEFAULT = { description: '', category: 'Contribution', amount: '', date: new Date().toISOString().split('T')[0], notes: '' };
 
 export default function ReserveFundPage({ userProfile, onToast }) {
   const [entries, setEntries] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [editingProject, setEditingProject] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
+  const [projectForm, setProjectForm] = useState(PROJECT_DEFAULT);
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
@@ -36,15 +32,16 @@ export default function ReserveFundPage({ userProfile, onToast }) {
     const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
     if (!isPrivileged) { setLoading(false); return; }
 
-    const unsub = subscribeReserveFund(data => { setEntries(data); setLoading(false); });
-    return () => unsub && unsub();
+    const unsubE = subscribeReserveFund(data => { setEntries(data); setLoading(false); });
+    const unsubP = subscribeReserveProjects(data => setProjects(data));
+    return () => { unsubE && unsubE(); unsubP && unsubP(); };
   }, [userProfile]);
 
   const totalContributions = entries.filter(e => e.category === 'Contribution' || e.category === 'Special Levy' || e.category === 'Interest').reduce((a, e) => a + (Number(e.amount) || 0), 0);
   const totalExpenditures  = entries.filter(e => e.category === 'Expenditure').reduce((a, e) => a + (Number(e.amount) || 0), 0);
   const currentBalance = totalContributions - totalExpenditures;
-  const totalPlanned = PLANNED_ITEMS.reduce((a, p) => a + p.estimatedCost, 0);
-  const fundedPercent = Math.min(100, Math.round((currentBalance / totalPlanned) * 100));
+  const totalPlanned = projects.reduce((a, p) => a + (Number(p.estimatedCost) || 0), 0);
+  const fundedPercent = totalPlanned > 0 ? Math.min(100, Math.round((currentBalance / totalPlanned) * 100)) : 100;
 
   const filtered = entries.filter(e => {
     const q = search.toLowerCase();
@@ -64,6 +61,24 @@ export default function ReserveFundPage({ userProfile, onToast }) {
       setShowForm(false);
     } catch (e) { onToast(e.message, 'error'); }
     setSaving(false);
+  };
+
+  const handleSaveProject = async () => {
+    if (!projectForm.item || !projectForm.estimatedCost) return onToast('Project name and cost required.', 'error');
+    setSaving(true);
+    try {
+      const data = { ...projectForm, year: parseInt(projectForm.year), estimatedCost: parseFloat(projectForm.estimatedCost) };
+      if (editingProject) { await updateReserveProject(editingProject.id, data); onToast('Project updated.'); }
+      else { await addReserveProject(data); onToast('Project added.'); }
+      setShowProjectForm(false);
+    } catch (e) { onToast(e.message, 'error'); }
+    setSaving(false);
+  };
+
+  const handleDeleteProject = async (id) => {
+    if (!confirm('Delete this project?')) return;
+    try { await deleteReserveProject(id); onToast('Project deleted.'); }
+    catch (e) { onToast(e.message, 'error'); }
   };
 
   const handleDelete = async (id) => {
@@ -94,7 +109,7 @@ export default function ReserveFundPage({ userProfile, onToast }) {
         <div style={{ background: P.card, borderRadius: 14, padding: 20, border: `1px solid ${P.border}` }}>
           <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: P.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>Upcoming Planned Expenses</div>
           <div style={{ fontSize: 28, fontWeight: 800, color: P.text }}>${totalPlanned.toLocaleString()}</div>
-          <div style={{ fontSize: 12, color: P.textMuted, marginTop: 4 }}>Across {PLANNED_ITEMS.length} scheduled capital projects</div>
+          <div style={{ fontSize: 12, color: P.textMuted, marginTop: 4 }}>Across {projects.length} scheduled capital projects</div>
         </div>
         <div style={{ background: P.card, borderRadius: 14, padding: 20, border: `1px solid ${P.border}` }}>
           <div style={{ fontSize: 12, fontWeight: 700, textTransform: 'uppercase', color: P.textMuted, letterSpacing: 0.5, marginBottom: 8 }}>Reserve Fund Adequacy</div>
@@ -110,21 +125,29 @@ export default function ReserveFundPage({ userProfile, onToast }) {
 
       {/* Planned Capital Projects */}
       <div style={{ background: P.card, borderRadius: 14, border: `1px solid ${P.border}`, padding: 20, marginBottom: 24 }}>
-        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
-          <TrendingUp size={16} color={P.navy} /> Scheduled Capital Projects
+        <div style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}><TrendingUp size={16} color={P.navy} /> Scheduled Capital Projects</div>
+          <Btn size="xs" variant="ghost" onClick={() => { setProjectForm(PROJECT_DEFAULT); setEditingProject(null); setShowProjectForm(true); }}>Manage Projects</Btn>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 10 }}>
-          {PLANNED_ITEMS.map(p => {
+          {projects.length === 0 ? <div style={{ fontSize: 13, color: P.textMuted, py: 10 }}>No projects scheduled.</div> : 
+           projects.map(p => {
             const isFunded = currentBalance >= p.estimatedCost;
             return (
-              <div key={p.item} style={{ padding: '12px 14px', borderRadius: 10, background: P.bg, border: `1px solid ${P.border}` }}>
+              <div key={p.id} style={{ padding: '12px 14px', borderRadius: 10, background: P.bg, border: `1px solid ${P.border}`, position: 'relative' }} className="group">
                 <div style={{ fontSize: 13, fontWeight: 600, color: P.text }}>{p.item}</div>
                 <div style={{ fontSize: 12, color: P.textMuted, marginTop: 2 }}>Target Year: {p.year}</div>
                 <div style={{ fontSize: 14, fontWeight: 700, color: isFunded ? P.success : P.danger, marginTop: 6 }}>
-                  ${p.estimatedCost.toLocaleString()}
+                  ${(p.estimatedCost||0).toLocaleString()}
                 </div>
-                <div style={{ fontSize: 11, color: isFunded ? P.success : P.textMuted }}>
-                  {isFunded ? '✓ Funded' : '○ Unfunded'}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
+                  <div style={{ fontSize: 11, color: isFunded ? P.success : P.textMuted }}>
+                    {isFunded ? '✓ Funded' : '○ Unfunded'}
+                  </div>
+                  <div style={{ display: 'flex', gap: 4 }}>
+                    <button onClick={() => { setProjectForm(p); setEditingProject(p); setShowProjectForm(true); }} style={{ fontSize: 10, color: P.gold, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Edit</button>
+                    <button onClick={() => handleDeleteProject(p.id)} style={{ fontSize: 10, color: P.danger, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 700 }}>Del</button>
+                  </div>
                 </div>
               </div>
             );
@@ -184,6 +207,22 @@ export default function ReserveFundPage({ userProfile, onToast }) {
           <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <Btn variant="ghost" onClick={() => setShowForm(false)} style={{ flex: 1 }}>Cancel</Btn>
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Save Entry'}</Btn>
+          </div>
+        </Modal>
+      )}
+
+      {showProjectForm && (
+        <Modal title={editingProject ? 'Edit Project' : 'Add Capital Project'} onClose={() => setShowProjectForm(false)}>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+            <div style={{ gridColumn: '1 / -1' }}>
+              <Input label="Project Name *" value={projectForm.item} onChange={e => setProjectForm({ ...projectForm, item: e.target.value })} placeholder="e.g. Roof Replacement" />
+            </div>
+            <Input label="Target Year *" type="number" value={projectForm.year} onChange={e => setProjectForm({ ...projectForm, year: e.target.value })} />
+            <Input label="Estimated Cost ($) *" type="number" value={projectForm.estimatedCost} onChange={e => setProjectForm({ ...projectForm, estimatedCost: e.target.value })} />
+          </div>
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
+            <Btn variant="ghost" onClick={() => setShowProjectForm(false)} style={{ flex: 1 }}>Cancel</Btn>
+            <Btn onClick={handleSaveProject} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Save Project'}</Btn>
           </div>
         </Modal>
       )}

@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Plus, Building2, MapPin, List, Edit, Trash2 } from 'lucide-react';
 import { subscribeProperties, addProperty, updateProperty, deleteProperty } from '../firebase';
 import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Table, TR, TD, Spinner, EmptyState, StatCard } from '../components/UI';
+import { useHOAMode } from '../contexts/HOAModeContext';
 
 const FORM_DEFAULT = { name: '', address: '', type: 'Residential', units: '', description: '', amenities: '' };
 
 export default function PropertiesPage({ onToast }) {
+  const { label, isHOAMode } = useHOAMode();
   const [properties, setProperties] = useState([]);
   const [loading, setLoading]       = useState(true);
   const [showForm, setShowForm]     = useState(false);
@@ -59,8 +61,8 @@ export default function PropertiesPage({ onToast }) {
 
   return (
     <div>
-      <PageHeader title="Property Portfolio" subtitle={`${properties.length} managed properties`}
-        action={<Btn onClick={openAdd}><Plus size={15} /> Add Property</Btn>} />
+      <PageHeader title={isHOAMode ? "Building Portfolio" : "Property Portfolio"} subtitle={`${properties.length} managed ${isHOAMode ? 'buildings' : 'properties'}`}
+        action={<Btn onClick={openAdd}><Plus size={15} /> Add {isHOAMode ? 'Building' : 'Property'}</Btn>} />
 
       <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
         <StatCard label="Total Properties" value={properties.length} color={P.navyLight} icon="🏢" />
@@ -69,9 +71,9 @@ export default function PropertiesPage({ onToast }) {
       </div>
 
       {properties.length === 0
-        ? <EmptyState icon="🏢" title="No properties found" body="Start by adding your first building to CanadaCore." action={<Btn onClick={openAdd}><Plus size={14} /> Add Property</Btn>} />
+        ? <EmptyState icon="🏢" title={isHOAMode ? "No buildings found" : "No properties found"} body={`Start by adding your first ${isHOAMode ? 'building' : 'property'} to CanadaCore.`} action={<Btn onClick={openAdd}><Plus size={14} /> Add {isHOAMode ? 'Building' : 'Property'}</Btn>} />
         : (
-          <Table headers={['Property', 'Address', 'Type', 'Units', 'Amenities', '']}>
+          <Table headers={[isHOAMode ? 'Building' : 'Property', 'Address', 'Type', 'Units', 'Amenities', '']}>
             {properties.map((p, i) => (
               <TR key={p.id} idx={i}>
                 <TD>
@@ -105,18 +107,18 @@ export default function PropertiesPage({ onToast }) {
         )}
 
       {showForm && (
-        <Modal title={editing ? 'Edit Property' : 'Add New Property'} onClose={() => setShowForm(false)}>
+        <Modal title={editing ? (isHOAMode ? 'Edit Building' : 'Edit Property') : (isHOAMode ? 'Add New Building' : 'Add New Property')} onClose={() => setShowForm(false)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
             <div style={{ gridColumn: 'span 2' }}>
-              <Input label="Building Name *" {...F('name')} placeholder="e.g. Harborview Condominiums" />
+              <Input label="Building Name *" helpText="The common name for this building or complex." {...F('name')} placeholder="e.g. Harborview Condominiums" />
             </div>
             <div style={{ gridColumn: 'span 2' }}>
-              <Input label="Address *" {...F('address')} placeholder="Full street address, city, province" />
+              <Input label="Address *" helpText="The full legal address of the property." {...F('address')} placeholder="Full street address, city, province" />
             </div>
-            <Select label="Property Type" {...F('type')} options={['Residential', 'Commercial', 'Mixed-Use', 'Industrial']} />
-            <Input label="Total Units" type="number" {...F('units')} />
+            <Select label="Property Type" helpText="Governs which management modules (HOA, Condo, etc.) are available." {...F('type')} options={['Residential', 'Condo', 'HOA', 'Single Unit', 'Multi-Family', 'Commercial', 'Mixed-Use', 'Industrial']} />
+            <Input label="Total Units" helpText="The total number of keys or individual property units." type="number" {...F('units')} />
           </div>
-          <Input label="Amenities (comma separated)" {...F('amenities')} placeholder="e.g. Pool, Gym, Concierge, Underground Parking" />
+          <Input label="Amenities (comma separated)" helpText="Common features like Gym, Pool, or Parking." {...F('amenities')} placeholder="e.g. Pool, Gym, Concierge, Underground Parking" />
           <Textarea label="Description" {...F('description')} placeholder="Optional building description..." rows={3} />
           
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>

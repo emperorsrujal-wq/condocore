@@ -1,27 +1,32 @@
 import { useState, useEffect } from 'react';
-import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements } from '../firebase';
-import { P, StatCard, Card, StatusBadge, Spinner } from '../components/UI';
+import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements, subscribeMeetings, subscribeVotes, submitVote } from '../firebase';
+import { P, StatCard, Card, StatusBadge, Spinner, Btn } from '../components/UI';
+import { Vote, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { useHOAMode } from '../contexts/HOAModeContext';
 
 export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
+  const { label, isHOAMode } = useHOAMode();
   const [tenants,  setTenants]  = useState([]);
   const [payments, setPayments] = useState([]);
   const [maint,    setMaint]    = useState([]);
   const [notices,  setNotices]  = useState([]);
+  const [meetings, setMeetings] = useState([]);
+  const [myVotes,  setMyVotes]  = useState([]);
   const [loading,  setLoading]  = useState(true);
-
-  useEffect(() => {
-    let count = 0;
-    const done = () => { count++; if (count >= 3) setLoading(false); };
-    const u1 = subscribeTenants(d => { setTenants(d); done(); });
-    const u2 = subscribePayments(d => { setPayments(d); done(); });
-    const u3 = subscribeMaintenance(d => { setMaint(d); done(); });
-    const u4 = subscribeAnnouncements(d => setNotices(d));
-    return () => { u1(); u2(); u3(); u4(); };
-  }, []);
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><Spinner size={36} /></div>;
 
   const role = userProfile?.role;
+
+  useEffect(() => {
+    if (!role || role !== 'tenant' || !meetings.length) return;
+    const active = meetings.find(m => m.status === 'Active');
+    if (!active) { setMyVotes([]); return; }
+    const unsub = subscribeVotes(active.id, data => {
+      setMyVotes(data.filter(v => v.userId === userProfile.uid));
+    });
+    return () => unsub();
+  }, [role, meetings, userProfile.uid]);
 
   // Metrics
   const activeT    = tenants.filter(t => t.status === 'active').length;
@@ -52,15 +57,19 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
             <h1 style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 26, color: '#fff', margin: '0 0 4px' }}>{userProfile.name}</h1>
             <p style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 18px', fontSize: 13 }}>Unit {tenantData.unit} · {tenantData.property}</p>
             <div style={{ display: 'flex', gap: 10 }}>
-              <button onClick={() => onNavigate('my-payments')} style={{ padding: '9px 18px', borderRadius: 9, background: P.gold, border: 'none', color: P.navy, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>Pay Rent</button>
-              <button onClick={() => onNavigate('maintenance')} style={{ padding: '9px 18px', borderRadius: 9, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>Submit Request</button>
+              <button onClick={() => onNavigate('my-payments')} style={{ padding: '9px 18px', borderRadius: 9, background: P.gold, border: 'none', color: P.navy, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
+                {label('my-payments', 'Pay Rent')}
+              </button>
+              <button onClick={() => onNavigate('maintenance')} style={{ padding: '9px 18px', borderRadius: 9, background: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.2)', color: '#fff', fontWeight: 600, fontSize: 13, cursor: 'pointer' }}>
+                {label('maintenance', 'Submit Request')}
+              </button>
             </div>
           </div>
         </div>
 
         <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
-          <StatCard label="Monthly Rent" value={`$${(tenantData.rent || 0).toLocaleString()}`} sub="Per month" color={pendingPay ? P.danger : P.success} />
-          <StatCard label="Lease Ends" value={tenantData.leaseEnd || '—'} color={P.gold} />
+          <StatCard label={isHOAMode ? "Monthly Dues" : "Monthly Rent"} value={`$${(tenantData.rent || 0).toLocaleString()}`} sub="Per month" color={pendingPay ? P.danger : P.success} />
+          <StatCard label={isHOAMode ? "Ownership Entry" : "Lease Ends"} value={tenantData.leaseEnd || '—'} color={P.gold} />
           <StatCard label="Open Requests" value={myMaint.filter(m => m.status !== 'resolved').length} color={P.warning} />
         </div>
 
@@ -86,6 +95,54 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
               ))}
           </Card>
         </div>
+
+        {/* Governance & Voting Section */}
+        {isHOAMode && meetings.filter(m => m.status === 'Active').length > 0 && (
+          <Card style={{ padding: 22, marginTop: 18, border: `1.5px solid ${P.gold}44` }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: '#FFF9E6', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Vote size={20} color={P.gold} />
+              </div>
+              <div>
+                <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 18, color: P.text }}>Board Governance & Voting</div>
+                <div style={{ fontSize: 12, color: P.textMuted }}>Cast your vote on active building motions</div>
+              </div>
+            </div>
+
+            {meetings.filter(m => m.status === 'Active').map(m => (
+              <div key={m.id} style={{ background: P.bg, borderRadius: 12, padding: 16, border: `1px solid ${P.border}` }}>
+                <div style={{ fontSize: 14, fontWeight: 700, marginBottom: 12 }}>Meeting: {m.title} ({m.date})</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                  {(m.motions || []).map((motion, idx) => {
+                    const myVote = myVotes.find(v => v.motionIndex === idx);
+                    return (
+                      <div key={idx} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#fff', padding: '12px 14px', borderRadius: 9, border: `1px solid ${P.border}` }}>
+                        <div style={{ flex: 1, paddingRight: 10 }}>
+                          <div style={{ fontSize: 13, fontWeight: 600 }}>{motion.text}</div>
+                          {myVote && <div style={{ fontSize: 11, color: P.success, fontWeight: 700, marginTop: 4 }}>✓ Your Vote: {myVote.vote}</div>}
+                        </div>
+                        <div style={{ display: 'flex', gap: 6 }}>
+                          <button onClick={() => submitVote(m.id, `${userProfile.uid}_${idx}`, { userId: userProfile.uid, motionIndex: idx, vote: 'Yes' })}
+                            style={{ padding: '6px 12px', borderRadius: 7, border: myVote?.vote === 'Yes' ? `2px solid ${P.success}` : `1px solid ${P.border}`, background: myVote?.vote === 'Yes' ? '#EAF7F2' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <CheckCircle2 size={14} color={P.success} /> <span style={{ fontSize: 12, fontWeight: 600 }}>Yes</span>
+                          </button>
+                          <button onClick={() => submitVote(m.id, `${userProfile.uid}_${idx}`, { userId: userProfile.uid, motionIndex: idx, vote: 'No' })}
+                            style={{ padding: '6px 12px', borderRadius: 7, border: myVote?.vote === 'No' ? `2px solid ${P.danger}` : `1px solid ${P.border}`, background: myVote?.vote === 'No' ? '#FDECEA' : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <XCircle size={14} color={P.danger} /> <span style={{ fontSize: 12, fontWeight: 600 }}>No</span>
+                          </button>
+                          <button onClick={() => submitVote(m.id, `${userProfile.uid}_${idx}`, { userId: userProfile.uid, motionIndex: idx, vote: 'Abstain' })}
+                            style={{ padding: '6px 12px', borderRadius: 7, border: myVote?.vote === 'Abstain' ? `2px solid ${P.textMuted}` : `1px solid ${P.border}`, background: myVote?.vote === 'Abstain' ? P.bg : '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                            <MinusCircle size={14} color={P.textMuted} /> <span style={{ fontSize: 12, fontWeight: 600 }}>Abstain</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </Card>
+        )}
       </div>
     );
   }
@@ -102,9 +159,9 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
 
       {/* KPIs */}
       <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
-        <StatCard label="Active Tenants" value={activeT} sub={`${expiring} expiring`} color={P.navyLight} icon="👤" />
-        <StatCard label="Rent Collected" value={`$${collected.toLocaleString()}`} sub={`${colRate}% of $${totalRent.toLocaleString()}`} color={P.success} icon="💰" />
-        <StatCard label="Open Maintenance" value={openMaint} sub="Requests open" color={openMaint > 0 ? P.danger : P.success} icon="🔧" />
+        <StatCard label={label('tenants', 'Active Tenants')} value={activeT} sub={`${expiring} expiring`} color={P.navyLight} icon="👤" />
+        <StatCard label={label('rent', 'Rent') + " Collected"} value={`$${collected.toLocaleString()}`} sub={`${colRate}% of $${totalRent.toLocaleString()}`} color={P.success} icon="💰" />
+        <StatCard label={"Open " + label('maintenance', 'Maintenance')} value={openMaint} sub="Requests open" color={openMaint > 0 ? P.danger : P.success} icon="🔧" />
         <StatCard label="Overdue Payments" value={overdue} sub="Need follow-up" color={overdue > 0 ? P.danger : P.success} icon="⚠️" />
       </div>
 

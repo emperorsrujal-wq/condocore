@@ -28,7 +28,8 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
   }, [isTenant, tenantData?.id]);
 
   const TYPES = ['All', 'Lease', 'Inspection', 'Notice', 'Insurance', 'Report', 'Other'];
-  const filtered = filterType === 'All' ? documents : documents.filter(d => d.type === filterType);
+  const filtered = (filterType === 'All' ? documents : documents.filter(d => d.type === filterType))
+    .filter(d => !isTenant || d.status !== 'pending_approval');
 
   const handleUpload = async () => {
     if (!file) return onToast('Please select a file.', 'error');

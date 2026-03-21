@@ -2,11 +2,13 @@ import { useState, useEffect } from 'react';
 import { Plus, Search, Mail, Phone, Home, Calendar, DollarSign } from 'lucide-react';
 import { subscribeTenants, addTenant, updateTenant, deleteTenant, subscribeProperties, uploadFile, addDocument } from '../firebase';
 import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, Avatar } from '../components/UI';
+import { useHOAMode } from '../contexts/HOAModeContext';
 import { generateLeasePDF } from '../utils/pdfGenerator';
 
 const FORM_DEFAULT = { name: '', email: '', phone: '', unit: '', property: '', leaseStart: '', leaseEnd: '', rent: '', status: 'active', type: 'Condo', pets: [], occupants: [] };
 
 export default function TenantsPage({ onToast }) {
+  const { label, isHOAMode } = useHOAMode();
   const [tenants, setTenants]   = useState([]);
   const [loading, setLoading]   = useState(true);
   const [search, setSearch]     = useState('');
@@ -120,8 +122,8 @@ export default function TenantsPage({ onToast }) {
 
   return (
     <div>
-      <PageHeader title="Tenants & Leases" subtitle={`${tenants.length} tenants across all properties`}
-        action={<Btn onClick={openAdd}><Plus size={15} /> Add Tenant</Btn>} />
+      <PageHeader title={label('tenants', 'Tenants & Leases')} subtitle={`${tenants.length} ${isHOAMode ? 'homeowners' : 'tenants'} across all properties`}
+        action={<Btn onClick={openAdd}><Plus size={15} /> Add {label('tenant', 'Tenant')}</Btn>} />
 
       {/* Filters */}
       <div style={{ display: 'flex', gap: 10, marginBottom: 20, flexWrap: 'wrap' }}>
@@ -139,9 +141,9 @@ export default function TenantsPage({ onToast }) {
 
       {/* Table */}
       {filtered.length === 0
-        ? <EmptyState icon="👤" title="No tenants found" body={search ? `No results for "${search}"` : 'Add your first tenant to get started.'} action={<Btn onClick={openAdd}><Plus size={14} /> Add Tenant</Btn>} />
+        ? <EmptyState icon="👤" title={isHOAMode ? "No homeowners found" : "No tenants found"} body={search ? `No results for "${search}"` : `Add your first ${isHOAMode ? 'homeowner' : 'tenant'} to get started.`} action={<Btn onClick={openAdd}><Plus size={14} /> Add {label('tenant', 'Tenant')}</Btn>} />
         : (
-          <Table headers={['Tenant', 'Unit / Property', 'Lease Period', 'Rent', 'Status', '']}>
+          <Table headers={[label('tenant', 'Tenant'), isHOAMode ? 'Unit / Building' : 'Unit / Property', isHOAMode ? 'Ownership Period' : 'Lease Period', label('rent', 'Rent'), 'Status', '']}>
             {filtered.map((t, i) => (
               <TR key={t.id} idx={i} onClick={() => setSelected(t)}>
                 <TD>
@@ -173,11 +175,11 @@ export default function TenantsPage({ onToast }) {
             {[
               { icon: Mail, label: 'Email', val: selected.email },
               { icon: Phone, label: 'Phone', val: selected.phone },
-              { icon: Home, label: 'Unit', val: `${selected.unit} (${selected.type})` },
-              { icon: Home, label: 'Property', val: selected.property },
-              { icon: Calendar, label: 'Lease Start', val: selected.leaseStart },
-              { icon: Calendar, label: 'Lease End', val: selected.leaseEnd },
-              { icon: DollarSign, label: 'Monthly Rent', val: `$${(selected.rent||0).toLocaleString()}` },
+              { icon: Home, label: isHOAMode ? 'Unit' : 'Unit', val: `${selected.unit} (${selected.type})` },
+              { icon: Home, label: isHOAMode ? 'Building' : 'Property', val: selected.property },
+              { icon: Calendar, label: isHOAMode ? 'Ownership Start' : 'Lease Start', val: selected.leaseStart },
+              { icon: Calendar, label: isHOAMode ? 'Ownership End' : 'Lease End', val: selected.leaseEnd },
+              { icon: DollarSign, label: isHOAMode ? 'Monthly Dues' : 'Monthly Rent', val: `$${(selected.rent||0).toLocaleString()}` },
             ].map(({ icon: Icon, label, val }) => (
               <div key={label} style={{ background: P.bg, borderRadius: 9, padding: '11px 14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}><Icon size={12} color={P.gold} /><span style={{ fontSize: 10, color: P.textMuted, textTransform: 'uppercase', fontWeight: 700 }}>{label}</span></div>
@@ -235,7 +237,7 @@ export default function TenantsPage({ onToast }) {
             <StatusBadge status={selected.status} />
             <div style={{ display: 'flex', gap: 8 }}>
               <Btn variant="primary" size="sm" onClick={() => handleGenerateLease(selected)} disabled={generating}>
-                {generating ? 'Generating...' : 'Generate Lease'}
+                {generating ? 'Generating...' : isHOAMode ? 'Unit Certificate' : 'Generate Lease'}
               </Btn>
               <Btn variant="ghost" size="sm" onClick={() => openEdit(selected)}>Edit</Btn>
               <Btn variant="danger" size="sm" onClick={() => handleDelete(selected.id)}>Delete</Btn>
@@ -246,25 +248,33 @@ export default function TenantsPage({ onToast }) {
 
       {/* Add/Edit Modal */}
       {showForm && (
-        <Modal title={editing ? 'Edit Tenant' : 'Add New Tenant'} onClose={() => setShowForm(false)}>
+        <Modal title={editing ? (isHOAMode ? 'Edit Homeowner' : 'Edit Tenant') : (isHOAMode ? 'Add New Homeowner' : 'Add New Tenant')} onClose={() => setShowForm(false)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
-            <Input label="Full Name *" {...F('name')} />
-            <Input label="Email *" type="email" {...F('email')} />
-            <Input label="Phone" {...F('phone')} />
-            <Input label="Unit Number *" {...F('unit')} placeholder="e.g. 1204" />
-            <Select label="Property Name" {...F('property')} options={['', ...properties.map(p => p.name)]} />
-            <Input label="Monthly Rent ($)" type="number" {...F('rent')} />
-            <Input label="Lease Start" type="date" {...F('leaseStart')} />
-            <Input label="Lease End" type="date" {...F('leaseEnd')} />
+            <div style={{ gridColumn: 'span 2' }}>
+              <Input label={isHOAMode ? "Homeowner Full Name *" : "Tenant Full Name *"} {...F('name')} placeholder="John Doe" />
+            </div>
+            <Input label="Email Address *" type="email" {...F('email')} placeholder="john@example.com" />
+            <Input label="Phone Number" {...F('phone')} placeholder="+1 (555) 000-0000" />
+            <div style={{ gridColumn: 'span 2' }}>
+              <Select label={isHOAMode ? "Building *" : "Property *"} value={form.propertyId} onChange={e => {
+                const p = properties.find(prop => prop.id === e.target.value);
+                setForm(f => ({ ...f, propertyId: e.target.value, property: p?.name || '' }));
+              }} options={[{ label: `Select ${isHOAMode ? 'Building' : 'Property'}`, value: '' }, ...properties.map(p => ({ label: p.name, value: p.id }))]} />
+            </div>
+            <Input label="Unit Number *" {...F('unit')} placeholder="101" />
+            <Select label="Unit Type" {...F('type')} options={['Residential', 'Commercial', 'Parking', 'Locker']} />
+            <Input label={isHOAMode ? "Ownership Start Date" : "Lease Start Date"} type="date" {...F('leaseStart')} />
+            <Input label={isHOAMode ? "Ownership End Date" : "Lease End Date"} type="date" {...F('leaseEnd')} />
+            <Input label={isHOAMode ? "Monthly Dues ($)" : "Monthly Rent ($)"} type="number" {...F('rent')} placeholder="0.00" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
             <Select label="Status" {...F('status')} options={['active', 'expiring', 'overdue']} />
-            <Select label="Unit Type" {...F('type')} options={['Condo', 'Basement', 'Penthouse', 'Studio']} />
+            <Select label="Classification" {...F('type')} options={isHOAMode ? ['Owner-Occupied', 'Tenanted', 'Vacant'] : ['Standard', 'Corporate', 'Short-term']} />
           </div>
-          <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
             <Btn variant="ghost" onClick={() => setShowForm(false)} style={{ flex: 1 }}>Cancel</Btn>
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>
-              {saving ? 'Saving...' : editing ? 'Update Tenant' : 'Add Tenant'}
+              {saving ? 'Saving...' : editing ? (isHOAMode ? 'Update Homeowner' : 'Update Tenant') : (isHOAMode ? 'Add Homeowner' : 'Add Tenant')}
             </Btn>
           </div>
         </Modal>

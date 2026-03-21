@@ -28,6 +28,8 @@ import ReserveFundPage   from './pages/ReserveFundPage';
 import BoardMeetingsPage from './pages/BoardMeetingsPage';
 import SpecialAssessmentsPage from './pages/SpecialAssessmentsPage';
 import AnonymousReportPage from './pages/AnonymousReportPage';
+import VendorsPage from './pages/VendorsPage';
+import RegistryPage from './pages/RegistryPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
@@ -47,6 +49,8 @@ const ALL_PAGES = [
   { id: 'messages',      label: 'messages',         icon: MessageSquare },
   { id: 'keys',          label: 'keys_access',      icon: Key },
   { id: 'packages',      label: 'packages',         icon: Package },
+  { id: 'vendors',       label: 'vendors',          icon: Users },
+  { id: 'registry',      label: 'registry',         icon: BookOpen },
   { id: 'legal-forms',   label: 'legal_forms',      icon: FileText },
   { id: 'evictions',     label: 'evictions',        icon: Shield },
   { id: 'violations',    label: 'violations',       icon: AlertTriangle },
@@ -59,8 +63,8 @@ const ALL_PAGES = [
 ];
 
 const ROLE_NAV = {
-  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings'],
-  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings'],
+  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry'],
+  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry'],
   tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings'],
   owner:    ['dashboard', 'announcements', 'messages', 'settings'],
 };
@@ -70,7 +74,7 @@ const ROLE_GROUPS = {
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
+    { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
@@ -79,7 +83,7 @@ const ROLE_GROUPS = {
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
-    { label: 'operations',    pages: ['maintenance', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
+    { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
   ],
@@ -102,15 +106,24 @@ const PAGE_TITLES = {
   'my-payments': 'my_payments', deposits: 'deposits', maintenance: 'maintenance', documents: 'documents',
   'my-documents': 'my_documents', announcements: 'announcements', 'legal-forms': 'legal_forms', evictions: 'evictions',
   violations: 'violations', 'reserve-fund': 'reserve_fund', 'board-meetings': 'board_meetings', assessments: 'assessments',
-  messages: 'messages', keys: 'keys_access', packages: 'packages', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
+  messages: 'messages', keys: 'keys_access', packages: 'packages', vendors: 'vendors', registry: 'registry', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
 function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLogout }) {
   const { t } = useLanguage();
-  const { label: hoaLabel } = useHOAMode();
+  const { label: hoaLabel, isHOAMode } = useHOAMode();
   const roleColor = ROLE_COLORS[userProfile?.role] || P.gold;
-  const groups    = ROLE_GROUPS[userProfile?.role] || [];
+  const groups    = (ROLE_GROUPS[userProfile?.role] || []).map(g => ({
+    ...g,
+    pages: g.pages.filter(p => {
+      if (!isHOAMode) {
+        const hoaOnly = ['violations', 'reserve-fund', 'board-meetings', 'assessments'];
+        if (hoaOnly.includes(p)) return false;
+      }
+      return true;
+    })
+  })).filter(g => g.pages.length > 0);
   const navLookup = Object.fromEntries(ALL_PAGES.map(p => [p.id, p]));
 
   return (
@@ -297,6 +310,8 @@ export default function App() {
       case 'deposits':      return <DepositsPage      {...props} />;
       case 'reports':       return <ReportsPage       {...props} />;
       case 'settings':      return <SettingsPage      {...props} />;
+      case 'vendors':       return <VendorsPage       {...props} />;
+      case 'registry':      return <RegistryPage      {...props} />;
       case 'super-admin':   return <SuperAdminPage    {...props} currentUser={currentUser} />;
       default:              return <DashboardPage {...props} onNavigate={navigate} />;
     }

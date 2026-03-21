@@ -115,8 +115,9 @@ The tenant was served with an N4 Notice on ${data.dateServed || 'the service dat
   } 
   // BC FORMS
   else if (province === 'BC') {
-    title = "RTB-30: 10 DAY NOTICE TO END TENANCY FOR UNPAID RENT";
-    body = `
+    if (formType === 'RTB30') {
+      title = "RTB-30: 10 DAY NOTICE TO END TENANCY FOR UNPAID RENT";
+      body = `
 To Tenant(s): ${tenant.name}
 Rental Unit Address: Unit ${tenant.unit}, ${tenant.property || 'Property'}
 
@@ -126,7 +127,15 @@ You have failed to pay rent in the amount of $${data.amountOwed || 0} that was d
 You must move out of the rental unit by ${data.deadlineDate || 'the deadline date'} (10 days after receiving this notice).
 
 You have 5 days to pay the rent or file an Application for Dispute Resolution with the Residential Tenancy Branch (RTB).
-    `;
+      `;
+    } else {
+      title = "RTB-1: NOTICE OF TERMINATION OF TENANCY";
+      body = `
+To Tenant(s): ${tenant.name}
+The tenancy at Unit ${tenant.unit}, ${tenant.property || 'Property'} is hereby terminated effective ${data.deadlineDate || 'the termination date'}.
+Reason: ${data.reason || 'General termination as per RTB guidelines.'}
+      `;
+    }
   }
   // ALBERTA FORMS
   else if (province === 'AB') {
@@ -142,6 +151,61 @@ Reason for Notice:
 ${data.reason || 'Substantial breach of the Residential Tenancies Act.'}
 
 Ensure the premises are vacated and keys returned by 12:00 PM on the termination date.
+    `;
+  }
+  // QUEBEC FORMS
+  else if (province === 'QC') {
+    title = "TAL NOTICE: NOTICE FOR NON-PAYMENT OR REPOSSESSION";
+    body = `
+To Tenant(s): ${tenant.name}
+Address: Unit ${tenant.unit}, ${tenant.property || 'Property'}
+
+This notice is issued regarding your tenancy.
+${formType === 'TAL_NP' ? `Amount Owed: $${data.amountOwed || 0}` : `Repossession Date: ${data.deadlineDate || 'the date'}`}
+Description: ${data.reason || 'Issued as per Tribunal administratif du logement guidelines.'}
+    `;
+  }
+  // MANITOBA FORMS
+  else if (province === 'MB') {
+    title = "RTB MANITOBA: NOTICE OF TERMINATION";
+    body = `
+To Tenant(s): ${tenant.name}
+Address: Unit ${tenant.unit}, ${tenant.property || 'Property'}
+
+Landlord: ${landlordName}
+Notice of termination effective: ${data.deadlineDate || 'the termination date'}.
+    `;
+  }
+  // USA - NEW YORK
+  else if (province === 'NY') {
+    title = "NEW YORK STATE: 14-DAY NOTICE TO QUIT / HOLDOVER";
+    body = `
+To Tenant(s): ${tenant.name}
+Address: Unit ${tenant.unit}, ${tenant.property || 'Property'}
+
+${formType === 'NY_14DAY' ? `You owe $${data.amountOwed || 0} in back rent. You have 14 days to pay or quit.` : `Holdover proceeding initiated for termination on ${data.deadlineDate || 'the date'}.`}
+    `;
+  }
+  // USA - CALIFORNIA
+  else if (province === 'CA') {
+    title = "CALIFORNIA: 3-DAY NOTICE TO PAY OR QUIT";
+    body = `
+To Tenant(s): ${tenant.name}
+Address: Unit ${tenant.unit}, ${tenant.property || 'Property'}
+
+Amount Due: $${data.amountOwed || 0}
+You are hereby notified that you are required to pay the amount due or quit the premises within three (3) days.
+    `;
+  }
+  // USA - FLORIDA / TEXAS
+  else if (province === 'FL' || province === 'TX') {
+    title = `${province === 'FL' ? 'FLORIDA' : 'TEXAS'} 3-DAY NOTICE TO VACATE`;
+    body = `
+To Tenant(s): ${tenant.name}
+Address: Unit ${tenant.unit}, ${tenant.property || 'Property'}
+
+Amount Due: $${data.amountOwed || 0}
+You have three (3) days to pay the rent or vacate the premises.
     `;
   }
 

@@ -62,10 +62,17 @@ export function Btn({ children, onClick, variant = 'primary', size = 'md', disab
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
-export function Input({ label, type = 'text', value, onChange, placeholder, required, style: extraStyle }) {
+export function Input({ label, type = 'text', value, onChange, placeholder, required, style: extraStyle, helpText }) {
   return (
     <div style={{ marginBottom: 14, ...extraStyle }}>
-      {label && <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>{label}{required && <span style={{ color: P.danger }}> *</span>}</label>}
+      {label && (
+        <div style={{ marginBottom: 5 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>
+            {label}{required && <span style={{ color: P.danger }}> *</span>}
+          </label>
+          {helpText && <div style={{ fontSize: 10, color: P.goldDark, fontWeight: 500, marginTop: 1, fontStyle: 'italic' }}>{helpText}</div>}
+        </div>
+      )}
       <input type={type} value={value} onChange={onChange} placeholder={placeholder} required={required}
         style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, background: P.card, boxSizing: 'border-box', transition: 'border 0.15s' }}
         onFocus={e => e.target.style.borderColor = P.navyLight}
@@ -75,10 +82,17 @@ export function Input({ label, type = 'text', value, onChange, placeholder, requ
 }
 
 // ─── Select ───────────────────────────────────────────────────────────────────
-export function Select({ label, value, onChange, options, required }) {
+export function Select({ label, value, onChange, options, required, helpText }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      {label && <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>{label}{required && <span style={{ color: P.danger }}> *</span>}</label>}
+      {label && (
+        <div style={{ marginBottom: 5 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>
+            {label}{required && <span style={{ color: P.danger }}> *</span>}
+          </label>
+          {helpText && <div style={{ fontSize: 10, color: P.goldDark, fontWeight: 500, marginTop: 1, fontStyle: 'italic' }}>{helpText}</div>}
+        </div>
+      )}
       <select value={value} onChange={onChange} required={required}
         style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, background: P.card }}>
         {options.map(o => typeof o === 'string' ? <option key={o} value={o}>{o}</option> : <option key={o.value} value={o.value}>{o.label}</option>)}
@@ -88,10 +102,15 @@ export function Select({ label, value, onChange, options, required }) {
 }
 
 // ─── Textarea ─────────────────────────────────────────────────────────────────
-export function Textarea({ label, value, onChange, placeholder, rows = 3 }) {
+export function Textarea({ label, value, onChange, placeholder, rows = 3, helpText }) {
   return (
     <div style={{ marginBottom: 14 }}>
-      {label && <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>{label}</label>}
+      {label && (
+        <div style={{ marginBottom: 5 }}>
+          <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>{label}</label>
+          {helpText && <div style={{ fontSize: 10, color: P.goldDark, fontWeight: 500, marginTop: 1, fontStyle: 'italic' }}>{helpText}</div>}
+        </div>
+      )}
       <textarea value={value} onChange={onChange} placeholder={placeholder} rows={rows}
         style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, resize: 'vertical', boxSizing: 'border-box' }}
         onFocus={e => e.target.style.borderColor = P.navyLight}

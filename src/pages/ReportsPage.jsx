@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo } from 'react';
 import { Download, PieChart, BarChart2, DollarSign, Wrench } from 'lucide-react';
 import { subscribePayments, subscribeMaintenance, subscribeProperties, subscribeTenants } from '../firebase';
 import { P, Btn, PageHeader, StatCard, Table, TR, TD, Select, Spinner, EmptyState } from '../components/UI';
+import { useHOAMode } from '../contexts/HOAModeContext';
 
 export default function ReportsPage({ userProfile, onToast }) {
+  const { label, isHOAMode } = useHOAMode();
   const [reportType, setReportType] = useState('financial'); // 'financial' | 'vat' | 'maintenance'
   const [propertyId, setPropertyId] = useState('all');
   const [dateRange, setDateRange]   = useState('ytd'); // 'ytd' | 'lastYear' | 'all'
@@ -85,9 +87,9 @@ export default function ReportsPage({ userProfile, onToast }) {
       <div style={{ display: 'flex', gap: 16, marginBottom: 28, background: P.card, padding: 16, borderRadius: 12, border: `1px solid ${P.border}`, flexWrap: 'wrap' }}>
         <div style={{ flex: '1 1 200px' }}>
           <Select label="Report Type" value={reportType} onChange={e => setReportType(e.target.value)} options={[
-            { label: 'Financial Summary', value: 'financial' },
+            { label: (isHOAMode ? 'HOA ' : '') + 'Financial Summary', value: 'financial' },
             { label: 'VAT / Tax Estimator', value: 'vat' },
-            { label: 'Maintenance Efficiency', value: 'maintenance' }
+            { label: label('maintenance', 'Maintenance') + ' Efficiency', value: 'maintenance' }
           ]} />
         </div>
         <div style={{ flex: '1 1 200px' }}>
@@ -110,13 +112,13 @@ export default function ReportsPage({ userProfile, onToast }) {
         <>
           <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
             <StatCard label="Total Revenue (Expected)" value={`$${totalRevenue.toLocaleString()}`} icon="💰" color={P.navy} />
-            <StatCard label="Collected (Paid)" value={`$${totalCollected.toLocaleString()}`} icon="✅" color={P.success} />
+            <StatCard label={label('rent', 'Rent') + " Collected"} value={`$${totalCollected.toLocaleString()}`} icon="✅" color={P.success} />
             <StatCard label="Outstanding" value={`$${totalPending.toLocaleString()}`} icon="⏳" color={P.gold} />
           </div>
 
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: P.text, marginBottom: 12 }}>Payment Breakdown</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: P.text, marginBottom: 12 }}>{label('rent', 'Payment')} Breakdown</h3>
           {filteredPayments.length === 0 ? <EmptyState icon="🧾" title="No data found for this period" /> : (
-            <Table headers={['Tenant', 'Amount', 'Status', 'Method', 'Date']}>
+            <Table headers={[label('tenant', 'Tenant'), 'Amount', 'Status', 'Method', 'Date']}>
               {filteredPayments.map((p, i) => {
                 const tenantName = tenants.find(t => t.id === p.tenantId)?.name || 'Unknown';
                 const dateStr = p.paid || p.due || (p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString() : 'N/A');
@@ -169,9 +171,9 @@ export default function ReportsPage({ userProfile, onToast }) {
             <StatCard label="Pending/Active" value={maintenancePending} icon="🚧" color={P.gold} />
           </div>
 
-          <h3 style={{ fontSize: 16, fontWeight: 700, color: P.text, marginBottom: 12 }}>Maintenance Ticket Log</h3>
+          <h3 style={{ fontSize: 16, fontWeight: 700, color: P.text, marginBottom: 12 }}>{label('maintenance', 'Maintenance')} Ticket Log</h3>
           {filteredMaintenance.length === 0 ? <EmptyState icon="🛠️" title="No maintenance data found" /> : (
-            <Table headers={['Issue', 'Tenant', 'Status', 'Priority', 'Logged']}>
+            <Table headers={['Issue', label('tenant', 'Tenant'), 'Status', 'Priority', 'Logged']}>
               {filteredMaintenance.map((m, i) => {
                 const tenantName = tenants.find(t => t.id === m.tenantId)?.name || 'Unknown';
                 const dateStr = m.createdAt?.toDate ? m.createdAt.toDate().toLocaleDateString() : 'N/A';

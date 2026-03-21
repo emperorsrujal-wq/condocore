@@ -269,6 +269,19 @@ export const updateReserveFundEntry = (id, data) =>
 
 export const deleteReserveFundEntry = (id) => deleteDoc(doc(db, 'reserve_fund', id));
 
+// HOA Phase 22: Reserve Study Projects
+export const subscribeReserveProjects = (callback) =>
+  onSnapshot(query(collection(db, 'reserve_projects'), orderBy('year', 'asc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addReserveProject = (data) =>
+  addDoc(collection(db, 'reserve_projects'), { ...data, createdAt: serverTimestamp() });
+
+export const updateReserveProject = (id, data) =>
+  updateDoc(doc(db, 'reserve_projects', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteReserveProject = (id) => deleteDoc(doc(db, 'reserve_projects', id));
+
 // HOA Phase 19: Board Meetings
 export const subscribeMeetings = (callback) =>
   onSnapshot(query(collection(db, 'meetings'), orderBy('date', 'desc')), snap =>
@@ -294,5 +307,47 @@ export const updateAssessment = (id, data) =>
   updateDoc(doc(db, 'assessments', id), { ...data, updatedAt: serverTimestamp() });
 
 export const deleteAssessment = (id) => deleteDoc(doc(db, 'assessments', id));
+
+// HOA Phase 23: Special Assessment Unit Payments (Scalability)
+export const subscribeAssessmentPayments = (assessmentId, callback) =>
+  onSnapshot(collection(db, 'assessments', assessmentId, 'unit_payments'), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const setUnitPayment = (assessmentId, unitId, data) =>
+  setDoc(doc(db, 'assessments', assessmentId, 'unit_payments', unitId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
+
+// HOA Phase 23: Electronic Voting
+export const subscribeVotes = (meetingId, callback) =>
+  onSnapshot(collection(db, 'meetings', meetingId, 'votes'), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const submitVote = (meetingId, voteId, data) =>
+  setDoc(doc(db, 'meetings', meetingId, 'votes', voteId), { ...data, timestamp: serverTimestamp() }, { merge: true });
+
+// Vendors & Contractors
+export const subscribeVendors = (callback) =>
+  onSnapshot(query(collection(db, 'vendors'), orderBy('name', 'asc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addVendor = (data) =>
+  addDoc(collection(db, 'vendors'), { ...data, createdAt: serverTimestamp() });
+
+export const updateVendor = (id, data) =>
+  updateDoc(doc(db, 'vendors', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteVendor = (id) => deleteDoc(doc(db, 'vendors', id));
+
+// Registry (Pets & Vehicles)
+export const subscribeRegistry = (callback) =>
+  onSnapshot(query(collection(db, 'registry'), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addRegistryEntry = (data) =>
+  addDoc(collection(db, 'registry'), { ...data, createdAt: serverTimestamp() });
+
+export const updateRegistryEntry = (id, data) =>
+  updateDoc(doc(db, 'registry', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteRegistryEntry = (id) => deleteDoc(doc(db, 'registry', id));
 
 export default app;
