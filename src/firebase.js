@@ -213,4 +213,21 @@ export const updatePackage = (id, data) =>
 
 export const deletePackage = (id) => deleteDoc(doc(db, 'packages', id));
 
+// Deposits / LMR
+export const subscribeDeposits = (callback) =>
+  onSnapshot(query(collection(db, 'deposits'), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const subscribeTenantDeposits = (tenantId, callback) =>
+  onSnapshot(query(collection(db, 'deposits'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addDeposit = (data) =>
+  addDoc(collection(db, 'deposits'), { ...data, createdAt: serverTimestamp() });
+
+export const updateDeposit = (id, data) =>
+  updateDoc(doc(db, 'deposits', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteDeposit = (id) => deleteDoc(doc(db, 'deposits', id));
+
 export default app;

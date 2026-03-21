@@ -97,5 +97,11 @@ service cloud.firestore {
       allow read: if isAuth() && (isManagerOrLandlord() || resource.data.tenantId == uid());
       allow write: if isAuth() && isManagerOrLandlord();
     }
+
+    // Deposits / LMR
+    match /deposits/{depId} {
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.tenantId == uid());
+      allow write: if isAuth() && isManagerOrLandlord();
+    }
   }
 }

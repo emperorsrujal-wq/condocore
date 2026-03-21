@@ -19,6 +19,7 @@ import ReportsPage       from './pages/ReportsPage';
 import MessagesPage      from './pages/MessagesPage';
 import KeysPage          from './pages/KeysPage';
 import PackagesPage      from './pages/PackagesPage';
+import DepositsPage      from './pages/DepositsPage';
 import AnonymousReportPage from './pages/AnonymousReportPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
@@ -31,6 +32,7 @@ const ALL_PAGES = [
   { id: 'tenants',       label: 'tenants',          icon: Users },
   { id: 'rent',          label: 'rent',             icon: DollarSign },
   { id: 'my-payments',   label: 'my_payments',      icon: DollarSign },
+  { id: 'deposits',      label: 'deposits',         icon: DollarSign },
   { id: 'maintenance',   label: 'maintenance',      icon: Wrench },
   { id: 'documents',     label: 'documents',        icon: FileText },
   { id: 'my-documents',  label: 'my_documents',     icon: FileText },
@@ -54,7 +56,7 @@ const ROLE_GROUPS = {
   manager: [
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
-    { label: 'finance',       pages: ['rent', 'reports'] },
+    { label: 'finance',       pages: ['rent', 'deposits', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'keys', 'packages', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
@@ -63,13 +65,14 @@ const ROLE_GROUPS = {
   landlord: [
     { label: 'overview',      pages: ['dashboard'] },
     { label: 'tenants',       pages: ['tenants', 'properties'] },
-    { label: 'finance',       pages: ['rent', 'reports'] },
+    { label: 'finance',       pages: ['rent', 'deposits', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'keys', 'packages', 'documents'] },
     { label: 'communication', pages: ['messages', 'announcements'] },
     { label: 'account',       pages: ['settings'] },
   ],
   tenant: [
     { label: 'home',      pages: ['dashboard'] },
+    { label: 'finance',   pages: ['my-payments', 'deposits'] },
     { label: 'services',  pages: ['maintenance', 'packages', 'my-documents'] },
     { label: 'building',  pages: ['messages', 'announcements'] },
     { label: 'account',   pages: ['settings'] },
@@ -83,7 +86,7 @@ const ROLE_GROUPS = {
 
 const PAGE_TITLES = {
   dashboard: 'dashboard', properties: 'properties', tenants: 'tenants', rent: 'rent',
-  'my-payments': 'my_payments', maintenance: 'maintenance', documents: 'documents',
+  'my-payments': 'my_payments', deposits: 'deposits', maintenance: 'maintenance', documents: 'documents',
   'my-documents': 'my_documents', announcements: 'announcements',
   messages: 'messages', keys: 'keys_access', packages: 'packages', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
 };
@@ -265,6 +268,7 @@ export default function App() {
       case 'messages':      return <MessagesPage      {...props} />;
       case 'keys':          return <KeysPage          {...props} />;
       case 'packages':      return <PackagesPage      {...props} />;
+      case 'deposits':      return <DepositsPage      {...props} />;
       case 'reports':       return <ReportsPage       {...props} />;
       case 'settings':      return <SettingsPage      {...props} />;
       case 'super-admin':   return <SuperAdminPage    {...props} currentUser={currentUser} />;
