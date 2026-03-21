@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare, Key, Package, AlertTriangle, PiggyBank, ClipboardList, Banknote } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare, Key, Package, AlertTriangle, PiggyBank, ClipboardList, Banknote, BookOpen } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { getTenantByUserId, subscribeTenants } from './firebase';
 import { P, ROLE_COLORS, Toast, Spinner } from './components/UI';
