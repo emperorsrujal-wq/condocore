@@ -69,5 +69,11 @@ service cloud.firestore {
         allow create: if isAuth();
       }
     }
+
+    // Notifications
+    match /notifications/{notifId} {
+      allow read, update: if isAuth() && resource.data.userId == uid();
+      allow create: if isAuth();
+    }
   }
 }

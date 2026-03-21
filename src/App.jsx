@@ -16,6 +16,7 @@ import PropertiesPage    from './pages/PropertiesPage';
 import SettingsPage      from './pages/SettingsPage';
 import ReportsPage       from './pages/ReportsPage';
 import MessagesPage      from './pages/MessagesPage';
+import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
 
@@ -168,7 +169,7 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
 }
 
 // ─── TopBar ───────────────────────────────────────────────────────────────────
-function TopBar({ userProfile, tab, onLogout }) {
+function TopBar({ userProfile, tab, onLogout, onNavigate }) {
   const roleColor = ROLE_COLORS[userProfile?.role] || P.gold;
   const title     = PAGE_TITLES[tab] || 'CondoCore';
 
@@ -176,6 +177,7 @@ function TopBar({ userProfile, tab, onLogout }) {
     <div style={{ background: P.card, borderBottom: `1px solid ${P.border}`, padding: '0 22px', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
       <div style={{ fontSize: 16, fontWeight: 700, color: P.text }}>{title}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <NotificationsMenu userProfile={userProfile} onNavigate={onNavigate} />
         <div style={{ padding: '3px 10px', borderRadius: 20, background: roleColor + '18', border: `1px solid ${roleColor}35`, fontSize: 11, fontWeight: 700, color: roleColor, textTransform: 'uppercase', letterSpacing: 0.5 }}>
           {userProfile?.role}
         </div>
@@ -263,7 +265,7 @@ export default function App() {
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-        <TopBar userProfile={userProfile} tab={tab} onLogout={handleLogout} />
+        <TopBar userProfile={userProfile} tab={tab} onLogout={handleLogout} onNavigate={navigate} />
         <div key={tab} className="animate-fadeIn" style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
           {renderPage()}
         </div>

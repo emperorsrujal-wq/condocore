@@ -81,12 +81,18 @@ export const subscribeTenantMaintenance = (tenantId, callback) =>
   onSnapshot(query(collection(db, 'maintenance'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
-export const addMaintenanceRequest = (data) =>
-  addDoc(collection(db, 'maintenance'), {
+export const addMaintenanceRequest = async (data) => {
+  const docRef = await addDoc(collection(db, 'maintenance'), {
     ...data,
     updates: [{ date: new Date().toLocaleDateString(), text: 'Request submitted.' }],
     createdAt: serverTimestamp()
   });
+  // Notify managers
+  getDocs(query(collection(db, 'users'), where('role', 'in', ['manager', 'landlord']))).then(snap => {
+    snap.forEach(d => createNotification({ userId: d.id, title: 'New Maintenance Ticket', body: `${data.title} reported.`, link: 'maintenance' }));
+  }).catch(e => console.error(e));
+  return docRef;
+};
 
 export const updateMaintenanceRequest = (id, data) =>
   updateDoc(doc(db, 'maintenance', id), { ...data, updatedAt: serverTimestamp() });
@@ -122,8 +128,14 @@ export const subscribeAnnouncements = (callback) =>
   onSnapshot(query(collection(db, 'announcements'), orderBy('createdAt', 'desc')), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
-export const addAnnouncement = (data) =>
-  addDoc(collection(db, 'announcements'), { ...data, createdAt: serverTimestamp() });
+export const addAnnouncement = async (data) => {
+  const docRef = await addDoc(collection(db, 'announcements'), { ...data, createdAt: serverTimestamp() });
+  // Notify tenants
+  getDocs(query(collection(db, 'users'), where('role', '==', 'tenant'))).then(snap => {
+    snap.forEach(d => createNotification({ userId: d.id, title: 'New Announcement', body: data.title, link: 'announcements' }));
+  }).catch(e => console.error(e));
+  return docRef;
+};
 
 export const updateAnnouncement = (id, data) =>
   updateDoc(doc(db, 'announcements', id), { ...data, updatedAt: serverTimestamp() });
@@ -146,5 +158,15 @@ export const sendMessage = async (threadId, message) => {
 
 export const createThread = (data) =>
   addDoc(collection(db, 'threads'), { ...data, createdAt: serverTimestamp(), updatedAt: serverTimestamp() });
+
+// Notifications
+export const subscribeNotifications = (userId, callback) =>
+  onSnapshot(query(collection(db, 'notifications'), where('userId', '==', userId), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const markNotificationRead = (id) => updateDoc(doc(db, 'notifications', id), { read: true });
+
+export const createNotification = (data) =>
+  addDoc(collection(db, 'notifications'), { ...data, read: false, createdAt: serverTimestamp() });
 
 export default app;
