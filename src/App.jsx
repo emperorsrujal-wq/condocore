@@ -4,6 +4,7 @@ import { useAuth } from './contexts/AuthContext';
 import { getTenantByUserId, subscribeTenants } from './firebase';
 import { P, ROLE_COLORS, Toast, Spinner } from './components/UI';
 import { useLanguage } from './contexts/LanguageContext';
+import { useHOAMode } from './contexts/HOAModeContext';
 
 import LoginPage         from './pages/LoginPage';
 import DashboardPage     from './pages/DashboardPage';
@@ -104,9 +105,10 @@ const PAGE_TITLES = {
   messages: 'messages', keys: 'keys_access', packages: 'packages', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
 };
 
-// ─── Sidebar ──────────────────────────────────────────────────────────────────
+// ──────────────────────────────────────────────────────────────────────────────
 function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLogout }) {
   const { t } = useLanguage();
+  const { label: hoaLabel } = useHOAMode();
   const roleColor = ROLE_COLORS[userProfile?.role] || P.gold;
   const groups    = ROLE_GROUPS[userProfile?.role] || [];
   const navLookup = Object.fromEntries(ALL_PAGES.map(p => [p.id, p]));
@@ -152,7 +154,7 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
       <nav style={{ flex: 1, padding: '4px 6px', overflowY: 'auto' }}>
         {groups.map((g, gi) => (
           <div key={gi} style={{ marginBottom: 2 }}>
-            {!collapsed && <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.22)', textTransform: 'uppercase', letterSpacing: 1.2, padding: '8px 6px 3px' }}>{t(g.label)}</div>}
+            {!collapsed && <div style={{ fontSize: 9, fontWeight: 700, color: 'rgba(255,255,255,0.22)', textTransform: 'uppercase', letterSpacing: 1.2, padding: '8px 6px 3px' }}>{hoaLabel(g.label, t(g.label))}</div>}
             {collapsed && gi > 0 && <div style={{ height: 1, background: 'rgba(255,255,255,0.06)', margin: '4px 3px' }} />}
             {g.pages.map(id => {
               const nav = navLookup[id];
@@ -166,7 +168,7 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
                   onMouseEnter={e => { if (!active) e.currentTarget.style.background = 'rgba(255,255,255,0.07)'; }}
                   onMouseLeave={e => { if (!active) e.currentTarget.style.background = 'transparent'; }}>
                   <nav.icon size={15} style={{ flexShrink: 0 }} />
-                  {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t(nav.label)}</span>}
+                  {!collapsed && <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{hoaLabel(nav.label, t(nav.label))}</span>}
                 </button>
               );
             })}
@@ -191,12 +193,13 @@ function Sidebar({ user, userProfile, tab, onNavigate, collapsed, onToggle, onLo
 // ─── TopBar ───────────────────────────────────────────────────────────────────
 function TopBar({ userProfile, tab, onLogout, onNavigate }) {
   const { t, locale, setLocale } = useLanguage();
+  const { label: hoaLabel } = useHOAMode();
   const roleColor = ROLE_COLORS[userProfile?.role] || P.gold;
   const title     = PAGE_TITLES[tab] || 'dashboard';
 
   return (
     <div style={{ background: P.card, borderBottom: `1px solid ${P.border}`, padding: '0 22px', height: 54, display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexShrink: 0, gap: 12 }}>
-      <div style={{ fontSize: 16, fontWeight: 700, color: P.text }}>{t(title)}</div>
+      <div style={{ fontSize: 16, fontWeight: 700, color: P.text }}>{hoaLabel(title, t(title))}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
         
         {/* Language Selector */}
