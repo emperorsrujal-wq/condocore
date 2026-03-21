@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Mail, Phone, Home, Calendar, DollarSign } from 'lucide-react';
-import { subscribeTenants, addTenant, updateTenant, deleteTenant, subscribeProperties } from '../firebase';
+import { subscribeTenants, addTenant, updateTenant, deleteTenant, subscribeProperties, uploadFile, addDocument } from '../firebase';
 import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, Avatar } from '../components/UI';
+import { generateLeasePDF } from '../utils/pdfGenerator';
 
 const FORM_DEFAULT = { name: '', email: '', phone: '', unit: '', property: '', leaseStart: '', leaseEnd: '', rent: '', status: 'active', type: 'Condo' };
 
@@ -15,6 +16,7 @@ export default function TenantsPage({ onToast }) {
   const [editing, setEditing]   = useState(null);
   const [form, setForm]         = useState(FORM_DEFAULT);
   const [saving, setSaving]     = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [properties, setProperties] = useState([]);
 
   useEffect(() => {
@@ -49,6 +51,29 @@ export default function TenantsPage({ onToast }) {
     if (!confirm('Delete this tenant?')) return;
     try { await deleteTenant(id); setSelected(null); onToast('Tenant deleted.'); }
     catch (e) { onToast(e.message, 'error'); }
+  };
+
+  const handleGenerateLease = async (t) => {
+    setGenerating(true);
+    try {
+      onToast('Generating PDF...');
+      const blob = await generateLeasePDF(t);
+      const filename = `documents/leases/${t.id}_${Date.now()}.pdf`;
+      
+      const url = await uploadFile(blob, filename);
+      await addDocument({
+        title: `Lease Agreement - ${t.name}`,
+        url,
+        tenantId: t.userId || t.id,
+        propertyId: t.propertyId || null,
+        type: 'lease'
+      });
+      
+      onToast('Lease generated and attached successfully!', 'success');
+    } catch (e) {
+      onToast('Failed to generate lease: ' + e.message, 'error');
+    }
+    setGenerating(false);
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -125,7 +150,10 @@ export default function TenantsPage({ onToast }) {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <StatusBadge status={selected.status} />
             <div style={{ display: 'flex', gap: 8 }}>
-              <Btn variant="ghost" size="sm" onClick={() => openEdit(selected)}>Edit Tenant</Btn>
+              <Btn variant="primary" size="sm" onClick={() => handleGenerateLease(selected)} disabled={generating}>
+                {generating ? 'Generating...' : 'Generate Lease'}
+              </Btn>
+              <Btn variant="ghost" size="sm" onClick={() => openEdit(selected)}>Edit</Btn>
               <Btn variant="danger" size="sm" onClick={() => handleDelete(selected.id)}>Delete</Btn>
             </div>
           </div>
