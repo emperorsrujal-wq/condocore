@@ -118,6 +118,9 @@ export const subscribeTenantDocuments = (tenantId, callback) =>
 export const addDocument = (data) =>
   addDoc(collection(db, 'documents'), { ...data, createdAt: serverTimestamp() });
 
+export const updateDocument = (id, data) =>
+  updateDoc(doc(db, 'documents', id), { ...data, updatedAt: serverTimestamp() });
+
 export const deleteDocument = (id) => deleteDoc(doc(db, 'documents', id));
 
 export const uploadFile = (file, path, onProgress) => {
