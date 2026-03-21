@@ -34,7 +34,9 @@ const translations = {
     legal_forms: 'Legal Forms',
     evictions: 'Eviction Timelines',
     violations: 'Bylaw Violations',
-    reserve_fund: 'Reserve Fund'
+    reserve_fund: 'Reserve Fund',
+    board_meetings: 'Board Meetings',
+    assessments: 'Special Assessments'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -69,7 +71,9 @@ const translations = {
     legal_forms: 'Formularios Legales',
     evictions: 'Desalojos y Plazos',
     violations: 'Violaciones de Normas',
-    reserve_fund: 'Fondo de Reserva'
+    reserve_fund: 'Fondo de Reserva',
+    board_meetings: 'Reuniones de Junta',
+    assessments: 'Cuotas Especiales'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -104,7 +108,9 @@ const translations = {
     legal_forms: 'Formulaires Légaux',
     evictions: 'Chronologies d\'Éviction',
     violations: 'Violations des Règlements',
-    reserve_fund: 'Fonds de Réserve'
+    reserve_fund: 'Fonds de Réserve',
+    board_meetings: 'Réunions du Conseil',
+    assessments: 'Cotisations Spéciales'
   }
 };
 

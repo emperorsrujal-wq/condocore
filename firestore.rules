@@ -118,5 +118,16 @@ service cloud.firestore {
     match /reserve_fund/{rfId} {
       allow read, write: if isAuth() && isManagerOrLandlord();
     }
+
+    // HOA: Board Meetings
+    match /meetings/{mId} {
+      allow read, write: if isAuth() && isManagerOrLandlord();
+    }
+
+    // HOA: Special Assessments
+    match /assessments/{aId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrLandlord();
+    }
   }
 }

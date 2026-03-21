@@ -269,4 +269,30 @@ export const updateReserveFundEntry = (id, data) =>
 
 export const deleteReserveFundEntry = (id) => deleteDoc(doc(db, 'reserve_fund', id));
 
+// HOA Phase 19: Board Meetings
+export const subscribeMeetings = (callback) =>
+  onSnapshot(query(collection(db, 'meetings'), orderBy('date', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addMeeting = (data) =>
+  addDoc(collection(db, 'meetings'), { ...data, createdAt: serverTimestamp() });
+
+export const updateMeeting = (id, data) =>
+  updateDoc(doc(db, 'meetings', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteMeeting = (id) => deleteDoc(doc(db, 'meetings', id));
+
+// HOA Phase 20: Special Assessments
+export const subscribeAssessments = (callback) =>
+  onSnapshot(query(collection(db, 'assessments'), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const addAssessment = (data) =>
+  addDoc(collection(db, 'assessments'), { ...data, createdAt: serverTimestamp() });
+
+export const updateAssessment = (id, data) =>
+  updateDoc(doc(db, 'assessments', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteAssessment = (id) => deleteDoc(doc(db, 'assessments', id));
+
 export default app;

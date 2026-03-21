@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { User, Shield, Bell, Lock, Mail, Phone, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { useHOAMode } from '../contexts/HOAModeContext';
 import { P, Btn, Card, Input, PageHeader, Spinner } from '../components/UI';
 
 export default function SettingsPage({ onToast }) {
   const { userProfile, updateUserPassword, updateProfile } = useAuth();
+  const { isHOAMode, toggleMode } = useHOAMode();
+  const isManager = ['manager', 'landlord', 'super_admin'].includes(userProfile?.role);
   const [profileForm, setProfileForm] = useState({
     name: userProfile?.name || '',
     phone: userProfile?.phone || '',
@@ -146,6 +149,28 @@ export default function SettingsPage({ onToast }) {
           ))}
         </Card>
       </Section>
+
+      {/* HOA Mode Toggle — Manager/Landlord only */}
+      {isManager && (
+        <Section title="Property Type" icon={Shield}>
+          <Card style={{ padding: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '20px 24px' }}>
+              <div>
+                <div style={{ fontSize: 14, fontWeight: 600, color: P.text }}>HOA / Condominium Corporation Mode</div>
+                <div style={{ fontSize: 12, color: P.textMuted, marginTop: 3 }}>
+                  {isHOAMode
+                    ? '✓ Active — UI labels show Homeowners, HOA Dues, Work Orders'
+                    : 'Inactive — Using standard Rental PM labels (Tenants, Rent)'}
+                </div>
+              </div>
+              <div onClick={toggleMode}
+                style={{ width: 52, height: 28, borderRadius: 14, background: isHOAMode ? P.navy : P.border, position: 'relative', cursor: 'pointer', transition: 'background 0.25s', flexShrink: 0 }}>
+                <div style={{ position: 'absolute', top: 4, left: isHOAMode ? 28 : 4, width: 20, height: 20, borderRadius: '50%', background: '#fff', transition: 'left 0.25s', boxShadow: '0 1px 4px rgba(0,0,0,0.15)' }} />
+              </div>
+            </div>
+          </Card>
+        </Section>
+      )}
     </div>
   );
 }
