@@ -372,4 +372,19 @@ export const updateBooking = (id, data) =>
 
 export const deleteBooking = (id) => deleteDoc(doc(db, 'bookings', id));
 
+// Visitor Management
+export const subscribeVisitors = (propertyId, callback) => {
+  let q = collection(db, 'visitors');
+  if (propertyId) q = query(q, where('propertyId', '==', propertyId), orderBy('visitDate', 'desc'));
+  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+};
+
+export const addVisitor = (data) =>
+  addDoc(collection(db, 'visitors'), { ...data, createdAt: serverTimestamp() });
+
+export const updateVisitorStatus = (id, status) =>
+  updateDoc(doc(db, 'visitors', id), { status, updatedAt: serverTimestamp() });
+
+export const deleteVisitor = (id) => deleteDoc(doc(db, 'visitors', id));
+
 export default app;

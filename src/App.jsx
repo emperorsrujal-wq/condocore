@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare, Key, Package, AlertTriangle, PiggyBank, ClipboardList, Banknote, BookOpen } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare, Key, Package, AlertTriangle, PiggyBank, ClipboardList, Banknote, BookOpen, Calendar, UserPlus } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { getTenantByUserId, subscribeTenants } from './firebase';
 import { P, ROLE_COLORS, Toast, Spinner } from './components/UI';
@@ -32,6 +32,7 @@ import VendorsPage from './pages/VendorsPage';
 import RegistryPage from './pages/RegistryPage';
 import MyPropertyPage from './pages/MyPropertyPage';
 import AmenityBookingPage from './pages/AmenityBookingPage';
+import VisitorManagementPage from './pages/VisitorManagementPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
@@ -61,14 +62,17 @@ const ALL_PAGES = [
   { id: 'assessments',   label: 'assessments',      icon: Banknote },
   { id: 'reports',       label: 'reports',          icon: PieChart },
   { id: 'settings',      label: 'settings',         icon: Shield },
+  { id: 'amenity-bookings', label: 'amenities',      icon: Calendar },
+  { id: 'visitor-management', label: 'visitors',      icon: UserPlus },
+  { id: 'my-property',    label: 'my_property',      icon: Home },
   { id: 'super-admin',   label: 'admin_panel',      icon: Shield },
 ];
 
 const ROLE_NAV = {
-  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings'],
-  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings'],
-  tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings', 'amenity-bookings'],
-  owner:    ['dashboard', 'maintenance', 'my-property', 'announcements', 'messages', 'settings', 'amenity-bookings'],
+  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management'],
+  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management'],
+  tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings', 'amenity-bookings', 'visitor-management'],
+  owner:    ['dashboard', 'maintenance', 'my-property', 'announcements', 'messages', 'settings', 'amenity-bookings', 'visitor-management'],
 };
 
 const ROLE_GROUPS = {
@@ -77,7 +81,7 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings'] },
+    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
   ],
@@ -86,20 +90,20 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings'] },
+    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',       pages: ['settings'] },
   ],
   tenant: [
     { label: 'home',      pages: ['dashboard'] },
     { label: 'finance',   pages: ['my-payments', 'deposits'] },
     { label: 'services',  pages: ['maintenance', 'packages', 'my-documents'] },
-    { label: 'building',  pages: ['messages', 'announcements', 'amenity-bookings'] },
+    { label: 'building',  pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',   pages: ['settings'] },
   ],
   owner: [
     { label: 'overview', pages: ['dashboard'] },
     { label: 'property', pages: ['maintenance', 'my-property'] },
-    { label: 'building', pages: ['messages', 'announcements', 'amenity-bookings'] },
+    { label: 'building', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',  pages: ['settings'] },
   ],
 };
@@ -317,6 +321,7 @@ export default function App() {
       case 'vendors':       return <VendorsPage       {...props} />;
       case 'registry':      return <RegistryPage      {...props} />;
       case 'amenity-bookings': return <AmenityBookingPage {...props} />;
+      case 'visitor-management': return <VisitorManagementPage {...props} />;
       case 'super-admin':   return <SuperAdminPage    {...props} currentUser={currentUser} />;
       default:              return <DashboardPage {...props} onNavigate={navigate} />;
     }

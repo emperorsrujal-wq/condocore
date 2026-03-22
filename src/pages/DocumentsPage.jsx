@@ -27,7 +27,7 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
     return () => unsub && unsub();
   }, [isTenant, tenantData?.id]);
 
-  const TYPES = ['All', 'Lease', 'Inspection', 'Notice', 'Insurance', 'Report', 'Other'];
+  const TYPES = ['All', 'Bylaws', 'Lease', 'Inspection', 'Notice', 'Insurance', 'Report', 'Other'];
   const filtered = (filterType === 'All' ? documents : documents.filter(d => d.type === filterType))
     .filter(d => !isTenant || d.status !== 'pending_approval');
 
@@ -130,7 +130,7 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
 
           <Input label="Document Name" value={docName} onChange={e => setDocName(e.target.value)} placeholder="e.g. Lease Agreement – John Smith" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
-            <Select label="Document Type" value={docType} onChange={e => setDocType(e.target.value)} options={['Lease', 'Inspection', 'Notice', 'Insurance', 'Report', 'Other']} />
+            <Select label="Document Type" value={docType} onChange={e => setDocType(e.target.value)} options={['Bylaws', 'Lease', 'Inspection', 'Notice', 'Insurance', 'Report', 'Other']} />
             <Input label="Unit" value={docUnit} onChange={e => setDocUnit(e.target.value)} placeholder="e.g. 1204 or All" />
           </div>
 
