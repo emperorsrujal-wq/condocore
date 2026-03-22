@@ -1,7 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider, OAuthProvider } from 'firebase/auth';
 import { getFirestore, initializeFirestore, collection, doc, addDoc, updateDoc, deleteDoc,
-  getDoc, getDocs, onSnapshot, query, where, orderBy, serverTimestamp, setDoc } from 'firebase/firestore';
+  getDoc, getDocs, onSnapshot, query, where, orderBy, serverTimestamp, setDoc, collectionGroup } from 'firebase/firestore';
 import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from 'firebase/storage';
 
 const firebaseConfig = {
@@ -315,6 +315,10 @@ export const deleteAssessment = (id) => deleteDoc(doc(db, 'assessments', id));
 export const subscribeAssessmentPayments = (assessmentId, callback) =>
   onSnapshot(collection(db, 'assessments', assessmentId, 'unit_payments'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const subscribeOwnerAssessmentPayments = (ownerId, callback) =>
+  onSnapshot(query(collectionGroup(db, 'unit_payments'), where('ownerId', '==', ownerId)), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, assessmentId: d.ref.parent.parent.id, ...d.data() }))));
 
 export const setUnitPayment = (assessmentId, unitId, data) =>
   setDoc(doc(db, 'assessments', assessmentId, 'unit_payments', unitId), { ...data, updatedAt: serverTimestamp() }, { merge: true });

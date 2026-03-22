@@ -14,18 +14,19 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
   const [expanded, setExpanded] = useState(null);
   const [form, setForm]         = useState(FORM_DEFAULT);
   const [saving, setSaving]     = useState(false);
-  const isTenant = userProfile?.role === 'tenant';
+  const isResident = ['tenant', 'owner'].includes(userProfile?.role);
+  const isManagerMode = ['manager', 'landlord'].includes(userProfile?.role);
 
   useEffect(() => {
     let unsub;
-    if (isTenant && tenantData?.id) {
+    if (isResident && tenantData?.id) {
       unsub = subscribeTenantMaintenance(tenantData.id, data => { setRequests(data); setLoading(false); });
     } else {
       unsub = subscribeMaintenance(data => { setRequests(data); setLoading(false); });
     }
     const unsubV = subscribeVendors(data => setVendors(data));
     return () => { if (unsub) unsub(); unsubV(); };
-  }, [isTenant, tenantData?.id]);
+  }, [isResident, tenantData?.id]);
 
   const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);
 
@@ -37,7 +38,7 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
         ...form,
         status: 'open',
         date: new Date().toISOString().split('T')[0],
-        ...(isTenant && tenantData ? { unit: tenantData.unit, tenantName: tenantData.name, tenantId: tenantData.id, propertyName: tenantData.property } : {})
+        ...(isResident && tenantData ? { unit: tenantData.unit, tenantName: tenantData.name, tenantId: tenantData.id, propertyName: tenantData.property } : {})
       };
       await addMaintenanceRequest(data);
       setShowAdd(false); setForm(FORM_DEFAULT); onToast('Request submitted!');
@@ -76,7 +77,7 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
       </div>
 
       {filtered.length === 0
-        ? <EmptyState icon="🔧" title="No maintenance requests" body={isTenant ? 'Submit a request if you have an issue.' : 'No requests match this filter.'} action={<Btn onClick={() => setShowAdd(true)}><Plus size={14} /> New Request</Btn>} />
+        ? <EmptyState icon="🔧" title="No maintenance requests" body={isResident ? 'Submit a request if you have an issue.' : 'No requests match this filter.'} action={<Btn onClick={() => setShowAdd(true)}><Plus size={14} /> New Request</Btn>} />
         : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.map(r => {
@@ -147,7 +148,7 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
                       )}
 
                       {/* Manager actions */}
-                      {!isTenant && r.status !== 'resolved' && (
+                      {!isResident && r.status !== 'resolved' && (
                         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                           {r.status === 'open' && (
                             <div style={{ display: 'flex', gap: 8 }}>
@@ -173,7 +174,7 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
       {showAdd && (
         <Modal title="New Maintenance Request" onClose={() => setShowAdd(false)}>
           <Input label="Issue Title *" {...F('title')} placeholder="e.g. Leaking kitchen faucet" />
-          {!isTenant && (
+          {!isResident && (
             <>
               <Input label="Unit Number" {...F('unit')} placeholder="e.g. 1204" />
               <Input label="Tenant Name" {...F('tenantName')} />

@@ -30,6 +30,7 @@ import SpecialAssessmentsPage from './pages/SpecialAssessmentsPage';
 import AnonymousReportPage from './pages/AnonymousReportPage';
 import VendorsPage from './pages/VendorsPage';
 import RegistryPage from './pages/RegistryPage';
+import MyPropertyPage from './pages/MyPropertyPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
@@ -66,7 +67,7 @@ const ROLE_NAV = {
   manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry'],
   landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry'],
   tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings'],
-  owner:    ['dashboard', 'announcements', 'messages', 'settings'],
+  owner:    ['dashboard', 'maintenance', 'my-property', 'announcements', 'messages', 'settings'],
 };
 
 const ROLE_GROUPS = {
@@ -96,6 +97,7 @@ const ROLE_GROUPS = {
   ],
   owner: [
     { label: 'overview', pages: ['dashboard'] },
+    { label: 'property', pages: ['maintenance', 'my-property'] },
     { label: 'building', pages: ['messages', 'announcements'] },
     { label: 'account',  pages: ['settings'] },
   ],
@@ -242,9 +244,9 @@ export default function App() {
   const [tenants, setTenants]     = useState([]);
   const [tenantData, setTenantData] = useState(null);
 
-  // Load tenant data if role is tenant
+  // Load tenant data if role is tenant or owner
   useEffect(() => {
-    if (!currentUser || userProfile?.role !== 'tenant') return;
+    if (!currentUser || !['tenant', 'owner'].includes(userProfile?.role)) return;
     const unsub = getTenantByUserId(currentUser.uid, data => setTenantData(data));
     return () => unsub && unsub();
   }, [currentUser, userProfile?.role]);
@@ -295,8 +297,9 @@ export default function App() {
       case 'rent':          return <PaymentsPage  {...props} tenants={tenants} />;
       case 'my-payments':   return <PaymentsPage  {...props} tenants={tenants} myOnly />;
       case 'maintenance':   return <MaintenancePage {...props} />;
-      case 'documents':     return <DocumentsPage  {...props} />;
-      case 'my-documents':  return <DocumentsPage  {...props} />;
+      case 'documents':     return <DocumentsPage     {...props} />;
+      case 'my-documents':  return <DocumentsPage     {...props} />;
+      case 'my-property':   return <MyPropertyPage    {...props} />;
       case 'announcements': return <AnnouncementsPage {...props} />;
       case 'messages':      return <MessagesPage      {...props} />;
       case 'keys':          return <KeysPage          {...props} />;
