@@ -20,9 +20,25 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
   useEffect(() => {
     let unsub;
     if (isTenant && tenantData?.id) {
-      unsub = subscribeTenantDocuments(tenantData.id, data => { setDocuments(data); setLoading(false); });
+      unsub = subscribeTenantDocuments(tenantData.id, data => { 
+        const sorted = [...data].sort((a, b) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return dateB - dateA;
+        });
+        setDocuments(sorted); 
+        setLoading(false); 
+      });
     } else {
-      unsub = subscribeDocuments(data => { setDocuments(data); setLoading(false); });
+      unsub = subscribeDocuments(data => { 
+        const sorted = [...data].sort((a, b) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return dateB - dateA;
+        });
+        setDocuments(sorted); 
+        setLoading(false); 
+      });
     }
     return () => unsub && unsub();
   }, [isTenant, tenantData?.id]);

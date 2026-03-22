@@ -53,6 +53,10 @@ export default function ReportsPage({ userProfile, onToast }) {
       const d = p.createdAt?.toDate ? p.createdAt.toDate() : p.createdAt;
       if (!isWithinDateRange(d)) return false;
       return true;
+    }).sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+      return dateB - dateA;
     });
   }, [payments, validTenantIds, dateRange]);
 
@@ -67,6 +71,10 @@ export default function ReportsPage({ userProfile, onToast }) {
       const d = m.createdAt?.toDate ? m.createdAt.toDate() : m.createdAt;
       if (!isWithinDateRange(d)) return false;
       return true;
+    }).sort((a, b) => {
+      const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+      const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+      return dateB - dateA;
     });
   }, [maintenance, validTenantIds, dateRange]);
 

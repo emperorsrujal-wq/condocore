@@ -32,8 +32,15 @@ export default function ReserveFundPage({ userProfile, onToast }) {
     const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
     if (!isPrivileged) { setLoading(false); return; }
 
-    const unsubE = subscribeReserveFund(data => { setEntries(data); setLoading(false); });
-    const unsubP = subscribeReserveProjects(data => setProjects(data));
+    const unsubE = subscribeReserveFund(data => { 
+      const sorted = [...data].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      setEntries(sorted); 
+      setLoading(false); 
+    });
+    const unsubP = subscribeReserveProjects(data => {
+      const sorted = [...data].sort((a, b) => (a.year || 0) - (b.year || 0));
+      setProjects(sorted);
+    });
     return () => { unsubE && unsubE(); unsubP && unsubP(); };
   }, [userProfile]);
 

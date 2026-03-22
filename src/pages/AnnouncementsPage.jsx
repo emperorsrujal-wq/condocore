@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Plus, Star, Edit, Trash2 } from 'lucide-react';
-import { subscribeAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement } from '../firebase';
+import { subscribeAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, subscribeProperties } from '../firebase';
 import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Spinner, EmptyState } from '../components/UI';
 
 const CAT_COLORS = {
@@ -22,12 +22,22 @@ export default function AnnouncementsPage({ onToast, userProfile }) {
   const [form, setForm]                   = useState(FORM_DEFAULT);
   const [saving, setSaving]               = useState(false);
   const [filterCat, setFilterCat]         = useState('All');
+  const [properties, setProperties]       = useState([]);
 
   const isReadOnly = userProfile?.role === 'tenant' || userProfile?.role === 'owner';
 
   useEffect(() => {
-    const unsub = subscribeAnnouncements(data => { setAnnouncements(data); setLoading(false); });
-    return unsub;
+    const unsubA = subscribeAnnouncements(data => { 
+      const sorted = [...data].sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date();
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date();
+        return dateB - dateA;
+      });
+      setAnnouncements(sorted); 
+      setLoading(false); 
+    });
+    const unsubP = subscribeProperties(data => setProperties(data));
+    return () => { unsubA(); unsubP(); };
   }, []);
 
   const filtered = filterCat === 'All' ? announcements : announcements.filter(a => a.category === filterCat);
@@ -136,7 +146,7 @@ export default function AnnouncementsPage({ onToast, userProfile }) {
             <Select label="Category" {...F('category')} options={['General', 'Maintenance', 'Reminder', 'Financial', 'Policy']} />
             <Select label="Priority" {...F('priority')} options={[{ value: 'normal', label: 'Normal' }, { value: 'high', label: 'High' }, { value: 'urgent', label: 'Urgent' }]} />
           </div>
-          <Select label="Audience" {...F('audience')} options={['All Properties', 'Harborview Condominiums', 'Elmwood Residences', 'Parkside Suites']} />
+          <Select label="Audience" {...F('audience')} options={['All Properties', ...properties.map(p => p.name)]} />
           <Textarea label="Message *" {...F('body')} placeholder="Write your announcement here..." rows={5} />
           <label style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', marginBottom: 18, padding: '11px 14px', background: form.pinned ? P.gold + '12' : P.bg, borderRadius: 9, border: `1px solid ${form.pinned ? P.gold + '40' : P.border}` }}>
             <div onClick={() => setForm(f => ({ ...f, pinned: !f.pinned }))} style={{ width: 38, height: 21, borderRadius: 11, background: form.pinned ? P.gold : P.border, position: 'relative', cursor: 'pointer', transition: 'background 0.2s', flexShrink: 0 }}>

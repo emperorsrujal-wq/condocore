@@ -88,11 +88,23 @@ export default function ViolationsPage({ userProfile, onToast }) {
   useEffect(() => {
     if (!userProfile) return;
     const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
-    if (!isPrivileged) { setLoading(false); return; }
-
-    const u1 = subscribeViolations(data => { setViolations(data); setLoading(false); });
-    const u2 = subscribeTenants(data => setOwners(data));
-    return () => { u1 && u1(); u2 && u2(); };
+    
+    let unsub1;
+    if (isPrivileged) {
+      unsub1 = subscribeViolations(data => {
+        const sorted = [...data].sort((a, b) => b.dateObserved.localeCompare(a.dateObserved));
+        setViolations(sorted);
+        setLoading(false);
+      });
+    } else {
+      unsub1 = subscribeUserViolations(userProfile.uid, data => {
+        const sorted = [...data].sort((a, b) => b.dateObserved.localeCompare(a.dateObserved));
+        setViolations(sorted);
+        setLoading(false);
+      });
+    }
+    const unsub2 = subscribeTenants(data => setOwners(data));
+    return () => { unsub1 && unsub1(); unsub2 && unsub2(); };
   }, [userProfile]);
 
   const filtered = violations.filter(v => {
@@ -162,8 +174,8 @@ export default function ViolationsPage({ userProfile, onToast }) {
     <div>
       <PageHeader
         title="Bylaw Violation Tracker"
-        subtitle={`${openViolations} open violations · ${violations.length} total`}
-        action={<Btn onClick={openAdd}><Plus size={15} /> Log Violation</Btn>}
+        subtitle={isPrivileged ? `${openViolations} open violations · ${violations.length} total` : `Violations recorded for your unit`}
+        action={isPrivileged && <Btn onClick={openAdd}><Plus size={15} /> Log Violation</Btn>}
       />
 
       {/* Summary stats */}
@@ -223,8 +235,12 @@ export default function ViolationsPage({ userProfile, onToast }) {
                 <TD>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => handlePrintNotice(v)} title="Generate Notice PDF" style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#EAF7F2', color: P.success, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}><FileText size={12} /> Notice</button>
-                    <button onClick={() => openEdit(v)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer' }}>Edit</button>
-                    <button onClick={() => handleDelete(v.id)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer' }}>Del</button>
+                    {isPrivileged && (
+                      <>
+                        <button onClick={() => openEdit(v)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer' }}>Edit</button>
+                        <button onClick={() => handleDelete(v.id)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer' }}>Del</button>
+                      </>
+                    )}
                   </div>
                 </TD>
               </TR>

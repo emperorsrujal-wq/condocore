@@ -79,9 +79,12 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
   useEffect(() => {
     if (!userProfile) return;
     const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
-    if (!isPrivileged) { setLoading(false); return; }
 
-    const u1 = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
+    const u1 = subscribeMeetings(data => { 
+      const sorted = [...data].sort((a, b) => b.date.localeCompare(a.date));
+      setMeetings(sorted); 
+      setLoading(false); 
+    });
     const u2 = subscribeProperties(data => setProperties(data));
     const u3 = subscribeTenants(data => setTenants(data));
     
@@ -164,7 +167,7 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
   return (
     <div>
       <PageHeader title={isHOAMode ? "Board Meeting Minutes" : "Management Meetings"} subtitle={`${meetings.length} meetings on record`}
-        action={<Btn onClick={openAdd}><Plus size={15} /> Log Meeting</Btn>} />
+        action={['manager', 'landlord', 'super_admin'].includes(userProfile?.role) && <Btn onClick={openAdd}><Plus size={15} /> Log Meeting</Btn>} />
 
       <div style={{ marginBottom: 16, position: 'relative' }}>
         <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: P.textMuted }} />
@@ -200,8 +203,12 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
                       style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#EAF7F2', color: P.success, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <FileText size={12} /> {generating === meeting.id ? '...' : 'Minutes PDF'}
                     </button>
-                    <button onClick={e => { e.stopPropagation(); openEdit(meeting); }} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer' }}>Edit</button>
-                    <button onClick={e => { e.stopPropagation(); handleDelete(meeting.id); }} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer' }}>Del</button>
+                    {['manager', 'landlord', 'super_admin'].includes(userProfile?.role) && (
+                      <>
+                        <button onClick={e => { e.stopPropagation(); openEdit(meeting); }} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer' }}>Edit</button>
+                        <button onClick={e => { e.stopPropagation(); handleDelete(meeting.id); }} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer' }}>Del</button>
+                      </>
+                    )}
                     {isOpen ? <ChevronDown size={16} color={P.textMuted} /> : <ChevronRight size={16} color={P.textMuted} />}
                   </div>
                 </div>

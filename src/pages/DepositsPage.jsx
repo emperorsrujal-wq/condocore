@@ -52,9 +52,17 @@ export default function DepositsPage({ userProfile, onToast }) {
   useEffect(() => {
     let unsubD, unsubT;
     if (isTenant) {
-      unsubD = subscribeTenantDeposits(userProfile.uid, data => { setDeposits(data); setLoading(false); });
+      unsubD = subscribeTenantDeposits(userProfile.uid, data => { 
+        const sorted = [...data].sort((a, b) => (b.dateCollected || '').localeCompare(a.dateCollected || ''));
+        setDeposits(sorted); 
+        setLoading(false); 
+      });
     } else {
-      unsubD = subscribeDeposits(data => { setDeposits(data); setLoading(false); });
+      unsubD = subscribeDeposits(data => { 
+        const sorted = [...data].sort((a, b) => (b.dateCollected || '').localeCompare(a.dateCollected || ''));
+        setDeposits(sorted); 
+        setLoading(false); 
+      });
       unsubT = subscribeTenants(data => setTenants(data));
     }
     return () => { unsubD && unsubD(); unsubT && unsubT(); };

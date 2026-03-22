@@ -55,7 +55,7 @@ export const deleteProperty = (id) => deleteDoc(doc(db, 'properties', id));
 
 // Tenants
 export const subscribeTenants = (callback) =>
-  onSnapshot(query(collection(db, 'tenants'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'tenants'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addTenant = (data) =>
@@ -239,7 +239,7 @@ export const deleteDeposit = (id) => deleteDoc(doc(db, 'deposits', id));
 
 // Evictions Phase 15
 export const subscribeEvictions = (callback) =>
-  onSnapshot(query(collection(db, 'evictions'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'evictions'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addEviction = (data) =>
@@ -252,7 +252,11 @@ export const deleteEviction = (id) => deleteDoc(doc(db, 'evictions', id));
 
 // HOA Phase 17: Bylaw Violations
 export const subscribeViolations = (callback) =>
-  onSnapshot(query(collection(db, 'violations'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'violations'), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const subscribeUserViolations = (userId, callback) =>
+  onSnapshot(query(collection(db, 'violations'), where('ownerId', '==', userId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addViolation = (data) =>
@@ -265,7 +269,7 @@ export const deleteViolation = (id) => deleteDoc(doc(db, 'violations', id));
 
 // HOA Phase 18: Reserve Fund
 export const subscribeReserveFund = (callback) =>
-  onSnapshot(query(collection(db, 'reserve_fund'), orderBy('date', 'desc')), snap =>
+  onSnapshot(collection(db, 'reserve_fund'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addReserveFundEntry = (data) =>
@@ -278,7 +282,7 @@ export const deleteReserveFundEntry = (id) => deleteDoc(doc(db, 'reserve_fund', 
 
 // HOA Phase 22: Reserve Study Projects
 export const subscribeReserveProjects = (callback) =>
-  onSnapshot(query(collection(db, 'reserve_projects'), orderBy('year', 'asc')), snap =>
+  onSnapshot(collection(db, 'reserve_projects'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addReserveProject = (data) =>
@@ -291,7 +295,7 @@ export const deleteReserveProject = (id) => deleteDoc(doc(db, 'reserve_projects'
 
 // HOA Phase 19: Board Meetings
 export const subscribeMeetings = (callback) =>
-  onSnapshot(query(collection(db, 'meetings'), orderBy('date', 'desc')), snap =>
+  onSnapshot(collection(db, 'meetings'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addMeeting = (data) =>
@@ -304,7 +308,7 @@ export const deleteMeeting = (id) => deleteDoc(doc(db, 'meetings', id));
 
 // HOA Phase 20: Special Assessments
 export const subscribeAssessments = (callback) =>
-  onSnapshot(query(collection(db, 'assessments'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'assessments'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addAssessment = (data) =>

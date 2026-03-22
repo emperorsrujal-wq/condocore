@@ -19,8 +19,16 @@ export default function RegistryPage({ onToast, userProfile }) {
   useEffect(() => {
     const isAdmin = ['manager', 'landlord', 'super_admin'].includes(userProfile?.role);
     const unsubR = isAdmin 
-      ? subscribeRegistry(data => { setEntries(data); setLoading(false); })
-      : subscribeUserRegistry(userProfile.uid, data => { setEntries(data); setLoading(false); });
+      ? subscribeRegistry(data => { 
+        const sorted = [...data].sort((a, b) => (a.ownerName || '').localeCompare(b.ownerName || ''));
+        setEntries(sorted); 
+        setLoading(false); 
+      })
+      : subscribeUserRegistry(userProfile.uid, data => { 
+        const sorted = [...data].sort((a, b) => (a.ownerName || '').localeCompare(b.ownerName || ''));
+        setEntries(sorted); 
+        setLoading(false); 
+      });
 
     const unsubP = subscribeProperties(data => setProperties(data));
     return () => { unsubR(); unsubP(); };

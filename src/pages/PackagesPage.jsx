@@ -21,9 +21,25 @@ export default function PackagesPage({ userProfile, onToast }) {
   useEffect(() => {
     let unsubP, unsubT;
     if (isTenant) {
-      unsubP = subscribeTenantPackages(userProfile.uid, data => { setPackages(data); setLoading(false); });
+      unsubP = subscribeTenantPackages(userProfile.uid, data => { 
+        const sorted = [...data].sort((a, b) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return dateB - dateA;
+        });
+        setPackages(sorted); 
+        setLoading(false); 
+      });
     } else {
-      unsubP = subscribePackages(data => { setPackages(data); setLoading(false); });
+      unsubP = subscribePackages(data => { 
+        const sorted = [...data].sort((a, b) => {
+          const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+          const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+          return dateB - dateA;
+        });
+        setPackages(sorted); 
+        setLoading(false); 
+      });
       unsubT = subscribeTenants(data => setTenants(data));
     }
     return () => { unsubP && unsubP(); unsubT && unsubT(); };

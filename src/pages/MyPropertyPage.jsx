@@ -15,10 +15,17 @@ export default function MyPropertyPage({ userProfile, tenantData, onToast }) {
        return;
     }
 
-    const unsubP = subscribeTenantPayments(tenantData.id, data => setPayments(data));
+    const unsubP = subscribeTenantPayments(tenantData.id, data => {
+      const sorted = [...data].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+      setPayments(sorted);
+    });
     const unsubA = subscribeAssessments(data => {
-      // All assessments, we will filter them below
-      setAssessments(data);
+      const sorted = [...data].sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return dateB - dateA;
+      });
+      setAssessments(sorted);
       setLoading(false);
     });
 
@@ -49,7 +56,7 @@ export default function MyPropertyPage({ userProfile, tenantData, onToast }) {
       <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
         <StatCard label="Monthly HOA Fee" value={`$${(tenantData.rentAmount || 0).toLocaleString()}`} color={P.navy} icon="🏢" />
         <StatCard label="Outstanding Levies" value={`$${totalOutstanding.toLocaleString()}`} color={totalOutstanding > 0 ? P.danger : P.success} icon="⚠️" />
-        <StatCard label="Owner Status" value="Good Standing" sub="All fees paid" color={P.success} icon="✅" />
+        <StatCard label="Owner Status" value={totalOutstanding > 0 ? "Levy Owed" : "Good Standing"} sub={totalOutstanding > 0 ? "Outstanding balance" : "All fees paid"} color={totalOutstanding > 0 ? P.warning : P.success} icon={totalOutstanding > 0 ? "⏳" : "✅"} />
       </div>
 
       <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
@@ -117,7 +124,7 @@ export default function MyPropertyPage({ userProfile, tenantData, onToast }) {
                     </div>
 
                     <div style={{ marginTop: 14, display: 'flex', gap: 8 }}>
-                      <button style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 8, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
+                      <button onClick={() => onToast('Invoice download started...', 'info')} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, padding: '8px', borderRadius: 8, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
                         <Download size={14} /> Download Invoice
                       </button>
                     </div>

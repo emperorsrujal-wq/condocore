@@ -32,7 +32,15 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
 
   useEffect(() => {
     if (!userProfile) return;
-    const u1 = subscribeAssessments(data => { setAssessments(data); setLoading(false); });
+    const u1 = subscribeAssessments(data => { 
+      const sorted = [...data].sort((a, b) => {
+        const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+        const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+        return dateB - dateA;
+      });
+      setAssessments(sorted); 
+      setLoading(false); 
+    });
     const uP = subscribeProperties(data => setProperties(data));
     
     const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);

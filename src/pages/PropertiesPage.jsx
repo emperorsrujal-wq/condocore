@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Building2, MapPin, List, Edit, Trash2 } from 'lucide-react';
+import { Plus, Building2, MapPin, List, Edit, Trash2, X } from 'lucide-react';
 import { subscribeProperties, addProperty, updateProperty, deleteProperty } from '../firebase';
 import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Table, TR, TD, Spinner, EmptyState, StatCard } from '../components/UI';
 import { useHOAMode } from '../contexts/HOAModeContext';
@@ -16,7 +16,11 @@ export default function PropertiesPage({ onToast }) {
   const [saving, setSaving]         = useState(false);
 
   useEffect(() => {
-    const unsub = subscribeProperties(data => { setProperties(data); setLoading(false); });
+    const unsub = subscribeProperties(data => { 
+      const sorted = [...data].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      setProperties(sorted); 
+      setLoading(false); 
+    });
     return unsub;
   }, []);
 

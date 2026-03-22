@@ -66,10 +66,25 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   const expiring   = tenants.filter(t => t.status === 'expiring').length;
   const overdue    = payments.filter(p => p.status === 'overdue').length;
 
-  const recentPayments   = payments.slice(0, 5);
-  const recentMaint      = maint.filter(m => m.status !== 'resolved').slice(0, 4);
-  const pinnedNotices    = notices.filter(n => n.pinned).slice(0, 3);
-  const recentAnnounce   = notices.slice(0, 3);
+  const recentPayments = [...payments].sort((a, b) => {
+    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+    return dateB - dateA;
+  }).slice(0, 5);
+
+  const recentMaint = maint.filter(m => m.status !== 'resolved').sort((a, b) => {
+    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+    return dateB - dateA;
+  }).slice(0, 4);
+
+  const recentAnnounce = [...notices].sort((a, b) => {
+    const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
+    const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
+    return dateB - dateA;
+  }).slice(0, 3);
+  
+  const pinnedNotices = recentAnnounce.filter(n => n.pinned);
 
   // ── Tenant Dashboard ──
   if (role === 'tenant' && tenantData) {

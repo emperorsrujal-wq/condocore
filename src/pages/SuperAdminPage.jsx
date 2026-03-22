@@ -9,7 +9,8 @@ export default function SuperAdminPage({ onToast }) {
 
   useEffect(() => {
     const unsub = subscribeAllUsers(data => {
-      setUsers(data);
+      const sorted = [...data].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      setUsers(sorted);
       setLoading(false);
     });
     return () => unsub();

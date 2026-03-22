@@ -26,7 +26,11 @@ export default function TenantsPage({ onToast }) {
   const [newOcc, setNewOcc] = useState({ name: '', relation: '', phone: '' });
 
   useEffect(() => {
-    const unsubT = subscribeTenants(data => { setTenants(data); setLoading(false); });
+    const unsubT = subscribeTenants(data => { 
+      const sorted = [...data].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      setTenants(sorted); 
+      setLoading(false); 
+    });
     const unsubP = subscribeProperties(data => setProperties(data));
     return () => { unsubT(); unsubP(); };
   }, []);

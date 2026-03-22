@@ -20,9 +20,17 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
   useEffect(() => {
     let unsub;
     if (isResident && tenantData?.id) {
-      unsub = subscribeTenantMaintenance(tenantData.id, data => { setRequests(data); setLoading(false); });
+      unsub = subscribeTenantMaintenance(tenantData.id, data => { 
+        const sorted = [...data].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        setRequests(sorted); 
+        setLoading(false); 
+      });
     } else {
-      unsub = subscribeMaintenance(data => { setRequests(data); setLoading(false); });
+      unsub = subscribeMaintenance(data => { 
+        const sorted = [...data].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
+        setRequests(sorted); 
+        setLoading(false); 
+      });
     }
     const unsubV = subscribeVendors(data => setVendors(data));
     return () => { if (unsub) unsub(); unsubV(); };

@@ -54,7 +54,11 @@ export default function EvictionsPage({ userProfile, onToast }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const unsubE = subscribeEvictions(data => { setEvictions(data); setLoading(false); });
+    const unsubE = subscribeEvictions(data => { 
+      const sorted = [...data].sort((a, b) => (b.issueDate || '').localeCompare(a.issueDate || ''));
+      setEvictions(sorted); 
+      setLoading(false); 
+    });
     const unsubT = subscribeTenants(data => setTenants(data));
     return () => { unsubE(); unsubT(); };
   }, []);

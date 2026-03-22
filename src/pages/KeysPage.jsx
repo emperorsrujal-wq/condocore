@@ -17,7 +17,11 @@ export default function KeysPage({ onToast }) {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const unsubK = subscribeKeys(data => { setKeys(data); setLoading(false); });
+    const unsubK = subscribeKeys(data => { 
+      const sorted = [...data].sort((a, b) => (a.serial || '').localeCompare(b.serial || ''));
+      setKeys(sorted); 
+      setLoading(false); 
+    });
     const unsubT = subscribeTenants(data => setTenants(data));
     return () => { unsubK(); unsubT(); };
   }, []);

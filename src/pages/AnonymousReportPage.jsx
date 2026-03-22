@@ -21,7 +21,8 @@ export default function AnonymousReportPage() {
   useEffect(() => {
     // We can subscribe to properties without auth thanks to the new rules!
     const unsub = subscribeProperties(data => {
-      setProperties(data);
+      const sorted = [...data].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      setProperties(sorted);
       setLoading(false);
     });
     return () => unsub();

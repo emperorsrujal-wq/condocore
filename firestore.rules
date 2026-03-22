@@ -116,22 +116,26 @@ service cloud.firestore {
 
     // HOA: Bylaw Violations
     match /violations/{vId} {
-      allow read, write: if isAuth() && isManagerOrLandlord();
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.ownerId == uid());
+      allow write: if isAuth() && isManagerOrLandlord();
     }
 
     // HOA: Reserve Fund
     match /reserve_fund/{rfId} {
-      allow read, write: if isAuth() && isManagerOrLandlord();
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrLandlord();
     }
 
     // HOA: Reserve Fund Projects
     match /reserve_projects/{rpId} {
-      allow read, write: if isAuth() && isManagerOrLandlord();
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrLandlord();
     }
 
     // HOA: Board Meetings
     match /meetings/{mId} {
-      allow read, write: if isAuth() && isManagerOrLandlord();
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrLandlord();
     }
 
     // HOA: Special Assessments
