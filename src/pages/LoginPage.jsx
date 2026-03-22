@@ -32,7 +32,7 @@ export default function LoginPage() {
   const matchedProperties = regAddress.trim().length >= 2
     ? properties.filter(p => {
         const q = regAddress.toLowerCase();
-        return (p.address || '').toLowerCase().includes(q) || (p.name || '').toLowerCase().includes(q);
+        return (p.address || '').toLowerCase().includes(q);
       })
     : [];
 

@@ -110,6 +110,28 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   const pinnedNotices = recentAnnounce.filter(n => n.pinned);
 
   // ── Personal Dashboard (Tenant/Owner) ──
+  if (['tenant', 'owner'].includes(role) && !tenantData) {
+    // Tenant/Owner with no linked tenant record yet — show a pending state, NOT the manager dashboard
+    return (
+      <div>
+        <div style={{ background: P.navy, borderRadius: 18, padding: '26px 30px', marginBottom: 24, position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', right: -30, top: -30, width: 180, height: 180, borderRadius: '50%', background: 'rgba(200,169,110,0.08)' }} />
+          <div style={{ position: 'relative' }}>
+            <div style={{ fontSize: 11, color: P.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Welcome</div>
+            <h1 style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 26, color: '#fff', margin: '0 0 4px' }}>{userProfile?.name || 'Resident'}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.5)', margin: 0, fontSize: 13 }}>Your account is being set up</p>
+          </div>
+        </div>
+        <div style={{ background: '#FEF3E2', border: `1px solid ${P.warning}30`, borderRadius: 12, padding: '20px 24px', textAlign: 'center' }}>
+          <div style={{ fontSize: 15, fontWeight: 700, color: P.warning, marginBottom: 8 }}>Account Pending Setup</div>
+          <p style={{ color: P.textMuted, fontSize: 13, margin: 0 }}>
+            Your building management is reviewing your registration. Once approved, you'll see your unit details, payments, and maintenance requests here.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
   if (['tenant', 'owner'].includes(role) && tenantData) {
     const myPayments  = safePayments.filter(p => p.tenantId === tenantData.id).slice(0, 4);
     const myMaint     = safeMaint.filter(m => m.tenantId === tenantData.id).slice(0, 3);
