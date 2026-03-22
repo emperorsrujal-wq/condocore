@@ -24,10 +24,15 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
     let unsubT, unsubP, unsubM, unsubA, unsubMe;
 
     if (role) {
-      if (role === 'tenant' && !tenantData) return; // Wait for tenant data
+      const isPrivileged = ['tenant', 'owner'].includes(role);
+      if (isPrivileged && !tenantData) return; // Wait for personal data
       
       const isAdmin = ['manager', 'landlord', 'super_admin'].includes(role);
-      const handle = (fn, data) => { fn(data); setLoading(false); };
+      const handle = (fn, data, isCore = false) => { 
+        fn(data); 
+        if (isCore) setInit(true);
+        if (!isAdmin || isCore) setLoading(false); 
+      };
 
       let activeUnsubs = [];
       if (isAdmin) {
@@ -37,13 +42,13 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
           subscribeMaintenance(data => handle(setMaint, data)),
           subscribeAnnouncements(data => handle(setNotices, data)),
           subscribeMeetings(data => handle(setMeetings, data)),
-          subscribeProperties(data => handle(setProperties, data))
+          subscribeProperties(data => handle(setProperties, data, true))
         ];
       } else {
-        // Tenant view
+        // Tenant/Owner view
         activeUnsubs = [
-          subscribeTenantPayments(tenantData.id, data => handle(setPayments, data)),
-          subscribeTenantMaintenance(tenantData.id, data => handle(setMaint, data)),
+          subscribeTenantPayments(tenantData?.id, data => handle(setPayments, data)),
+          subscribeTenantMaintenance(tenantData?.id, data => handle(setMaint, data)),
           subscribeAnnouncements(data => handle(setNotices, data)),
           subscribeMeetings(data => handle(setMeetings, data))
         ];
@@ -105,8 +110,8 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   
   const pinnedNotices = recentAnnounce.filter(n => n.pinned);
 
-  // ── Tenant Dashboard ──
-  if (role === 'tenant' && tenantData) {
+  // ── Personal Dashboard (Tenant/Owner) ──
+  if (['tenant', 'owner'].includes(role) && tenantData) {
     const myPayments  = safePayments.filter(p => p.tenantId === tenantData.id).slice(0, 4);
     const myMaint     = safeMaint.filter(m => m.tenantId === tenantData.id).slice(0, 3);
     const pendingPay  = myPayments.find(p => p.status === 'pending' || p.status === 'overdue');
