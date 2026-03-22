@@ -39,7 +39,9 @@ export default function MessagesPage({ userProfile, onToast }) {
     if (userProfile?.role === 'manager' || userProfile?.role === 'landlord') {
       const unsub = subscribeTenants(data => {
         // Tenants have { userId, name, unit }
-        const mapped = data.filter(t => t.userId).map(t => ({ id: t.userId, name: `${t.name} (Unit ${t.unit || '?'})` }));
+        const mapped = data
+          .filter(t => t.id && (t.userId || t.id)) // Use tenant id if userId not available
+          .map(t => ({ id: t.userId || t.id, name: `${t.name || 'Unknown'} (Unit ${t.unit || '?'})` }));
         setContacts(mapped);
       });
       return unsub;
