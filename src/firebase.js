@@ -33,6 +33,10 @@ export const subscribeAllUsers = (callback) =>
   onSnapshot(collection(db, 'users'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
+export const subscribeManagers = (callback) =>
+  onSnapshot(query(collection(db, 'users'), where('role', 'in', ['manager', 'landlord'])), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
 export const updateUserRole = (uid, role) =>
   updateDoc(doc(db, 'users', uid), { role, updatedAt: serverTimestamp() });
 
@@ -333,7 +337,7 @@ export const submitVote = (meetingId, voteId, data) =>
 
 // Vendors & Contractors
 export const subscribeVendors = (callback) =>
-  onSnapshot(query(collection(db, 'vendors'), orderBy('name', 'asc')), snap =>
+  onSnapshot(collection(db, 'vendors'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addVendor = (data) =>
@@ -347,6 +351,10 @@ export const deleteVendor = (id) => deleteDoc(doc(db, 'vendors', id));
 // Registry (Pets & Vehicles)
 export const subscribeRegistry = (callback) =>
   onSnapshot(query(collection(db, 'registry'), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+
+export const subscribeUserRegistry = (userId, callback) =>
+  onSnapshot(query(collection(db, 'registry'), where('userId', '==', userId), orderBy('createdAt', 'desc')), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addRegistryEntry = (data) =>

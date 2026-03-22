@@ -149,7 +149,7 @@ service cloud.firestore {
     // Registry (Pets & Vehicles)
     match /registry/{rId} {
       allow read: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
-      allow create: if isAuth();
+      allow create: if isAuth() && request.resource.data.userId == uid();
       allow update, delete: if isAuth() && isManagerOrLandlord();
     }
   }

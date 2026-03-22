@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Dog, Car, User, MapPin, Hash, ShieldCheck, ShieldAlert, Edit, Trash2 } from 'lucide-react';
-import { subscribeRegistry, addRegistryEntry, updateRegistryEntry, deleteRegistryEntry, subscribeProperties } from '../firebase';
+import { subscribeRegistry, subscribeUserRegistry, addRegistryEntry, updateRegistryEntry, deleteRegistryEntry, subscribeProperties } from '../firebase';
 import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, StatusBadge } from '../components/UI';
 
 const FORM_DEFAULT = { type: 'pet', ownerName: '', unit: '', property: '', name: '', breed: '', vaccineStatus: 'up-to-date', make: '', model: '', color: '', plate: '', spot: '' };
 
-export default function RegistryPage({ onToast }) {
+export default function RegistryPage({ onToast, userProfile }) {
   const [entries, setEntries] = useState([]);
   const [properties, setProperties] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,10 +17,14 @@ export default function RegistryPage({ onToast }) {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const unsubR = subscribeRegistry(data => { setEntries(data); setLoading(false); });
+    const isAdmin = ['manager', 'landlord', 'super_admin'].includes(userProfile?.role);
+    const unsubR = isAdmin 
+      ? subscribeRegistry(data => { setEntries(data); setLoading(false); })
+      : subscribeUserRegistry(userProfile.uid, data => { setEntries(data); setLoading(false); });
+
     const unsubP = subscribeProperties(data => setProperties(data));
     return () => { unsubR(); unsubP(); };
-  }, []);
+  }, [userProfile]);
 
   const openAdd = () => { setForm({ ...FORM_DEFAULT, type: tab }); setEditing(null); setShowForm(true); };
   const openEdit = (e) => { setForm({ ...e }); setEditing(e); setShowForm(true); };
@@ -28,9 +32,11 @@ export default function RegistryPage({ onToast }) {
   const handleSave = async () => {
     if (!form.ownerName || !form.unit || !form.property) return onToast('Owner, Unit, and Property are required.', 'error');
     setSaving(true);
+    setSaving(true);
     try {
-      if (editing) { await updateRegistryEntry(editing.id, form); onToast('Entry updated.'); }
-      else { await addRegistryEntry(form); onToast('Entry added.'); }
+      const dataWithUser = { ...form, userId: userProfile.uid };
+      if (editing) { await updateRegistryEntry(editing.id, dataWithUser); onToast('Entry updated.'); }
+      else { await addRegistryEntry(dataWithUser); onToast('Entry added.'); }
       setShowForm(false);
     } catch (e) { onToast(e.message, 'error'); }
     setSaving(false);

@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Send, Plus, Search, MessageSquare, User, Clock } from 'lucide-react';
-import { subscribeThreads, subscribeMessages, sendMessage, createThread, subscribeTenants } from '../firebase';
+import { subscribeThreads, subscribeMessages, sendMessage, createThread, subscribeTenants, subscribeManagers } from '../firebase';
 import { P, Btn, PageHeader, Modal, Input, Select, Spinner, EmptyState } from '../components/UI';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../firebase'; // for manual queries if needed
@@ -44,18 +44,12 @@ export default function MessagesPage({ userProfile, onToast }) {
       });
       return unsub;
     } else {
-      // Tenant looking for manager. For MVP, we fetch all managers.
-      const fetchManagers = async () => {
-        try {
-          const q = query(collection(db, 'users'), where('role', 'in', ['manager', 'landlord']));
-          const snap = await getDocs(q);
-          const mapped = snap.docs.map(d => ({ id: d.id, name: `${d.data().name} (Manager)` }));
-          setContacts(mapped);
-        } catch (e) {
-          console.error("Failed to load managers", e);
-        }
-      };
-      fetchManagers();
+      // Tenant looking for manager. Using optimized helper.
+      const unsub = subscribeManagers(data => {
+        const mapped = data.map(d => ({ id: d.id, name: `${d.name} (Manager)` }));
+        setContacts(mapped);
+      });
+      return unsub;
     }
   }, [userProfile]);
 
