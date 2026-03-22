@@ -65,8 +65,8 @@ export default function EvictionsPage({ userProfile, onToast }) {
 
   const filtered = evictions.filter(e => {
     const tName = tenants.find(t => t.id === e.tenantId)?.name || '';
-    return e.formType.toLowerCase().includes(search.toLowerCase()) || 
-           e.status.toLowerCase().includes(search.toLowerCase()) || 
+    return (e.formType || '').toLowerCase().includes(search.toLowerCase()) || 
+           (e.status || '').toLowerCase().includes(search.toLowerCase()) || 
            tName.toLowerCase().includes(search.toLowerCase());
   });
 

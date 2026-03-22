@@ -15,7 +15,7 @@ export default function VendorsPage({ onToast, userProfile }) {
 
   useEffect(() => {
     const unsub = subscribeVendors(data => { 
-      const sorted = [...data].sort((a, b) => a.name.localeCompare(b.name));
+      const sorted = [...data].sort((a, b) => (a.name || '').localeCompare(b.name || ''));
       setVendors(sorted); 
       setLoading(false); 
     });

@@ -48,7 +48,7 @@ export default function PackagesPage({ userProfile, onToast }) {
   const filtered = packages.filter(p => {
     const q = search.toLowerCase();
     const tName = tenants.find(t => t.id === p.tenantId)?.name || '';
-    return p.courier.toLowerCase().includes(q) || p.tracking.toLowerCase().includes(q) || tName.toLowerCase().includes(q);
+    return (p.courier || '').toLowerCase().includes(q) || (p.tracking || '').toLowerCase().includes(q) || tName.toLowerCase().includes(q);
   });
 
   const openAdd = () => { setForm(FORM_DEFAULT); setEditing(null); setShowForm(true); };

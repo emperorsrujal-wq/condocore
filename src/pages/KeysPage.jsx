@@ -29,7 +29,7 @@ export default function KeysPage({ onToast }) {
   const filtered = keys.filter(k => {
     const q = search.toLowerCase();
     const tName = tenants.find(t => t.id === k.tenantId)?.name || '';
-    return k.serial.toLowerCase().includes(q) || tName.toLowerCase().includes(q) || k.property.toLowerCase().includes(q);
+    return (k.serial || '').toLowerCase().includes(q) || tName.toLowerCase().includes(q) || (k.property || '').toLowerCase().includes(q);
   });
 
   const openAdd = () => { setForm(FORM_DEFAULT); setEditing(null); setShowForm(true); };

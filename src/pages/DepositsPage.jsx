@@ -71,7 +71,7 @@ export default function DepositsPage({ userProfile, onToast }) {
   const filtered = deposits.filter(d => {
     const q = search.toLowerCase();
     const tName = tenants.find(t => t.id === d.tenantId)?.name || '';
-    return d.type.toLowerCase().includes(q) || d.status.toLowerCase().includes(q) || tName.toLowerCase().includes(q);
+    return (d.type || '').toLowerCase().includes(q) || (d.status || '').toLowerCase().includes(q) || tName.toLowerCase().includes(q);
   });
 
   const aggregateEscrow = filtered.reduce((acc, curr) => curr.status === 'Held in Escrow' ? acc + (Number(curr.amount) || 0) : acc, 0);

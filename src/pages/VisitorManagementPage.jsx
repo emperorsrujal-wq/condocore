@@ -32,7 +32,7 @@ export default function VisitorManagementPage({ userProfile, tenantData, onToast
   useEffect(() => {
     if (!selectedPropertyId) return;
     const unsubV = subscribeVisitors(selectedPropertyId, data => {
-      const sorted = [...data].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
+      const sorted = [...data].sort((a, b) => (b.visitDate || '').localeCompare(a.visitDate || ''));
       setVisitors(sorted);
       setLoading(false);
     });
@@ -76,7 +76,7 @@ export default function VisitorManagementPage({ userProfile, tenantData, onToast
   const filtered = visitors.filter(v => {
     const q = search.toLowerCase();
     const isOwnerMatch = isManager || v.residentId === userProfile.uid;
-    const isSearchMatch = v.guestName.toLowerCase().includes(q) || v.unit.toLowerCase().includes(q);
+    const isSearchMatch = (v.guestName || '').toLowerCase().includes(q) || (v.unit || '').toLowerCase().includes(q);
     return isOwnerMatch && isSearchMatch;
   });
 
