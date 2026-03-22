@@ -77,31 +77,14 @@ export default function LegalFormsPage({ userProfile, onToast }) {
     setGenerating(true);
     try {
       console.log('Generating PDF for:', selectedTenant.name, form.formType);
-      
+
       // Generate Blob
       const blob = await generateLegalNoticePDF(selectedTenant, form.province, form.formType, form, userProfile?.name);
 
       if (!blob || blob.size === 0) throw new Error('Failed to generate PDF content.');
 
-      // Save it automatically to the tenant's Documents folder for record keeping
+      // Generate filename for download
       const filename = `${form.formType}_Notice_${selectedTenant.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-      const path = `documents/${filename}`;
-      
-      console.log('Uploading PDF to:', path);
-      const url = await uploadFile(blob, path);
-
-      await addDocument({
-        name: `${form.formType} Legal Notice`,
-        type: 'Notice',
-        unit: selectedTenant.unit,
-        tenantId: selectedTenant.id,
-        url,
-        storagePath: path,
-        size: (blob.size / 1024).toFixed(1) + ' KB',
-        ext: 'PDF',
-        uploadedBy: userProfile?.name || 'System',
-        status: 'pending_approval'
-      });
 
       // Trigger automatic local download
       const localUrl = URL.createObjectURL(blob);
@@ -115,7 +98,7 @@ export default function LegalFormsPage({ userProfile, onToast }) {
         URL.revokeObjectURL(localUrl);
       }, 100);
 
-      onToast(`${form.formType} Form Generated & Saved!`);
+      onToast(`${form.formType} Form Generated & Downloaded!`);
     } catch (e) {
       console.error('PDF Generation Error:', e);
       onToast(`Failed to generate notice: ${e.message}`, 'error');
