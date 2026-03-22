@@ -32,7 +32,8 @@ export default function VisitorManagementPage({ userProfile, tenantData, onToast
   useEffect(() => {
     if (!selectedPropertyId) return;
     const unsubV = subscribeVisitors(selectedPropertyId, data => {
-      setVisitors(data);
+      const sorted = [...data].sort((a, b) => b.visitDate.localeCompare(a.visitDate));
+      setVisitors(sorted);
       setLoading(false);
     });
     return () => unsubV();

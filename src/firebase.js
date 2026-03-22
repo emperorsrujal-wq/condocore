@@ -368,7 +368,7 @@ export const deleteRegistryEntry = (id) => deleteDoc(doc(db, 'registry', id));
 // Amenity Bookings
 export const subscribeBookings = (propertyId, callback) => {
   let q = collection(db, 'bookings');
-  if (propertyId) q = query(q, where('propertyId', '==', propertyId), orderBy('date', 'asc'));
+  if (propertyId) q = query(q, where('propertyId', '==', propertyId));
   return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 };
 
@@ -383,7 +383,7 @@ export const deleteBooking = (id) => deleteDoc(doc(db, 'bookings', id));
 // Visitor Management
 export const subscribeVisitors = (propertyId, callback) => {
   let q = collection(db, 'visitors');
-  if (propertyId) q = query(q, where('propertyId', '==', propertyId), orderBy('visitDate', 'desc'));
+  if (propertyId) q = query(q, where('propertyId', '==', propertyId));
   return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 };
 

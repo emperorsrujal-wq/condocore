@@ -30,7 +30,8 @@ export default function AmenityBookingPage({ userProfile, tenantData, onToast })
   useEffect(() => {
     if (!selectedPropertyId) return;
     const unsubB = subscribeBookings(selectedPropertyId, data => {
-      setBookings(data);
+      const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+      setBookings(sorted);
       setLoading(false);
     });
     return () => unsubB();
