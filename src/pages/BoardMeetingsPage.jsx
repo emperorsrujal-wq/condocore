@@ -1,6 +1,6 @@
 import { subscribeMeetings, addMeeting, updateMeeting, deleteMeeting, uploadFile, addDocument, subscribeProperties, subscribeTenants, subscribeVotes } from '../firebase';
 import { P, Btn, Modal, Input, Select, PageHeader, Spinner, EmptyState } from '../components/UI';
-import { Vote } from 'lucide-react';
+import { Vote, ClipboardList, ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Minus, FileText } from 'lucide-react';
 import { useHOAMode } from '../contexts/HOAModeContext';
 import { jsPDF } from 'jspdf';
 

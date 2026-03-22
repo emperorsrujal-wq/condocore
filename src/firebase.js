@@ -72,11 +72,11 @@ export const getTenantByUserId = (uid, callback) =>
 
 // Payments
 export const subscribePayments = (callback) =>
-  onSnapshot(query(collection(db, 'payments'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'payments'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeTenantPayments = (tenantId, callback) =>
-  onSnapshot(query(collection(db, 'payments'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'payments'), where('tenantId', '==', tenantId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addPayment = (data) =>
@@ -87,11 +87,11 @@ export const updatePayment = (id, data) =>
 
 // Maintenance
 export const subscribeMaintenance = (callback) =>
-  onSnapshot(query(collection(db, 'maintenance'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'maintenance'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeTenantMaintenance = (tenantId, callback) =>
-  onSnapshot(query(collection(db, 'maintenance'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'maintenance'), where('tenantId', '==', tenantId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addMaintenanceRequest = async (data) => {
@@ -112,11 +112,11 @@ export const updateMaintenanceRequest = (id, data) =>
 
 // Documents
 export const subscribeDocuments = (callback) =>
-  onSnapshot(query(collection(db, 'documents'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'documents'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeTenantDocuments = (tenantId, callback) =>
-  onSnapshot(query(collection(db, 'documents'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'documents'), where('tenantId', '==', tenantId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addDocument = (data) =>
@@ -141,7 +141,7 @@ export const uploadFile = (file, path, onProgress) => {
 
 // Announcements
 export const subscribeAnnouncements = (callback) =>
-  onSnapshot(query(collection(db, 'announcements'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'announcements'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addAnnouncement = async (data) => {
@@ -164,7 +164,7 @@ export const subscribeThreads = (userId, callback) =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeMessages = (threadId, callback) =>
-  onSnapshot(query(collection(db, 'threads', threadId, 'messages'), orderBy('createdAt', 'asc')), snap =>
+  onSnapshot(collection(db, 'threads', threadId, 'messages'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const sendMessage = async (threadId, message) => {
@@ -177,7 +177,7 @@ export const createThread = (data) =>
 
 // Notifications
 export const subscribeNotifications = (userId, callback) =>
-  onSnapshot(query(collection(db, 'notifications'), where('userId', '==', userId), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'notifications'), where('userId', '==', userId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const markNotificationRead = (id) => updateDoc(doc(db, 'notifications', id), { read: true });
@@ -200,11 +200,11 @@ export const deleteKey = (id) => deleteDoc(doc(db, 'keys', id));
 
 // Packages
 export const subscribePackages = (callback) =>
-  onSnapshot(query(collection(db, 'packages'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'packages'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeTenantPackages = (tenantId, callback) =>
-  onSnapshot(query(collection(db, 'packages'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'packages'), where('tenantId', '==', tenantId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addPackage = async (data) => {
@@ -222,11 +222,11 @@ export const deletePackage = (id) => deleteDoc(doc(db, 'packages', id));
 
 // Deposits / LMR
 export const subscribeDeposits = (callback) =>
-  onSnapshot(query(collection(db, 'deposits'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'deposits'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeTenantDeposits = (tenantId, callback) =>
-  onSnapshot(query(collection(db, 'deposits'), where('tenantId', '==', tenantId), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'deposits'), where('tenantId', '==', tenantId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addDeposit = (data) =>
@@ -295,16 +295,16 @@ export const deleteReserveProject = (id) => deleteDoc(doc(db, 'reserve_projects'
 
 // HOA Phase 19: Board Meetings
 export const subscribeMeetings = (callback) =>
-  onSnapshot(collection(db, 'meetings'), snap =>
+  onSnapshot(collection(db, 'boardMeetings'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addMeeting = (data) =>
-  addDoc(collection(db, 'meetings'), { ...data, createdAt: serverTimestamp() });
+  addDoc(collection(db, 'boardMeetings'), { ...data, createdAt: serverTimestamp() });
 
 export const updateMeeting = (id, data) =>
-  updateDoc(doc(db, 'meetings', id), { ...data, updatedAt: serverTimestamp() });
+  updateDoc(doc(db, 'boardMeetings', id), { ...data, updatedAt: serverTimestamp() });
 
-export const deleteMeeting = (id) => deleteDoc(doc(db, 'meetings', id));
+export const deleteMeeting = (id) => deleteDoc(doc(db, 'boardMeetings', id));
 
 // HOA Phase 20: Special Assessments
 export const subscribeAssessments = (callback) =>
@@ -333,11 +333,11 @@ export const setUnitPayment = (assessmentId, unitId, data) =>
 
 // HOA Phase 23: Electronic Voting
 export const subscribeVotes = (meetingId, callback) =>
-  onSnapshot(collection(db, 'meetings', meetingId, 'votes'), snap =>
+  onSnapshot(collection(db, 'boardMeetings', meetingId, 'votes'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const submitVote = (meetingId, voteId, data) =>
-  setDoc(doc(db, 'meetings', meetingId, 'votes', voteId), { ...data, timestamp: serverTimestamp() }, { merge: true });
+  setDoc(doc(db, 'boardMeetings', meetingId, 'votes', voteId), { ...data, timestamp: serverTimestamp() }, { merge: true });
 
 // Vendors & Contractors
 export const subscribeVendors = (callback) =>
@@ -354,11 +354,11 @@ export const deleteVendor = (id) => deleteDoc(doc(db, 'vendors', id));
 
 // Registry (Pets & Vehicles)
 export const subscribeRegistry = (callback) =>
-  onSnapshot(query(collection(db, 'registry'), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(collection(db, 'registry'), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeUserRegistry = (userId, callback) =>
-  onSnapshot(query(collection(db, 'registry'), where('userId', '==', userId), orderBy('createdAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'registry'), where('userId', '==', userId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const addRegistryEntry = (data) =>

@@ -21,8 +21,11 @@ const HOA_LABELS = {
 
 export function HOAModeProvider({ children }) {
   const [isHOAMode, setIsHOAMode] = useState(() => {
-    try { return localStorage.getItem('condocore_hoa_mode') === 'true'; }
-    catch { return false; }
+    try { 
+      const stored = localStorage.getItem('condocore_hoa_mode');
+      return stored === 'true' || stored === null; // Default to true if not set
+    }
+    catch { return true; }
   });
 
   const toggleMode = () => {

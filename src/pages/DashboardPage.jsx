@@ -23,28 +23,31 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
 
     if (role) {
       const isAdmin = ['manager', 'landlord', 'super_admin'].includes(role);
+      const handle = (fn, data) => { fn(data); setLoading(false); };
 
-      if (isAdmin) {
-        unsubT = subscribeTenants(data => setTenants(data));
-        unsubP = subscribePayments(data => setPayments(data));
-        unsubM = subscribeMaintenance(data => setMaint(data));
-        unsubA = subscribeAnnouncements(data => setNotices(data));
-        unsubMe = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
-      } else {
-        unsubP = subscribePayments(data => setPayments(data));
-        unsubM = subscribeMaintenance(data => setMaint(data));
-        unsubA = subscribeAnnouncements(data => setNotices(data));
-        unsubMe = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
-      }
+      const subs = isAdmin ? [
+        [subscribeTenants, setTenants],
+        [subscribePayments, setPayments],
+        [subscribeMaintenance, setMaint],
+        [subscribeAnnouncements, setNotices],
+        [subscribeMeetings, setMeetings]
+      ] : [
+        [subscribePayments, setPayments],
+        [subscribeMaintenance, setMaint],
+        [subscribeAnnouncements, setNotices],
+        [subscribeMeetings, setMeetings]
+      ];
+
+      const activeUnsubs = subs.map(([sub, set]) => sub(data => handle(set, data)));
+
+      const timer = setTimeout(() => setLoading(false), 2500);
+      return () => {
+        clearTimeout(timer);
+        activeUnsubs.forEach(unsub => unsub && unsub());
+      };
+    } else {
+      setLoading(false);
     }
-
-    return () => {
-      unsubT && unsubT();
-      unsubP && unsubP();
-      unsubM && unsubM();
-      unsubA && unsubA();
-      unsubMe && unsubMe();
-    };
   }, [role]);
 
   useEffect(() => {

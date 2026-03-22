@@ -63,19 +63,20 @@ export function Btn({ children, onClick, variant = 'primary', size = 'md', disab
 }
 
 // ─── Input ────────────────────────────────────────────────────────────────────
-export function Input({ label, type = 'text', value, onChange, placeholder, required, style: extraStyle, helpText }) {
+export function Input({ id, label, type = 'text', value, onChange, placeholder, required, style: extraStyle, helpText }) {
+  const inputId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   return (
     <div style={{ marginBottom: 14, ...extraStyle }}>
       {label && (
         <div style={{ marginBottom: 5 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>
+          <label htmlFor={inputId} style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>
             {label}{required && <span style={{ color: P.danger }}> *</span>}
           </label>
           {helpText && <div style={{ fontSize: 10, color: P.goldDark, fontWeight: 500, marginTop: 1, fontStyle: 'italic' }}>{helpText}</div>}
         </div>
       )}
-      <input type={type} value={value} onChange={onChange} placeholder={placeholder} required={required}
-        style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, background: P.card, boxSizing: 'border-box', transition: 'border 0.15s' }}
+      <input id={inputId} type={type} value={value} onChange={onChange} placeholder={placeholder} required={required}
+        style={{ width: '100%', padding: '12px 14px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, background: P.card, boxSizing: 'border-box', transition: 'border 0.15s' }}
         onFocus={e => e.target.style.borderColor = P.navyLight}
         onBlur={e => e.target.style.borderColor = P.border} />
     </div>
@@ -83,19 +84,20 @@ export function Input({ label, type = 'text', value, onChange, placeholder, requ
 }
 
 // ─── Select ───────────────────────────────────────────────────────────────────
-export function Select({ label, value, onChange, options, required, helpText }) {
+export function Select({ id, label, value, onChange, options, required, helpText }) {
+  const selectId = id || (label ? label.toLowerCase().replace(/\s+/g, '-') : undefined);
   return (
     <div style={{ marginBottom: 14 }}>
       {label && (
         <div style={{ marginBottom: 5 }}>
-          <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>
+          <label htmlFor={selectId} style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block' }}>
             {label}{required && <span style={{ color: P.danger }}> *</span>}
           </label>
           {helpText && <div style={{ fontSize: 10, color: P.goldDark, fontWeight: 500, marginTop: 1, fontStyle: 'italic' }}>{helpText}</div>}
         </div>
       )}
-      <select value={value} onChange={onChange} required={required}
-        style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, background: P.card }}>
+      <select id={selectId} value={value} onChange={onChange} required={required}
+        style={{ width: '100%', padding: '12px 14px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, background: P.card }}>
         {options.map(o => typeof o === 'string' ? <option key={o} value={o}>{o}</option> : <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>

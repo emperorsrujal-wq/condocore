@@ -21,6 +21,7 @@ export default function ReserveFundPage({ userProfile, onToast }) {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [showProjectForm, setShowProjectForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [editingProject, setEditingProject] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);

@@ -34,7 +34,7 @@ service cloud.firestore {
 
     // Properties — managers can do everything, others can read
     match /properties/{propId} {
-      allow read: if isAuth();
+      allow read, list: if true; // Allow public selection for anonymous reports
       allow write: if isAuth() && isManagerOrLandlord();
     }
 
@@ -52,10 +52,10 @@ service cloud.firestore {
       allow create: if isAuth() && userRole() == 'tenant';
     }
 
-    // Maintenance — managers full access, tenants read/create their own
+    // Maintenance — managers full access, tenants read/create their own, public can create
     match /maintenance/{reqId} {
       allow read: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
-      allow create: if isAuth();
+      allow create: if true; // Allow public/anonymous reports
       allow update: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
       allow delete: if isAuth() && isManager();
     }
@@ -133,9 +133,14 @@ service cloud.firestore {
     }
 
     // HOA: Board Meetings
-    match /meetings/{mId} {
+    match /boardMeetings/{mId} {
       allow read: if isAuth();
       allow write: if isAuth() && isManagerOrLandlord();
+
+      match /votes/{vId} {
+        allow read: if isAuth();
+        allow create, update: if isAuth();
+      }
     }
 
     // HOA: Special Assessments
