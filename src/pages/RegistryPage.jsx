@@ -59,9 +59,9 @@ export default function RegistryPage({ onToast, userProfile }) {
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
 
   const filtered = entries.filter(e => e.type === tab && (
-    e.ownerName.toLowerCase().includes(search.toLowerCase()) ||
-    e.unit.toLowerCase().includes(search.toLowerCase()) ||
-    e.property.toLowerCase().includes(search.toLowerCase()) ||
+    (e.ownerName || '').toLowerCase().includes(search.toLowerCase()) ||
+    (e.unit || '').toLowerCase().includes(search.toLowerCase()) ||
+    (e.property || '').toLowerCase().includes(search.toLowerCase()) ||
     (e.plate || '').toLowerCase().includes(search.toLowerCase()) ||
     (e.name || '').toLowerCase().includes(search.toLowerCase())
   ));

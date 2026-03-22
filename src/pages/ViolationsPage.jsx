@@ -92,13 +92,13 @@ export default function ViolationsPage({ userProfile, onToast }) {
     let unsub1;
     if (isPrivileged) {
       unsub1 = subscribeViolations(data => {
-        const sorted = [...data].sort((a, b) => b.dateObserved.localeCompare(a.dateObserved));
+        const sorted = [...data].sort((a, b) => (b.dateObserved || '').localeCompare(a.dateObserved || ''));
         setViolations(sorted);
         setLoading(false);
       });
     } else {
       unsub1 = subscribeUserViolations(userProfile.uid, data => {
-        const sorted = [...data].sort((a, b) => b.dateObserved.localeCompare(a.dateObserved));
+        const sorted = [...data].sort((a, b) => (b.dateObserved || '').localeCompare(a.dateObserved || ''));
         setViolations(sorted);
         setLoading(false);
       });

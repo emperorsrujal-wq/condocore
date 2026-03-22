@@ -31,11 +31,11 @@ export const setUserProfile = (uid, data) => setDoc(doc(db, 'users', uid), { ...
 
 export const subscribeAllUsers = (callback) =>
   onSnapshot(collection(db, 'users'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeManagers = (callback) =>
   onSnapshot(query(collection(db, 'users'), where('role', 'in', ['manager', 'landlord'])), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const updateUserRole = (uid, role) =>
   updateDoc(doc(db, 'users', uid), { role, updatedAt: serverTimestamp() });
@@ -43,7 +43,7 @@ export const updateUserRole = (uid, role) =>
 // Properties
 export const subscribeProperties = (callback) =>
   onSnapshot(collection(db, 'properties'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addProperty = (data) =>
   addDoc(collection(db, 'properties'), { ...data, createdAt: serverTimestamp() });
@@ -56,7 +56,7 @@ export const deleteProperty = (id) => deleteDoc(doc(db, 'properties', id));
 // Tenants
 export const subscribeTenants = (callback) =>
   onSnapshot(collection(db, 'tenants'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addTenant = (data) =>
   addDoc(collection(db, 'tenants'), { ...data, createdAt: serverTimestamp() });
@@ -68,16 +68,16 @@ export const deleteTenant = (id) => deleteDoc(doc(db, 'tenants', id));
 
 export const getTenantByUserId = (uid, callback) =>
   onSnapshot(query(collection(db, 'tenants'), where('userId', '==', uid)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))[0] || null));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))[0] || null), err => console.warn('Listener error:', err.code));
 
 // Payments
 export const subscribePayments = (callback) =>
   onSnapshot(collection(db, 'payments'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeTenantPayments = (tenantId, callback) =>
   onSnapshot(query(collection(db, 'payments'), where('tenantId', '==', tenantId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addPayment = (data) =>
   addDoc(collection(db, 'payments'), { ...data, createdAt: serverTimestamp() });
@@ -88,11 +88,11 @@ export const updatePayment = (id, data) =>
 // Maintenance
 export const subscribeMaintenance = (callback) =>
   onSnapshot(collection(db, 'maintenance'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeTenantMaintenance = (tenantId, callback) =>
   onSnapshot(query(collection(db, 'maintenance'), where('tenantId', '==', tenantId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addMaintenanceRequest = async (data) => {
   const docRef = await addDoc(collection(db, 'maintenance'), {
@@ -113,11 +113,11 @@ export const updateMaintenanceRequest = (id, data) =>
 // Documents
 export const subscribeDocuments = (callback) =>
   onSnapshot(collection(db, 'documents'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeTenantDocuments = (tenantId, callback) =>
   onSnapshot(query(collection(db, 'documents'), where('tenantId', '==', tenantId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addDocument = (data) =>
   addDoc(collection(db, 'documents'), { ...data, createdAt: serverTimestamp() });
@@ -142,7 +142,7 @@ export const uploadFile = (file, path, onProgress) => {
 // Announcements
 export const subscribeAnnouncements = (callback) =>
   onSnapshot(collection(db, 'announcements'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addAnnouncement = async (data) => {
   const docRef = await addDoc(collection(db, 'announcements'), { ...data, createdAt: serverTimestamp() });
@@ -161,11 +161,11 @@ export const deleteAnnouncement = (id) => deleteDoc(doc(db, 'announcements', id)
 // Messages / Threads
 export const subscribeThreads = (userId, callback) =>
   onSnapshot(query(collection(db, 'threads'), where('participants', 'array-contains', userId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeMessages = (threadId, callback) =>
   onSnapshot(collection(db, 'threads', threadId, 'messages'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const sendMessage = async (threadId, message) => {
   await addDoc(collection(db, 'threads', threadId, 'messages'), { ...message, createdAt: serverTimestamp() });
@@ -178,7 +178,7 @@ export const createThread = (data) =>
 // Notifications
 export const subscribeNotifications = (userId, callback) =>
   onSnapshot(query(collection(db, 'notifications'), where('userId', '==', userId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const markNotificationRead = (id) => updateDoc(doc(db, 'notifications', id), { read: true });
 
@@ -188,7 +188,7 @@ export const createNotification = (data) =>
 // Keys & Access
 export const subscribeKeys = (callback) =>
   onSnapshot(collection(db, 'keys'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addKey = (data) =>
   addDoc(collection(db, 'keys'), { ...data, createdAt: serverTimestamp() });
@@ -201,11 +201,11 @@ export const deleteKey = (id) => deleteDoc(doc(db, 'keys', id));
 // Packages
 export const subscribePackages = (callback) =>
   onSnapshot(collection(db, 'packages'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeTenantPackages = (tenantId, callback) =>
   onSnapshot(query(collection(db, 'packages'), where('tenantId', '==', tenantId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addPackage = async (data) => {
   const docRef = await addDoc(collection(db, 'packages'), { ...data, createdAt: serverTimestamp() });
@@ -223,11 +223,11 @@ export const deletePackage = (id) => deleteDoc(doc(db, 'packages', id));
 // Deposits / LMR
 export const subscribeDeposits = (callback) =>
   onSnapshot(collection(db, 'deposits'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeTenantDeposits = (tenantId, callback) =>
   onSnapshot(query(collection(db, 'deposits'), where('tenantId', '==', tenantId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addDeposit = (data) =>
   addDoc(collection(db, 'deposits'), { ...data, createdAt: serverTimestamp() });
@@ -240,7 +240,7 @@ export const deleteDeposit = (id) => deleteDoc(doc(db, 'deposits', id));
 // Evictions Phase 15
 export const subscribeEvictions = (callback) =>
   onSnapshot(collection(db, 'evictions'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addEviction = (data) =>
   addDoc(collection(db, 'evictions'), { ...data, createdAt: serverTimestamp() });
@@ -253,11 +253,11 @@ export const deleteEviction = (id) => deleteDoc(doc(db, 'evictions', id));
 // HOA Phase 17: Bylaw Violations
 export const subscribeViolations = (callback) =>
   onSnapshot(collection(db, 'violations'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeUserViolations = (userId, callback) =>
   onSnapshot(query(collection(db, 'violations'), where('ownerId', '==', userId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addViolation = (data) =>
   addDoc(collection(db, 'violations'), { ...data, createdAt: serverTimestamp() });
@@ -270,7 +270,7 @@ export const deleteViolation = (id) => deleteDoc(doc(db, 'violations', id));
 // HOA Phase 18: Reserve Fund
 export const subscribeReserveFund = (callback) =>
   onSnapshot(collection(db, 'reserve_fund'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addReserveFundEntry = (data) =>
   addDoc(collection(db, 'reserve_fund'), { ...data, createdAt: serverTimestamp() });
@@ -283,7 +283,7 @@ export const deleteReserveFundEntry = (id) => deleteDoc(doc(db, 'reserve_fund', 
 // HOA Phase 22: Reserve Study Projects
 export const subscribeReserveProjects = (callback) =>
   onSnapshot(collection(db, 'reserve_projects'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addReserveProject = (data) =>
   addDoc(collection(db, 'reserve_projects'), { ...data, createdAt: serverTimestamp() });
@@ -296,7 +296,7 @@ export const deleteReserveProject = (id) => deleteDoc(doc(db, 'reserve_projects'
 // HOA Phase 19: Board Meetings
 export const subscribeMeetings = (callback) =>
   onSnapshot(collection(db, 'boardMeetings'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addMeeting = (data) =>
   addDoc(collection(db, 'boardMeetings'), { ...data, createdAt: serverTimestamp() });
@@ -309,7 +309,7 @@ export const deleteMeeting = (id) => deleteDoc(doc(db, 'boardMeetings', id));
 // HOA Phase 20: Special Assessments
 export const subscribeAssessments = (callback) =>
   onSnapshot(collection(db, 'assessments'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addAssessment = (data) =>
   addDoc(collection(db, 'assessments'), { ...data, createdAt: serverTimestamp() });
@@ -322,11 +322,11 @@ export const deleteAssessment = (id) => deleteDoc(doc(db, 'assessments', id));
 // HOA Phase 23: Special Assessment Unit Payments (Scalability)
 export const subscribeAssessmentPayments = (assessmentId, callback) =>
   onSnapshot(collection(db, 'assessments', assessmentId, 'unit_payments'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeOwnerAssessmentPayments = (ownerId, callback) =>
   onSnapshot(query(collectionGroup(db, 'unit_payments'), where('ownerId', '==', ownerId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, assessmentId: d.ref.parent.parent.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, assessmentId: d.ref.parent.parent.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const setUnitPayment = (assessmentId, unitId, data) =>
   setDoc(doc(db, 'assessments', assessmentId, 'unit_payments', unitId), { ...data, updatedAt: serverTimestamp() }, { merge: true });
@@ -334,7 +334,7 @@ export const setUnitPayment = (assessmentId, unitId, data) =>
 // HOA Phase 23: Electronic Voting
 export const subscribeVotes = (meetingId, callback) =>
   onSnapshot(collection(db, 'boardMeetings', meetingId, 'votes'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const submitVote = (meetingId, voteId, data) =>
   setDoc(doc(db, 'boardMeetings', meetingId, 'votes', voteId), { ...data, timestamp: serverTimestamp() }, { merge: true });
@@ -342,7 +342,7 @@ export const submitVote = (meetingId, voteId, data) =>
 // Vendors & Contractors
 export const subscribeVendors = (callback) =>
   onSnapshot(collection(db, 'vendors'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addVendor = (data) =>
   addDoc(collection(db, 'vendors'), { ...data, createdAt: serverTimestamp() });
@@ -355,11 +355,11 @@ export const deleteVendor = (id) => deleteDoc(doc(db, 'vendors', id));
 // Registry (Pets & Vehicles)
 export const subscribeRegistry = (callback) =>
   onSnapshot(collection(db, 'registry'), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const subscribeUserRegistry = (userId, callback) =>
   onSnapshot(query(collection(db, 'registry'), where('userId', '==', userId)), snap =>
-    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 
 export const addRegistryEntry = (data) =>
   addDoc(collection(db, 'registry'), { ...data, createdAt: serverTimestamp() });
@@ -373,7 +373,7 @@ export const deleteRegistryEntry = (id) => deleteDoc(doc(db, 'registry', id));
 export const subscribeBookings = (propertyId, callback) => {
   let q = collection(db, 'bookings');
   if (propertyId) q = query(q, where('propertyId', '==', propertyId));
-  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 };
 
 export const addBooking = (data) =>
@@ -388,7 +388,7 @@ export const deleteBooking = (id) => deleteDoc(doc(db, 'bookings', id));
 export const subscribeVisitors = (propertyId, callback) => {
   let q = collection(db, 'visitors');
   if (propertyId) q = query(q, where('propertyId', '==', propertyId));
-  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
 };
 
 export const addVisitor = (data) =>

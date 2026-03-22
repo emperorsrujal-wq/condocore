@@ -30,7 +30,7 @@ export default function AmenityBookingPage({ userProfile, tenantData, onToast })
   useEffect(() => {
     if (!selectedPropertyId) return;
     const unsubB = subscribeBookings(selectedPropertyId, data => {
-      const sorted = [...data].sort((a, b) => a.date.localeCompare(b.date));
+      const sorted = [...data].sort((a, b) => (a.date || '').localeCompare(b.date || ''));
       setBookings(sorted);
       setLoading(false);
     });
@@ -181,7 +181,7 @@ export default function AmenityBookingPage({ userProfile, tenantData, onToast })
             label="2. Select Facility" 
             value={selectedAmenity} 
             onChange={e => setSelectedAmenity(e.target.value)} 
-            options={[{ label: 'Select an Amenity...', value: '' }, ...bookableAmenities.map(a => ({ label: a, value: a }))]} 
+            options={[{ label: 'Select an Amenity...', value: '' }, ...(Array.isArray(bookableAmenities) ? bookableAmenities : []).map(a => ({ label: String(a), value: String(a) }))]} 
           />
         </div>
       </div>

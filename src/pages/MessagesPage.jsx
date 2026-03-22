@@ -23,7 +23,7 @@ export default function MessagesPage({ userProfile, onToast }) {
     if (!userProfile?.uid) return;
     const unsub = subscribeThreads(userProfile.uid, data => {
       // Sort by updatedAt desc
-      const sorted = data.sort((a, b) => {
+      const sorted = [...data].sort((a, b) => {
         const tA = a.updatedAt?.toDate ? a.updatedAt.toDate().getTime() : 0;
         const tB = b.updatedAt?.toDate ? b.updatedAt.toDate().getTime() : 0;
         return tB - tA;

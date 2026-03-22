@@ -102,7 +102,15 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     console.log('AuthProvider: Auth listener initializing...');
+    
+    // Safety timeout to ensure app eventually renders if Firebase hangs
+    const timer = setTimeout(() => {
+      console.log('AuthProvider: Safety timeout, forcing loading=false');
+      setLoading(false);
+    }, 5000);
+
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      clearTimeout(timer); // Prevent the 5s safety timeout from firing if we succeed
       console.log('AuthProvider: Auth state changed, user=', user?.email);
       setCurrentUser(user);
       if (user) {
@@ -124,12 +132,6 @@ export function AuthProvider({ children }) {
       console.log('AuthProvider: Setting loading=false');
       setLoading(false);
     });
-    
-    // Safety timeout to ensure app eventually renders
-    const timer = setTimeout(() => {
-      console.log('AuthProvider: Safety timeout, forcing loading=false');
-      setLoading(false);
-    }, 5000);
 
     return () => {
       unsubscribe();

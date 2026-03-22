@@ -81,7 +81,7 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
     const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
 
     const u1 = subscribeMeetings(data => { 
-      const sorted = [...data].sort((a, b) => b.date.localeCompare(a.date));
+      const sorted = [...data].sort((a, b) => (b.date || '').localeCompare(a.date || ''));
       setMeetings(sorted); 
       setLoading(false); 
     });

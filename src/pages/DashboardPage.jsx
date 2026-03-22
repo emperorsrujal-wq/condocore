@@ -22,23 +22,31 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
     let unsubT, unsubP, unsubM, unsubA, unsubMe;
 
     if (role) {
+      if (role === 'tenant' && !tenantData) return; // Wait for tenant data
+      
       const isAdmin = ['manager', 'landlord', 'super_admin'].includes(role);
       const handle = (fn, data) => { fn(data); setLoading(false); };
 
-      const subs = isAdmin ? [
-        [subscribeTenants, setTenants],
-        [subscribePayments, setPayments],
-        [subscribeMaintenance, setMaint],
-        [subscribeAnnouncements, setNotices],
-        [subscribeMeetings, setMeetings]
-      ] : [
-        [subscribePayments, setPayments],
-        [subscribeMaintenance, setMaint],
-        [subscribeAnnouncements, setNotices],
-        [subscribeMeetings, setMeetings]
-      ];
-
-      const activeUnsubs = subs.map(([sub, set]) => sub(data => handle(set, data)));
+      let activeUnsubs = [];
+      if (isAdmin) {
+        activeUnsubs = [
+          subscribeTenants(data => handle(setTenants, data)),
+          subscribePayments(data => handle(setPayments, data)),
+          subscribeMaintenance(data => handle(setMaint, data)),
+          subscribeAnnouncements(data => handle(setNotices, data)),
+          subscribeMeetings(data => handle(setMeetings, data))
+        ];
+      } else {
+        // Tenant view
+        import('../firebase').then(({ subscribeTenantPayments, subscribeTenantMaintenance }) => {
+          activeUnsubs = [
+            subscribeTenantPayments(tenantData.id, data => handle(setPayments, data)),
+            subscribeTenantMaintenance(tenantData.id, data => handle(setMaint, data)),
+            subscribeAnnouncements(data => handle(setNotices, data)),
+            subscribeMeetings(data => handle(setMeetings, data))
+          ];
+        });
+      }
 
       const timer = setTimeout(() => setLoading(false), 2500);
       return () => {
@@ -61,27 +69,32 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   }, [role, meetings, userProfile?.uid]);
 
   // Metrics
-  const activeT    = tenants.filter(t => t.status === 'active').length;
-  const collected  = payments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
-  const totalRent  = payments.reduce((s, p) => s + (p.amount || 0), 0);
-  const openMaint  = maint.filter(m => m.status !== 'resolved').length;
-  const colRate    = totalRent > 0 ? Math.round(collected / totalRent * 100) : 0;
-  const expiring   = tenants.filter(t => t.status === 'expiring').length;
-  const overdue    = payments.filter(p => p.status === 'overdue').length;
+  const safeTenants = Array.isArray(tenants) ? tenants : [];
+  const safePayments = Array.isArray(payments) ? payments : [];
+  const safeMaint = Array.isArray(maint) ? maint : [];
+  const safeNotices = Array.isArray(notices) ? notices : [];
 
-  const recentPayments = [...payments].sort((a, b) => {
+  const activeT    = safeTenants.filter(t => t.status === 'active').length;
+  const collected  = safePayments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
+  const totalRent  = safePayments.reduce((s, p) => s + (p.amount || 0), 0);
+  const openMaint  = safeMaint.filter(m => m.status !== 'resolved').length;
+  const colRate    = totalRent > 0 ? Math.round(collected / totalRent * 100) : 0;
+  const expiring   = safeTenants.filter(t => t.status === 'expiring').length;
+  const overdue    = safePayments.filter(p => p.status === 'overdue').length;
+
+  const recentPayments = [...safePayments].sort((a, b) => {
     const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
     const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
     return dateB - dateA;
   }).slice(0, 5);
 
-  const recentMaint = maint.filter(m => m.status !== 'resolved').sort((a, b) => {
+  const recentMaint = safeMaint.filter(m => m.status !== 'resolved').sort((a, b) => {
     const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
     const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
     return dateB - dateA;
   }).slice(0, 4);
 
-  const recentAnnounce = [...notices].sort((a, b) => {
+  const recentAnnounce = [...safeNotices].sort((a, b) => {
     const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(0);
     const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(0);
     return dateB - dateA;
@@ -91,8 +104,8 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
 
   // ── Tenant Dashboard ──
   if (role === 'tenant' && tenantData) {
-    const myPayments  = payments.filter(p => p.tenantId === tenantData.id).slice(0, 4);
-    const myMaint     = maint.filter(m => m.tenantId === tenantData.id).slice(0, 3);
+    const myPayments  = safePayments.filter(p => p.tenantId === tenantData.id).slice(0, 4);
+    const myMaint     = safeMaint.filter(m => m.tenantId === tenantData.id).slice(0, 3);
     const pendingPay  = myPayments.find(p => p.status === 'pending' || p.status === 'overdue');
     return (
       <div>
