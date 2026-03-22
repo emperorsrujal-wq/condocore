@@ -119,8 +119,8 @@ export default function MessagesPage({ userProfile, onToast }) {
   };
 
   const getOtherParticipantName = (thread) => {
-    if (!thread.participantNames) return 'Unknown';
-    const otherId = thread.participants.find(id => id !== userProfile.uid);
+    if (!thread || !thread.participants || !thread.participantNames) return 'Unknown';
+    const otherId = thread.participants.find(id => id !== userProfile?.uid);
     return thread.participantNames[otherId] || 'Unknown';
   };
 
@@ -185,7 +185,7 @@ export default function MessagesPage({ userProfile, onToast }) {
               {/* Chat Header */}
               <div style={{ padding: '16px 24px', borderBottom: `1px solid ${P.border}`, display: 'flex', alignItems: 'center', gap: 12 }}>
                 <div style={{ width: 36, height: 36, borderRadius: '50%', background: P.navyLight + '20', color: P.navy, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700 }}>
-                  {getOtherParticipantName(threads.find(t => t.id === activeThreadId)).charAt(0)}
+                  {getOtherParticipantName(threads.find(t => t.id === activeThreadId))?.[0] || '?'}
                 </div>
                 <div>
                   <div style={{ fontWeight: 700, color: P.navy, fontSize: 15 }}>{getOtherParticipantName(threads.find(t => t.id === activeThreadId))}</div>

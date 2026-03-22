@@ -156,7 +156,7 @@ export const deleteAnnouncement = (id) => deleteDoc(doc(db, 'announcements', id)
 
 // Messages / Threads
 export const subscribeThreads = (userId, callback) =>
-  onSnapshot(query(collection(db, 'threads'), where('participants', 'array-contains', userId), orderBy('updatedAt', 'desc')), snap =>
+  onSnapshot(query(collection(db, 'threads'), where('participants', 'array-contains', userId)), snap =>
     callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
 
 export const subscribeMessages = (threadId, callback) =>

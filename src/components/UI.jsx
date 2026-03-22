@@ -22,6 +22,7 @@ export function StatusBadge({ status }) {
     'in-progress':{ color: P.info,       bg: '#EAF0FB', label: 'In Progress' },
     open:         { color: P.danger,     bg: '#FDECEA', label: 'Open' },
     resolved:     { color: P.success,    bg: '#EAF7F2', label: 'Resolved' },
+    approved:     { color: P.success,    bg: '#EAF7F2', label: 'Approved' },
     urgent:       { color: '#7B1A1A',    bg: '#FDECEA', label: 'Urgent' },
     high:         { color: P.danger,     bg: '#FDECEA', label: 'High' },
     medium:       { color: P.warning,    bg: '#FEF3E2', label: 'Medium' },

@@ -11,9 +11,14 @@ service cloud.firestore {
     function isManager() { return isSuperAdmin() || (isAuth() && userRole() == 'manager'); }
     function isManagerOrLandlord() { return isManager() || (isAuth() && userRole() == 'landlord'); }
 
-    // Users — read own, managers can read all
+    // Users — read own, managers can read all, others can read managers/landlords
     match /users/{userId} {
-      allow read: if isAuth() && (uid() == userId || isManager() || request.auth.token.email == 'emperorsrujal@gmail.com');
+      allow read: if isAuth() && (
+        uid() == userId || 
+        isManager() || 
+        resource.data.role in ['manager', 'landlord'] ||
+        request.auth.token.email == 'emperorsrujal@gmail.com'
+      );
       
       // On creation, a user CANNOT set themselves as a 'manager' or 'landlord'. They must be a 'tenant' or 'owner'.
       // Only the Super Admin bypasses this.
@@ -133,6 +138,19 @@ service cloud.firestore {
     match /assessments/{aId} {
       allow read: if isAuth();
       allow write: if isAuth() && isManagerOrLandlord();
+    }
+
+    // Vendors
+    match /vendors/{vId} {
+      allow read: if isAuth();
+      allow write: if isAuth() && isManagerOrLandlord();
+    }
+
+    // Registry (Pets & Vehicles)
+    match /registry/{rId} {
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
+      allow create: if isAuth();
+      allow update, delete: if isAuth() && isManagerOrLandlord();
     }
   }
 }
