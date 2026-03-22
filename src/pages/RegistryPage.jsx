@@ -17,7 +17,7 @@ export default function RegistryPage({ onToast, userProfile }) {
   const [search, setSearch] = useState('');
 
   useEffect(() => {
-    const isAdmin = ['manager', 'landlord', 'super_admin'].includes(userProfile?.role);
+    const isAdmin = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
     const unsubR = isAdmin 
       ? subscribeRegistry(data => { 
         const sorted = [...data].sort((a, b) => (a.ownerName || '').localeCompare(b.ownerName || ''));
