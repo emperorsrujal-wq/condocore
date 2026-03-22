@@ -133,7 +133,7 @@ const PAGE_TITLES = {
   'my-payments': 'my_payments', deposits: 'deposits', maintenance: 'maintenance', documents: 'documents',
   'my-documents': 'my_documents', announcements: 'announcements', 'legal-forms': 'legal_forms', evictions: 'evictions',
   violations: 'violations', 'reserve-fund': 'reserve_fund', 'board-meetings': 'board_meetings', assessments: 'assessments',
-  messages: 'messages', keys: 'keys_access', packages: 'packages', vendors: 'vendors', registry: 'registry', reports: 'reports', settings: 'settings', 'super-admin': 'admin_panel'
+  messages: 'messages', keys: 'keys_access', packages: 'packages', vendors: 'vendors', registry: 'registry', reports: 'reports', settings: 'settings', 'amenity-bookings': 'amenities', 'visitor-management': 'visitors', 'super-admin': 'admin_panel'
 };
 
 // ──────────────────────────────────────────────────────────────────────────────

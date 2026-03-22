@@ -20,6 +20,7 @@ export default function VisitorManagementPage({ userProfile, tenantData, onToast
   useEffect(() => {
     const unsubP = subscribeProperties(data => {
       setProperties(data);
+      setLoading(false);
       if (!isManager && tenantData?.propertyId) {
         setSelectedPropertyId(tenantData.propertyId);
       } else if (data.length > 0 && !selectedPropertyId) {
