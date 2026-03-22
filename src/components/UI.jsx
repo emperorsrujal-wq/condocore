@@ -1,3 +1,5 @@
+import { useState, useEffect } from 'react';
+
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 export const P = {
   navy: '#0B1E3D', navyMid: '#152B52', navyLight: '#1E3A6B',
@@ -98,7 +100,7 @@ export function Select({ id, label, value, onChange, options, required, helpText
       )}
       <select id={selectId} value={value} onChange={onChange} required={required}
         style={{ width: '100%', padding: '12px 14px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif", color: P.text, background: P.card }}>
-        {options.map(o => typeof o === 'string' ? <option key={o} value={o}>{o}</option> : <option key={o.value} value={o.value}>{o.label}</option>)}
+        {(options || []).map(o => typeof o === 'string' ? <option key={o} value={o}>{o}</option> : <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>
   );
@@ -193,9 +195,6 @@ export function Toast({ message, type = 'success', onClose }) {
     </div>
   );
 }
-
-// Hook needed for Toast
-import { useEffect } from 'react';
 
 // ─── StatCard ─────────────────────────────────────────────────────────────────
 export function StatCard({ label, value, sub, color, icon }) {

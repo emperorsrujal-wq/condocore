@@ -32,10 +32,13 @@ service cloud.firestore {
       );
     }
 
-    // Properties — managers can do everything, others can read
+    // Properties & Buildings
     match /properties/{propId} {
-      allow read, list: if true; // Allow public selection for anonymous reports
+      allow read, list: if true; // Public access for property selection in anonymous reports
       allow write: if isAuth() && isManagerOrLandlord();
+    }
+    match /properties {
+      allow read, list: if true;
     }
 
     // Tenants — managers/landlords full access, tenants read their own
@@ -46,18 +49,21 @@ service cloud.firestore {
 
     // Payments — managers/landlords full access, tenants read their own
     match /payments/{payId} {
-      allow read: if isAuth() && (isManagerOrLandlord() || get(/databases/$(database)/documents/tenants/$(resource.data.tenantId)).data.userId == uid());
+      allow read: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
       allow create, update: if isAuth() && isManagerOrLandlord();
-      // Tenants can create own payment records
       allow create: if isAuth() && userRole() == 'tenant';
     }
 
-    // Maintenance — managers full access, tenants read/create their own, public can create
+    // Maintenance Requests
     match /maintenance/{reqId} {
       allow read: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
-      allow create: if true; // Allow public/anonymous reports
+      allow create: if true; // Public access for anonymous reporting
       allow update: if isAuth() && (isManagerOrLandlord() || resource.data.userId == uid());
       allow delete: if isAuth() && isManager();
+    }
+    match /maintenance {
+      allow create: if true;
+      allow read, list: if isAuth() && isManagerOrLandlord();
     }
 
     // Documents — managers full access, tenants read their own
