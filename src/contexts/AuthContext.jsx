@@ -118,8 +118,9 @@ export function AuthProvider({ children }) {
           console.log('AuthProvider: Fetching profile for', user.uid);
           const snap = await getDoc(doc(db, 'users', user.uid));
           if (snap.exists()) {
-            console.log('AuthProvider: Profile found');
-            setUserProfile(snap.data());
+            const data = snap.data();
+            console.log('AuthProvider: Profile found. Role:', data.role, 'Data:', data);
+            setUserProfile(data);
           } else {
             console.log('AuthProvider: Profile NOT found');
           }

@@ -6,8 +6,14 @@ service cloud.firestore {
     function isAuth() { return request.auth != null; }
     function uid() { return request.auth.uid; }
     function isAdminEmail() { return request.auth.token.email == 'emperorsrujal@gmail.com'; }
-    function userRole() { return get(/databases/$(database)/documents/users/$(uid())).data.role; }
-    function isSuperAdmin() { return isAdminEmail() || (isAuth() && userRole() == 'super_admin'); }
+    function userRole() { 
+      return exists(/databases/$(database)/documents/users/$(uid())) 
+        ? get(/databases/$(database)/documents/users/$(uid())).data.role 
+        : 'none'; 
+    }
+    function isSuperAdmin() { 
+      return isAdminEmail() || (isAuth() && userRole() in ['super_admin', 'super-admin']); 
+    }
     function isManager() { return isSuperAdmin() || (isAuth() && userRole() == 'manager'); }
     function isManagerOrLandlord() { return isManager() || (isAuth() && userRole() == 'landlord'); }
 
