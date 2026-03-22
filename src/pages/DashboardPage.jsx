@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements, subscribeMeetings, subscribeVotes, submitVote, subscribeTenantPayments, subscribeTenantMaintenance } from '../firebase';
-import { P, StatCard, Card, StatusBadge, Spinner, Btn } from '../components/UI';
-import { Vote, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
+import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements, subscribeMeetings, subscribeVotes, submitVote, subscribeTenantPayments, subscribeTenantMaintenance, subscribeProperties } from '../firebase';
+import { P, StatCard, Card, StatusBadge, Spinner, Btn, Table, TR, TD } from '../components/UI';
+import { Vote, CheckCircle2, XCircle, MinusCircle, Building2 } from 'lucide-react';
 import { useHOAMode } from '../contexts/HOAModeContext';
 
 export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
@@ -11,8 +11,10 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   const [maint,    setMaint]    = useState([]);
   const [notices,  setNotices]  = useState([]);
   const [meetings, setMeetings] = useState([]);
+  const [properties, setProperties] = useState([]);
   const [myVotes,  setMyVotes]  = useState([]);
   const [loading,  setLoading]  = useState(true);
+  const [init, setInit] = useState(false);
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><Spinner size={36} /></div>;
 
@@ -34,7 +36,8 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
           subscribePayments(data => handle(setPayments, data)),
           subscribeMaintenance(data => handle(setMaint, data)),
           subscribeAnnouncements(data => handle(setNotices, data)),
-          subscribeMeetings(data => handle(setMeetings, data))
+          subscribeMeetings(data => handle(setMeetings, data)),
+          subscribeProperties(data => handle(setProperties, data))
         ];
       } else {
         // Tenant view
@@ -46,13 +49,14 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
         ];
       }
 
-      const timer = setTimeout(() => setLoading(false), 2500);
+      const timer = setTimeout(() => { setLoading(false); setInit(true); }, 2000);
       return () => {
         clearTimeout(timer);
         activeUnsubs.forEach(unsub => unsub && unsub());
       };
     } else {
       setLoading(false);
+      setInit(true);
     }
   }, [role, tenantData]);
 
@@ -71,6 +75,7 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   const safePayments = Array.isArray(payments) ? payments : [];
   const safeMaint = Array.isArray(maint) ? maint : [];
   const safeNotices = Array.isArray(notices) ? notices : [];
+  const safeProperties = Array.isArray(properties) ? properties : [];
 
   const activeT    = safeTenants.filter(t => t.status === 'active').length;
   const collected  = safePayments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
@@ -205,15 +210,40 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
     );
   }
 
+  // Manager specific metrics
+  const portfolioSummary = safeProperties.reduce((acc, p) => {
+    const type = p.type || 'Residential';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+
   // ── Manager / Landlord Dashboard ──
   return (
     <div>
       <div style={{ marginBottom: 24 }}>
         <h1 style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 28, color: P.text, margin: 0 }}>
-          Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {userProfile?.name?.split(' ')[0] || 'there'}
+          {label('dashboard', 'Portfolio Overview')}
         </h1>
-        <p style={{ color: P.textMuted, margin: '4px 0 0', fontSize: 14 }}>Here's your portfolio overview for {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}</p>
+        <p style={{ color: P.textMuted, margin: '4px 0 0', fontSize: 14 }}>Welcome back, {userProfile?.name?.split(' ')[0] || 'there'}. Here's the performance across your entire portfolio.</p>
       </div>
+
+      {/* Portfolio Status Bar */}
+      <Card style={{ padding: '16px 22px', marginBottom: 24, background: '#F8FAFC', border: `1.5px solid ${P.border}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ width: 10, height: 10, borderRadius: '50%', background: P.success }} />
+            <span style={{ fontSize: 13, fontWeight: 700, color: P.navy }}>Active Assets: {safeProperties.length}</span>
+          </div>
+          <div style={{ width: 1, height: 16, background: P.border }} />
+          {Object.entries(portfolioSummary).map(([type, count]) => (
+            <div key={type} style={{ fontSize: 13, color: P.textMuted, fontWeight: 600 }}>
+              {count} {type}{count > 1 ? 's' : ''}
+            </div>
+          ))}
+          <div style={{ flex: 1 }} />
+          <Btn size="sm" variant="ghost" onClick={() => onNavigate('properties')}>Manage Buildings →</Btn>
+        </div>
+      </Card>
 
       {/* KPIs */}
       <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>

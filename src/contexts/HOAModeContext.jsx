@@ -16,16 +16,16 @@ const HOA_LABELS = {
   reports:     'Financial Reports',
   settings:    'Settings',
   properties:  'Buildings & Complexes',
-  dashboard:   'HOA Dashboard'
+  dashboard:   'Portfolio Overview'
 };
 
 export function HOAModeProvider({ children }) {
   const [isHOAMode, setIsHOAMode] = useState(() => {
     try { 
       const stored = localStorage.getItem('condocore_hoa_mode');
-      return stored === 'true' || stored === null; // Default to true if not set
+      return stored === 'true'; // Default to false if not set
     }
-    catch { return true; }
+    catch { return false; }
   });
 
   const toggleMode = () => {
