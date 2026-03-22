@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info, Trash2, User, Building } from 'lucide-react';
 import { subscribeBookings, addBooking, deleteBooking, subscribeProperties } from '../firebase';
-import { P, Btn, Modal, PageHeader, Spinner, EmptyState, StatusBadge } from '../components/UI';
+import { P, Btn, Modal, PageHeader, Spinner, EmptyState, StatusBadge, Select } from '../components/UI';
 
 export default function AmenityBookingPage({ userProfile, tenantData, onToast }) {
   const [properties, setProperties] = useState([]);
