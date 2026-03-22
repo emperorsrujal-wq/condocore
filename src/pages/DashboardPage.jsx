@@ -19,14 +19,43 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   const role = userProfile?.role;
 
   useEffect(() => {
-    if (!role || role !== 'tenant' || !meetings.length) return;
+    let unsubT, unsubP, unsubM, unsubA, unsubMe;
+
+    if (role) {
+      const isAdmin = ['manager', 'landlord', 'super_admin'].includes(role);
+
+      if (isAdmin) {
+        unsubT = subscribeTenants(data => setTenants(data));
+        unsubP = subscribePayments(data => setPayments(data));
+        unsubM = subscribeMaintenance(data => setMaint(data));
+        unsubA = subscribeAnnouncements(data => setNotices(data));
+        unsubMe = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
+      } else {
+        unsubP = subscribePayments(data => setPayments(data));
+        unsubM = subscribeMaintenance(data => setMaint(data));
+        unsubA = subscribeAnnouncements(data => setNotices(data));
+        unsubMe = subscribeMeetings(data => { setMeetings(data); setLoading(false); });
+      }
+    }
+
+    return () => {
+      unsubT && unsubT();
+      unsubP && unsubP();
+      unsubM && unsubM();
+      unsubA && unsubA();
+      unsubMe && unsubMe();
+    };
+  }, [role]);
+
+  useEffect(() => {
+    if (!role || role !== 'tenant' || !meetings.length || !userProfile?.uid) return;
     const active = meetings.find(m => m.status === 'Active');
     if (!active) { setMyVotes([]); return; }
     const unsub = subscribeVotes(active.id, data => {
       setMyVotes(data.filter(v => v.userId === userProfile.uid));
     });
     return () => unsub();
-  }, [role, meetings, userProfile.uid]);
+  }, [role, meetings, userProfile?.uid]);
 
   // Metrics
   const activeT    = tenants.filter(t => t.status === 'active').length;

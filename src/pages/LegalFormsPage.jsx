@@ -71,16 +71,23 @@ export default function LegalFormsPage({ userProfile, onToast }) {
     if (!form.tenantId) return onToast('Please select a tenant.', 'error');
     if (!form.province || !form.formType) return onToast('Please select province and form type.', 'error');
 
+    const selectedTenant = tenants.find(t => t.id === form.tenantId);
+    if (!selectedTenant) return onToast('Selected tenant not found.', 'error');
+
     setGenerating(true);
     try {
-      const selectedTenant = tenants.find(t => t.id === form.tenantId);
+      console.log('Generating PDF for:', selectedTenant.name, form.formType);
       
       // Generate Blob
       const blob = await generateLegalNoticePDF(selectedTenant, form.province, form.formType, form, userProfile?.name);
 
+      if (!blob || blob.size === 0) throw new Error('Failed to generate PDF content.');
+
       // Save it automatically to the tenant's Documents folder for record keeping
       const filename = `${form.formType}_Notice_${selectedTenant.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
       const path = `documents/${filename}`;
+      
+      console.log('Uploading PDF to:', path);
       const url = await uploadFile(blob, path);
 
       await addDocument({
@@ -96,20 +103,22 @@ export default function LegalFormsPage({ userProfile, onToast }) {
         status: 'pending_approval'
       });
 
-      // Trigger automatic local download for the Landlord to print out
+      // Trigger automatic local download
       const localUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = localUrl;
       a.download = filename;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(localUrl);
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(localUrl);
+      }, 100);
 
-      onToast(`${form.formType} Form Generated! It is currently pending approval.`);
+      onToast(`${form.formType} Form Generated & Saved!`);
     } catch (e) {
-      console.error(e);
-      onToast(e.message, 'error');
+      console.error('PDF Generation Error:', e);
+      onToast(`Failed to generate notice: ${e.message}`, 'error');
     }
     setGenerating(false);
   };
