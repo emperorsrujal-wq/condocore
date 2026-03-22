@@ -118,12 +118,11 @@ export default function MessagesPage({ userProfile, onToast }) {
     return thread.participantNames[otherId] || 'Unknown';
   };
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner size={32} /></div>;
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-      <PageHeader 
-        title="Messages" 
+      <PageHeader
+        title="Messages"
         subtitle="Direct communication with tenants and staff"
         action={<Btn onClick={() => setShowNew(true)}><Plus size={15} /> New Message</Btn>}
       />

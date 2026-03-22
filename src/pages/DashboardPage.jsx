@@ -16,53 +16,52 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   const [loading,  setLoading]  = useState(true);
   const [init, setInit] = useState(false);
 
-  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}><Spinner size={36} /></div>;
-
   const role = userProfile?.role;
 
   useEffect(() => {
     let unsubT, unsubP, unsubM, unsubA, unsubMe;
 
-    if (role) {
-      const isPrivileged = ['tenant', 'owner'].includes(role);
-      if (isPrivileged && !tenantData) return; // Wait for personal data
-      
-      const isAdmin = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(role);
-      const handle = (fn, data, isCore = false) => { 
-        fn(data); 
-        if (isCore) setInit(true);
-        if (!isAdmin || isCore) setLoading(false); 
-      };
-
-      let activeUnsubs = [];
-      if (isAdmin) {
-        activeUnsubs = [
-          subscribeTenants(data => handle(setTenants, data)),
-          subscribePayments(data => handle(setPayments, data)),
-          subscribeMaintenance(data => handle(setMaint, data)),
-          subscribeAnnouncements(data => handle(setNotices, data)),
-          subscribeMeetings(data => handle(setMeetings, data)),
-          subscribeProperties(data => handle(setProperties, data, true))
-        ];
-      } else {
-        // Tenant/Owner view
-        activeUnsubs = [
-          subscribeTenantPayments(tenantData?.id, data => handle(setPayments, data)),
-          subscribeTenantMaintenance(tenantData?.id, data => handle(setMaint, data)),
-          subscribeAnnouncements(data => handle(setNotices, data)),
-          subscribeMeetings(data => handle(setMeetings, data))
-        ];
-      }
-
-      const timer = setTimeout(() => { setLoading(false); setInit(true); }, 2000);
-      return () => {
-        clearTimeout(timer);
-        activeUnsubs.forEach(unsub => unsub && unsub());
-      };
-    } else {
+    if (!role) {
       setLoading(false);
       setInit(true);
+      return;
     }
+
+    const isPrivileged = ['tenant', 'owner'].includes(role);
+    if (isPrivileged && !tenantData) return; // Wait for personal data
+
+    const isAdmin = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(role);
+    const handle = (fn, data, isCore = false) => {
+      fn(data);
+      if (isCore) setInit(true);
+      if (!isAdmin || isCore) setLoading(false);
+    };
+
+    let activeUnsubs = [];
+    if (isAdmin) {
+      activeUnsubs = [
+        subscribeTenants(data => handle(setTenants, data)),
+        subscribePayments(data => handle(setPayments, data)),
+        subscribeMaintenance(data => handle(setMaint, data)),
+        subscribeAnnouncements(data => handle(setNotices, data)),
+        subscribeMeetings(data => handle(setMeetings, data)),
+        subscribeProperties(data => handle(setProperties, data, true))
+      ];
+    } else {
+      // Tenant/Owner view
+      activeUnsubs = [
+        subscribeTenantPayments(tenantData?.id, data => handle(setPayments, data)),
+        subscribeTenantMaintenance(tenantData?.id, data => handle(setMaint, data)),
+        subscribeAnnouncements(data => handle(setNotices, data)),
+        subscribeMeetings(data => handle(setMeetings, data))
+      ];
+    }
+
+    const timer = setTimeout(() => { setLoading(false); setInit(true); }, 2500);
+    return () => {
+      clearTimeout(timer);
+      activeUnsubs.forEach(unsub => unsub && unsub());
+    };
   }, [role, tenantData]);
 
   useEffect(() => {

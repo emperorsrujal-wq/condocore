@@ -40,7 +40,6 @@ export default function RegistryPage({ onToast, userProfile }) {
   const handleSave = async () => {
     if (!form.ownerName || !form.unit || !form.property) return onToast('Owner, Unit, and Property are required.', 'error');
     setSaving(true);
-    setSaving(true);
     try {
       const dataWithUser = { ...form, userId: userProfile.uid };
       if (editing) { await updateRegistryEntry(editing.id, dataWithUser); onToast('Entry updated.'); }
