@@ -73,6 +73,8 @@ const ROLE_NAV = {
   landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management'],
   tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings', 'amenity-bookings', 'visitor-management'],
   owner:    ['dashboard', 'maintenance', 'my-property', 'announcements', 'messages', 'settings', 'amenity-bookings', 'visitor-management'],
+  super_admin: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management', 'super-admin'],
+  'super-admin': ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management', 'super-admin'],
 };
 
 const ROLE_GROUPS = {
@@ -105,6 +107,24 @@ const ROLE_GROUPS = {
     { label: 'property', pages: ['maintenance', 'my-property'] },
     { label: 'building', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',  pages: ['settings'] },
+  ],
+  super_admin: [
+    { label: 'overview',      pages: ['dashboard'] },
+    { label: 'tenants',       pages: ['tenants', 'properties'] },
+    { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
+    { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
+    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
+    { label: 'account',       pages: ['settings'] },
+    { label: 'system',        pages: ['super-admin'] },
+  ],
+  'super-admin': [
+    { label: 'overview',      pages: ['dashboard'] },
+    { label: 'tenants',       pages: ['tenants', 'properties'] },
+    { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
+    { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
+    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
+    { label: 'account',       pages: ['settings'] },
+    { label: 'system',        pages: ['super-admin'] },
   ],
 };
 
