@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements, subscribeMeetings, subscribeVotes, submitVote } from '../firebase';
+import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements, subscribeMeetings, subscribeVotes, submitVote, subscribeTenantPayments, subscribeTenantMaintenance } from '../firebase';
 import { P, StatCard, Card, StatusBadge, Spinner, Btn } from '../components/UI';
 import { Vote, CheckCircle2, XCircle, MinusCircle } from 'lucide-react';
 import { useHOAMode } from '../contexts/HOAModeContext';
@@ -38,14 +38,12 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
         ];
       } else {
         // Tenant view
-        import('../firebase').then(({ subscribeTenantPayments, subscribeTenantMaintenance }) => {
-          activeUnsubs = [
-            subscribeTenantPayments(tenantData.id, data => handle(setPayments, data)),
-            subscribeTenantMaintenance(tenantData.id, data => handle(setMaint, data)),
-            subscribeAnnouncements(data => handle(setNotices, data)),
-            subscribeMeetings(data => handle(setMeetings, data))
-          ];
-        });
+        activeUnsubs = [
+          subscribeTenantPayments(tenantData.id, data => handle(setPayments, data)),
+          subscribeTenantMaintenance(tenantData.id, data => handle(setMaint, data)),
+          subscribeAnnouncements(data => handle(setNotices, data)),
+          subscribeMeetings(data => handle(setMeetings, data))
+        ];
       }
 
       const timer = setTimeout(() => setLoading(false), 2500);
@@ -56,7 +54,7 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
     } else {
       setLoading(false);
     }
-  }, [role]);
+  }, [role, tenantData]);
 
   useEffect(() => {
     if (!role || role !== 'tenant' || !meetings.length || !userProfile?.uid) return;
