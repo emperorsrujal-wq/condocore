@@ -70,7 +70,7 @@ export default function MessagesPage({ userProfile, onToast }) {
     const currentText = text.trim();
     setText(''); // clear optimistic
     try {
-      await sendMessage(activeThreadId, { text: currentText, senderId: userProfile.uid, senderName: userProfile.name });
+      await sendMessage(activeThreadId, { text: currentText, senderId: userProfile.uid, senderName: userProfile.name || userProfile.displayName || 'Me' });
     } catch (e) { 
       onToast(e.message, 'error'); 
       setText(currentText); // revert on error
@@ -95,12 +95,14 @@ export default function MessagesPage({ userProfile, onToast }) {
     try {
       // Find contact name
       const contactName = contacts.find(c => c.id === selectedContact)?.name || 'User';
-      
+      const myName = userProfile.name || userProfile.displayName || 'Me';
+      const otherName = contactName.replace(/ \(.*\)/, '') || 'User'; // Strip extra info
+
       const newThread = {
         participants: [userProfile.uid, selectedContact],
         participantNames: {
-          [userProfile.uid]: userProfile.name,
-          [selectedContact]: contactName.replace(/ \(.*\)/, '') // Strip extra info
+          [userProfile.uid]: myName,
+          [selectedContact]: otherName
         },
         lastMessage: 'Thread started',
       };
