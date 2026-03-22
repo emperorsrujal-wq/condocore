@@ -260,7 +260,7 @@ export default function App() {
   // Load tenants for payment page (Manager/Landlord only)
   useEffect(() => {
     if (!currentUser || !userProfile) return;
-    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
+    const isPrivileged = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile.role);
     if (!isPrivileged) return;
     
     const unsub = subscribeTenants(data => setTenants(data));

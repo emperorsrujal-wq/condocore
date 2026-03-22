@@ -27,7 +27,7 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
       const isPrivileged = ['tenant', 'owner'].includes(role);
       if (isPrivileged && !tenantData) return; // Wait for personal data
       
-      const isAdmin = ['manager', 'landlord', 'super_admin'].includes(role);
+      const isAdmin = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(role);
       const handle = (fn, data, isCore = false) => { 
         fn(data); 
         if (isCore) setInit(true);

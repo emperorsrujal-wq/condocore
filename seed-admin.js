@@ -31,7 +31,7 @@ async function seed() {
     await setDoc(doc(db, 'users', user.uid), {
       name: 'Super Admin',
       email: email,
-      role: 'super-admin',
+      role: 'super_admin',
       initials: 'SA',
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()

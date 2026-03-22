@@ -27,7 +27,7 @@ export default function SuperAdminPage({ onToast }) {
   };
 
   const ROLE_COLORS = {
-    'super-admin': P.danger,
+    'super_admin': P.danger,
     'manager': P.gold,
     'landlord': '#7EB8D4',
     'tenant': '#82C9A5',
