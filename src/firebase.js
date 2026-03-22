@@ -357,4 +357,19 @@ export const updateRegistryEntry = (id, data) =>
 
 export const deleteRegistryEntry = (id) => deleteDoc(doc(db, 'registry', id));
 
+// Amenity Bookings
+export const subscribeBookings = (propertyId, callback) => {
+  let q = collection(db, 'bookings');
+  if (propertyId) q = query(q, where('propertyId', '==', propertyId), orderBy('date', 'asc'));
+  return onSnapshot(q, snap => callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))));
+};
+
+export const addBooking = (data) =>
+  addDoc(collection(db, 'bookings'), { ...data, createdAt: serverTimestamp() });
+
+export const updateBooking = (id, data) =>
+  updateDoc(doc(db, 'bookings', id), { ...data, updatedAt: serverTimestamp() });
+
+export const deleteBooking = (id) => deleteDoc(doc(db, 'bookings', id));
+
 export default app;

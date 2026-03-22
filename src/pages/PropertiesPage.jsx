@@ -4,7 +4,7 @@ import { subscribeProperties, addProperty, updateProperty, deleteProperty } from
 import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Table, TR, TD, Spinner, EmptyState, StatCard } from '../components/UI';
 import { useHOAMode } from '../contexts/HOAModeContext';
 
-const FORM_DEFAULT = { name: '', address: '', type: 'Residential', units: '', description: '', amenities: '' };
+const FORM_DEFAULT = { name: '', address: '', type: 'Residential', units: '', description: '', amenities: '', bookableAmenities: [] };
 
 export default function PropertiesPage({ onToast }) {
   const { label, isHOAMode } = useHOAMode();
@@ -28,7 +28,8 @@ export default function PropertiesPage({ onToast }) {
       type: p.type || 'Residential', 
       units: String(p.units || ''), 
       description: p.description || '', 
-      amenities: Array.isArray(p.amenities) ? p.amenities.join(', ') : (p.amenities || '') 
+      amenities: Array.isArray(p.amenities) ? p.amenities.join(', ') : (p.amenities || ''),
+      bookableAmenities: p.bookableAmenities || []
     }); 
     setEditing(p); 
     setShowForm(true); 
@@ -119,7 +120,33 @@ export default function PropertiesPage({ onToast }) {
             <Input label="Total Units" helpText="The total number of keys or individual property units." type="number" {...F('units')} />
           </div>
           <Input label="Amenities (comma separated)" helpText="Common features like Gym, Pool, or Parking." {...F('amenities')} placeholder="e.g. Pool, Gym, Concierge, Underground Parking" />
-          <Textarea label="Description" {...F('description')} placeholder="Optional building description..." rows={3} />
+          
+          <div style={{ marginTop: 12, borderTop: `1px dashed ${P.border}`, paddingTop: 16 }}>
+            <label style={{ fontSize: 13, fontWeight: 700, color: P.navy, display: 'block', marginBottom: 8 }}>Bookable Facilities</label>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+              {form.bookableAmenities?.map((a, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '4px 10px', background: P.bg, borderRadius: 20, border: `1px solid ${P.border}` }}>
+                  <span style={{ fontSize: 12, fontWeight: 600 }}>{a}</span>
+                  <button onClick={() => setForm(f => ({ ...f, bookableAmenities: f.bookableAmenities.filter((_, idx) => idx !== i) }))} style={{ border: 'none', background: 'none', color: P.danger, cursor: 'pointer', padding: 0, display: 'flex' }}><X size={14} /></button>
+                </div>
+              ))}
+              <input 
+                placeholder="+ Add bookable facility (e.g. Guest Suite)" 
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (!e.target.value.trim()) return;
+                    setForm(f => ({ ...f, bookableAmenities: [...(f.bookableAmenities || []), e.target.value.trim()] }));
+                    e.target.value = '';
+                  }
+                }}
+                style={{ fontSize: 12, border: 'none', background: 'none', outline: 'none', minWidth: 200, padding: '4px 8px' }}
+              />
+            </div>
+            <div style={{ fontSize: 11, color: P.textMuted }}>Specify which amenities can be reserved by residents (Gym, Party Room, etc.). Press Enter to add.</div>
+          </div>
+
+          <Textarea label="Description" {...F('description')} placeholder="Optional building description..." rows={2} />
           
           <div style={{ display: 'flex', gap: 10, marginTop: 8 }}>
             <Btn variant="ghost" onClick={() => setShowForm(false)} style={{ flex: 1 }}>Cancel</Btn>

@@ -31,6 +31,7 @@ import AnonymousReportPage from './pages/AnonymousReportPage';
 import VendorsPage from './pages/VendorsPage';
 import RegistryPage from './pages/RegistryPage';
 import MyPropertyPage from './pages/MyPropertyPage';
+import AmenityBookingPage from './pages/AmenityBookingPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
@@ -64,10 +65,10 @@ const ALL_PAGES = [
 ];
 
 const ROLE_NAV = {
-  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry'],
-  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry'],
-  tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings'],
-  owner:    ['dashboard', 'maintenance', 'my-property', 'announcements', 'messages', 'settings'],
+  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings'],
+  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings'],
+  tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings', 'amenity-bookings'],
+  owner:    ['dashboard', 'maintenance', 'my-property', 'announcements', 'messages', 'settings', 'amenity-bookings'],
 };
 
 const ROLE_GROUPS = {
@@ -76,7 +77,7 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements'] },
+    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
   ],
@@ -85,20 +86,20 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements'] },
+    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings'] },
     { label: 'account',       pages: ['settings'] },
   ],
   tenant: [
     { label: 'home',      pages: ['dashboard'] },
     { label: 'finance',   pages: ['my-payments', 'deposits'] },
     { label: 'services',  pages: ['maintenance', 'packages', 'my-documents'] },
-    { label: 'building',  pages: ['messages', 'announcements'] },
+    { label: 'building',  pages: ['messages', 'announcements', 'amenity-bookings'] },
     { label: 'account',   pages: ['settings'] },
   ],
   owner: [
     { label: 'overview', pages: ['dashboard'] },
     { label: 'property', pages: ['maintenance', 'my-property'] },
-    { label: 'building', pages: ['messages', 'announcements'] },
+    { label: 'building', pages: ['messages', 'announcements', 'amenity-bookings'] },
     { label: 'account',  pages: ['settings'] },
   ],
 };
@@ -315,6 +316,7 @@ export default function App() {
       case 'settings':      return <SettingsPage      {...props} />;
       case 'vendors':       return <VendorsPage       {...props} />;
       case 'registry':      return <RegistryPage      {...props} />;
+      case 'amenity-bookings': return <AmenityBookingPage {...props} />;
       case 'super-admin':   return <SuperAdminPage    {...props} currentUser={currentUser} />;
       default:              return <DashboardPage {...props} onNavigate={navigate} />;
     }
