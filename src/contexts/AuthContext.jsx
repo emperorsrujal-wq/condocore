@@ -5,7 +5,7 @@ import {
   updateEmail as updateFbEmail, updatePassword as updateFbPassword,
   signInWithPopup
 } from 'firebase/auth';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, addDoc, collection, serverTimestamp } from 'firebase/firestore';
 import { auth, db, googleProvider, appleProvider } from '../firebase';
 
 const AuthContext = createContext();
@@ -41,6 +41,23 @@ export function AuthProvider({ children }) {
       updatedAt: serverTimestamp()
     };
     await setDoc(doc(db, 'users', user.uid), profile);
+
+    // Auto-create tenant record so they're immediately linked to their property
+    if (['tenant', 'owner'].includes(profileData.role) && profileData.propertyId) {
+      await addDoc(collection(db, 'tenants'), {
+        userId: user.uid,
+        name: profileData.name,
+        email,
+        unit: profileData.unit || '',
+        property: profileData.property || '',
+        propertyId: profileData.propertyId,
+        status: 'active',
+        type: 'Residential',
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+      });
+    }
+
     setUserProfile(profile);
     return user;
   }

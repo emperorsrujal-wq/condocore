@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Building2, Eye, EyeOff, Lock } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import { subscribeProperties } from '../firebase';
 import { P } from '../components/UI';
 
 export default function LoginPage() {
@@ -17,7 +18,28 @@ export default function LoginPage() {
   const [regName,     setRegName]     = useState('');
   const [regRole,     setRegRole]     = useState('tenant');
   const [regUnit,     setRegUnit]     = useState('');
-  const [regProperty, setRegProperty] = useState('');
+  const [regPropertyId, setRegPropertyId] = useState('');
+  const [regAddress, setRegAddress] = useState('');
+  const [properties, setProperties] = useState([]);
+
+  // Load properties from database for address matching
+  useEffect(() => {
+    const unsub = subscribeProperties(data => setProperties(data));
+    return () => unsub();
+  }, []);
+
+  // Filter properties by typed address
+  const matchedProperties = regAddress.trim().length >= 2
+    ? properties.filter(p => {
+        const q = regAddress.toLowerCase();
+        return (p.address || '').toLowerCase().includes(q) || (p.name || '').toLowerCase().includes(q);
+      })
+    : [];
+
+  const handleSelectProperty = (prop) => {
+    setRegPropertyId(prop.id);
+    setRegAddress(prop.address || prop.name);
+  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -34,10 +56,12 @@ export default function LoginPage() {
     e.preventDefault();
     setError(''); setLoading(true);
     try {
+      const selectedProp = properties.find(p => p.id === regPropertyId);
       await createAccount(email, password, {
         name: regName, role: regRole,
         unit: regUnit || null,
-        property: regProperty || null,
+        property: selectedProp?.name || null,
+        propertyId: regPropertyId || null,
         initials: regName.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase(),
       });
     } catch (err) {
@@ -188,10 +212,33 @@ export default function LoginPage() {
                       <input type="text" value={regUnit} onChange={e => setRegUnit(e.target.value)} placeholder="e.g. 1204"
                         style={{ width: '100%', padding: '11px 13px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: "'DM Sans', sans-serif" }} />
                     </div>
-                    <div style={{ marginBottom: 14 }}>
-                      <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>Property Name</label>
-                      <input type="text" value={regProperty} onChange={e => setRegProperty(e.target.value)} placeholder="e.g. Harborview Condominiums"
-                        style={{ width: '100%', padding: '11px 13px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: "'DM Sans', sans-serif" }} />
+                    <div style={{ marginBottom: 14, position: 'relative' }}>
+                      <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 5 }}>Street Address</label>
+                      <input type="text" value={regAddress} onChange={e => { setRegAddress(e.target.value); setRegPropertyId(''); }} placeholder="Start typing your building address..."
+                        style={{ width: '100%', padding: '11px 13px', borderRadius: 9, border: `1.5px solid ${regPropertyId ? P.success : P.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: "'DM Sans', sans-serif" }}
+                        onFocus={e => e.target.style.borderColor = P.navyLight} onBlur={e => { setTimeout(() => {}, 200); e.target.style.borderColor = regPropertyId ? P.success : P.border; }} />
+                      {/* Autocomplete results */}
+                      {regAddress.trim().length >= 2 && !regPropertyId && (
+                        <div style={{ position: 'absolute', top: '100%', left: 0, right: 0, zIndex: 10, background: '#fff', border: `1.5px solid ${P.border}`, borderRadius: 9, marginTop: 4, boxShadow: '0 4px 12px rgba(0,0,0,0.1)', maxHeight: 180, overflowY: 'auto' }}>
+                          {matchedProperties.length > 0 ? matchedProperties.map(p => (
+                            <div key={p.id} onMouseDown={() => handleSelectProperty(p)}
+                              style={{ padding: '10px 13px', cursor: 'pointer', borderBottom: `1px solid ${P.border}`, fontSize: 13 }}
+                              onMouseEnter={e => e.currentTarget.style.background = P.bg} onMouseLeave={e => e.currentTarget.style.background = '#fff'}>
+                              <div style={{ fontWeight: 700, color: P.navy }}>{p.name}</div>
+                              {p.address && <div style={{ fontSize: 11, color: P.textMuted }}>{p.address}</div>}
+                            </div>
+                          )) : (
+                            <div style={{ padding: '12px 13px', fontSize: 13, color: P.danger, textAlign: 'center' }}>
+                              No registered property found at this address. Please contact your building management.
+                            </div>
+                          )}
+                        </div>
+                      )}
+                      {regPropertyId && (
+                        <div style={{ marginTop: 6, fontSize: 12, color: P.success, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 4 }}>
+                          ✓ Matched: {properties.find(p => p.id === regPropertyId)?.name}
+                        </div>
+                      )}
                     </div>
                   </>
                 )}
