@@ -36,7 +36,13 @@ const translations = {
     violations: 'Bylaw Violations',
     reserve_fund: 'Reserve Fund',
     board_meetings: 'Board Meetings',
-    assessments: 'Special Assessments'
+    assessments: 'Special Assessments',
+    vendors: 'Vendors',
+    registry: 'Tenant Registry',
+    amenities: 'Amenity Bookings',
+    visitors: 'Visitor Management',
+    my_property: 'My Property',
+    property: 'Property'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -73,7 +79,13 @@ const translations = {
     violations: 'Violaciones de Normas',
     reserve_fund: 'Fondo de Reserva',
     board_meetings: 'Reuniones de Junta',
-    assessments: 'Cuotas Especiales'
+    assessments: 'Cuotas Especiales',
+    vendors: 'Proveedores',
+    registry: 'Registro de Inquilinos',
+    amenities: 'Reserva de Amenidades',
+    visitors: 'Gestión de Visitantes',
+    my_property: 'Mi Propiedad',
+    property: 'Propiedad'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -110,7 +122,13 @@ const translations = {
     violations: 'Violations des Règlements',
     reserve_fund: 'Fonds de Réserve',
     board_meetings: 'Réunions du Conseil',
-    assessments: 'Cotisations Spéciales'
+    assessments: 'Cotisations Spéciales',
+    vendors: 'Fournisseurs',
+    registry: 'Registre des Locataires',
+    amenities: 'Réservation d\'Équipements',
+    visitors: 'Gestion des Visiteurs',
+    my_property: 'Ma Propriété',
+    property: 'Propriété'
   }
 };
 

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Star, Edit, Trash2 } from 'lucide-react';
 import { subscribeAnnouncements, addAnnouncement, updateAnnouncement, deleteAnnouncement, subscribeProperties } from '../firebase';
-import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Spinner, EmptyState } from '../components/UI';
+import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 
 const CAT_COLORS = {
   Maintenance: { color: '#C97B1A', bg: '#FEF3E2' },
@@ -23,6 +23,7 @@ export default function AnnouncementsPage({ onToast, userProfile }) {
   const [saving, setSaving]               = useState(false);
   const [filterCat, setFilterCat]         = useState('All');
   const [properties, setProperties]       = useState([]);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const isReadOnly = userProfile?.role === 'tenant' || userProfile?.role === 'owner';
 
@@ -61,8 +62,10 @@ export default function AnnouncementsPage({ onToast, userProfile }) {
 
   const handlePin   = async (a) => { try { await updateAnnouncement(a.id, { pinned: !a.pinned }); onToast(a.pinned ? 'Unpinned.' : 'Pinned to top.'); } catch (e) { onToast(e.message, 'error'); } };
   const handleDelete = async (id) => {
-    if (!confirm('Delete this announcement?')) return;
-    try { await deleteAnnouncement(id); onToast('Deleted.'); } catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this announcement?', action: async () => {
+      try { await deleteAnnouncement(id); onToast('Deleted.'); } catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -161,6 +164,14 @@ export default function AnnouncementsPage({ onToast, userProfile }) {
             </Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

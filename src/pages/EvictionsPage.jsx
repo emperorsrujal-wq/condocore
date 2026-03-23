@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Gavel, Plus, Search, Calendar, CheckCircle2, CircleDashed } from 'lucide-react';
 import { subscribeEvictions, addEviction, updateEviction, deleteEviction, subscribeTenants } from '../firebase';
-import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 
 // Eviction Timeline Generators based on precise jurisdictional law
 const generateTimeline = (formType, issueDateStr) => {
@@ -52,6 +52,7 @@ export default function EvictionsPage({ userProfile, onToast }) {
   const [viewing, setViewing] = useState(null);
   const [form, setForm] = useState({ tenantId: '', formType: 'N4', issueDate: new Date().toISOString().split('T')[0], status: 'Active Process', notes: '' });
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     const unsubE = subscribeEvictions(data => { 
@@ -82,15 +83,19 @@ export default function EvictionsPage({ userProfile, onToast }) {
   };
 
   const handleResolve = async (eObj) => {
-    if (!confirm('Mark this eviction process as Resolved/Closed?')) return;
-    try { await updateEviction(eObj.id, { status: 'Resolved' }); onToast('Process closed.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Mark this eviction process as Resolved/Closed?', action: async () => {
+      try { await updateEviction(eObj.id, { status: 'Resolved' }); onToast('Process closed.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Permanently wipe this eviction record?')) return;
-    try { await deleteEviction(id); onToast('Record deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Permanently wipe this eviction record?', action: async () => {
+      try { await deleteEviction(id); onToast('Record deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -205,6 +210,14 @@ export default function EvictionsPage({ userProfile, onToast }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Lock Chronology'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

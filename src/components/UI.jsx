@@ -139,6 +139,26 @@ export function Modal({ title, onClose, children, maxWidth = 480 }) {
   );
 }
 
+// ─── ConfirmModal ────────────────────────────────────────────────────────────
+export function ConfirmModal({ message, onConfirm, onCancel, confirmLabel = 'Confirm', confirmVariant = 'danger' }) {
+  return (
+    <div className="animate-fadeIn" style={{ position: 'fixed', inset: 0, background: 'rgba(11,30,61,0.55)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1100, padding: 20 }}>
+      <div className="animate-slideUp" style={{ background: P.card, borderRadius: 16, width: '100%', maxWidth: 380, boxShadow: '0 20px 60px rgba(11,30,61,0.3)', overflow: 'hidden' }}>
+        <div style={{ padding: '28px 24px 16px', textAlign: 'center' }}>
+          <div style={{ width: 48, height: 48, borderRadius: '50%', background: confirmVariant === 'danger' ? '#FDECEA' : '#EAF0FB', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px', fontSize: 22 }}>
+            {confirmVariant === 'danger' ? '⚠' : '?'}
+          </div>
+          <p style={{ fontSize: 15, color: P.text, margin: 0, lineHeight: 1.5, fontWeight: 500 }}>{message}</p>
+        </div>
+        <div style={{ padding: '12px 24px 24px', display: 'flex', gap: 10, justifyContent: 'center' }}>
+          <Btn variant="ghost" onClick={onCancel}>Cancel</Btn>
+          <Btn variant={confirmVariant} onClick={onConfirm}>{confirmLabel}</Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Card ─────────────────────────────────────────────────────────────────────
 export function Card({ children, style: extra }) {
   return (

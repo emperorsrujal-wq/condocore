@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PiggyBank, Plus, Search, ChevronRight } from 'lucide-react';
 import { subscribeDeposits, subscribeTenantDeposits, addDeposit, updateDeposit, deleteDeposit, subscribeTenants } from '../firebase';
-import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 import { generateLMRStatementPDF } from '../utils/pdfGenerator';
 import { uploadFile, addDocument } from '../firebase';
 
@@ -48,6 +48,7 @@ export default function DepositsPage({ userProfile, onToast }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     let unsubD, unsubT;
@@ -92,9 +93,11 @@ export default function DepositsPage({ userProfile, onToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Permanently delete this escrow ledger record?')) return;
-    try { await deleteDeposit(id); onToast('Ledger record deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Permanently delete this escrow ledger record?', action: async () => {
+      try { await deleteDeposit(id); onToast('Ledger record deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -217,6 +220,14 @@ export default function DepositsPage({ userProfile, onToast }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Lock Escrow Ledger'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

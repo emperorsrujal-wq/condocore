@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Key, Plus, Search } from 'lucide-react';
 import { subscribeKeys, addKey, updateKey, deleteKey, subscribeTenants } from '../firebase';
-import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 
 const FORM_DEFAULT = { serial: '', tenantId: '', property: '', type: 'FOB', status: 'active', notes: '' };
 
@@ -15,6 +15,7 @@ export default function KeysPage({ onToast }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     const unsubK = subscribeKeys(data => { 
@@ -47,9 +48,11 @@ export default function KeysPage({ onToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this key record?')) return;
-    try { await deleteKey(id); onToast('Key deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this key record?', action: async () => {
+      try { await deleteKey(id); onToast('Key deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -120,6 +123,14 @@ export default function KeysPage({ onToast }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Save Key'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

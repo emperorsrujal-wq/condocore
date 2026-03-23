@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Building2, MapPin, List, Edit, Trash2, X } from 'lucide-react';
 import { subscribeProperties, addProperty, updateProperty, deleteProperty } from '../firebase';
-import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Table, TR, TD, Spinner, EmptyState, StatCard } from '../components/UI';
+import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Table, TR, TD, Spinner, EmptyState, StatCard, ConfirmModal } from '../components/UI';
 import { useHOAMode } from '../contexts/HOAModeContext';
 
 const FORM_DEFAULT = { name: '', address: '', type: 'Residential', units: '', description: '', amenities: '', bookableAmenities: [] };
@@ -14,6 +14,7 @@ export default function PropertiesPage({ onToast }) {
   const [editing, setEditing]       = useState(null);
   const [form, setForm]             = useState(FORM_DEFAULT);
   const [saving, setSaving]         = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     const unsub = subscribeProperties(data => { 
@@ -53,9 +54,11 @@ export default function PropertiesPage({ onToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this property? This will not delete associated tenants but will break links.')) return;
-    try { await deleteProperty(id); onToast('Property deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this property? This will not delete associated tenants but will break links.', action: async () => {
+      try { await deleteProperty(id); onToast('Property deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -159,6 +162,14 @@ export default function PropertiesPage({ onToast }) {
             </Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

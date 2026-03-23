@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Banknote, Plus, Search, Users, CheckCircle2, Clock } from 'lucide-react';
 import { subscribeAssessments, addAssessment, updateAssessment, deleteAssessment, subscribeTenants, subscribeProperties, subscribeAssessmentPayments, setUnitPayment } from '../firebase';
 import { jsPDF } from 'jspdf';
-import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 import { useHOAMode } from '../contexts/HOAModeContext';
 
 const ASSESSMENT_CATEGORIES = [
@@ -29,6 +29,7 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
   const [unitPayments, setUnitPayments] = useState([]);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     if (!userProfile) return;
@@ -124,9 +125,11 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this assessment?')) return;
-    try { await deleteAssessment(id); if (viewing?.id === id) setViewing(null); onToast('Deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this assessment?', action: async () => {
+      try { await deleteAssessment(id); if (viewing?.id === id) setViewing(null); onToast('Deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const togglePayment = async (assessment, paymentDoc) => {
@@ -340,6 +343,14 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Levy Assessment'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Package, Plus, Search, CheckCircle } from 'lucide-react';
 import { subscribePackages, subscribeTenantPackages, addPackage, updatePackage, deletePackage, subscribeTenants } from '../firebase';
-import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 
 const FORM_DEFAULT = { tenantId: '', courier: '', tracking: '', status: 'pending', notes: '' };
 
@@ -17,6 +17,7 @@ export default function PackagesPage({ userProfile, onToast }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     let unsubP, unsubT;
@@ -66,15 +67,19 @@ export default function PackagesPage({ userProfile, onToast }) {
   };
 
   const handleMarkPickedUp = async (p) => {
-    if (!confirm('Mark package as picked up?')) return;
-    try { await updatePackage(p.id, { status: 'picked up' }); onToast('Package picked up.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Mark package as picked up?', action: async () => {
+      try { await updatePackage(p.id, { status: 'picked up' }); onToast('Package picked up.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this package record?')) return;
-    try { await deletePackage(id); onToast('Package deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this package record?', action: async () => {
+      try { await deletePackage(id); onToast('Package deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -144,6 +149,14 @@ export default function PackagesPage({ userProfile, onToast }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Save & Notify'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

@@ -1,6 +1,7 @@
 import { subscribeMeetings, addMeeting, updateMeeting, deleteMeeting, uploadFile, addDocument, subscribeProperties, subscribeTenants, subscribeVotes } from '../firebase';
-import { P, Btn, Modal, Input, Select, PageHeader, Spinner, EmptyState } from '../components/UI';
-import { Vote, ClipboardList, ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Minus, FileText } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { P, Btn, Modal, Input, Select, PageHeader, Spinner, EmptyState, ConfirmModal } from '../components/UI';
+import { Vote, ClipboardList, ChevronDown, ChevronRight, ThumbsUp, ThumbsDown, Minus, FileText, Plus, Search } from 'lucide-react';
 import { useHOAMode } from '../contexts/HOAModeContext';
 import { jsPDF } from 'jspdf';
 
@@ -75,6 +76,7 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(null);
   const [meetingVotes, setMeetingVotes] = useState({}); // { meetingId: [votes] }
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     if (!userProfile) return;
@@ -141,9 +143,11 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this meeting record?')) return;
-    try { await deleteMeeting(id); onToast('Deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this meeting record?', action: async () => {
+      try { await deleteMeeting(id); onToast('Deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const handlePrintMinutes = async (meeting) => {
@@ -347,6 +351,14 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Save Meeting Record'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

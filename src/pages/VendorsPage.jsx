@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, User, Phone, Mail, Building, Edit, Trash2, Star } from 'lucide-react';
 import { subscribeVendors, addVendor, updateVendor, deleteVendor } from '../firebase';
-import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 
 const FORM_DEFAULT = { name: '', category: 'Plumbing', contact: '', phone: '', email: '', rating: '5' };
 
@@ -12,6 +12,7 @@ export default function VendorsPage({ onToast, userProfile }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     const unsub = subscribeVendors(data => { 
@@ -37,9 +38,11 @@ export default function VendorsPage({ onToast, userProfile }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this vendor?')) return;
-    try { await deleteVendor(id); onToast('Vendor deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this vendor?', action: async () => {
+      try { await deleteVendor(id); onToast('Vendor deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -111,6 +114,14 @@ export default function VendorsPage({ onToast, userProfile }) {
             </Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

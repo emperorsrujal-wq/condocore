@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Upload, Download, Eye, Trash2, FileText } from 'lucide-react';
 import { subscribeDocuments, subscribeTenantDocuments, addDocument, deleteDocument, uploadFile } from '../firebase';
-import { P, Btn, Modal, Input, Select, PageHeader, Spinner, EmptyState } from '../components/UI';
+import { P, Btn, Modal, Input, Select, PageHeader, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 
 export default function DocumentsPage({ onToast, userProfile, tenantData }) {
   const [documents, setDocuments] = useState([]);
@@ -16,6 +16,7 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
   const [docUnit, setDocUnit]      = useState('');
   const fileInputRef               = useRef();
   const isTenant = userProfile?.role === 'tenant';
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     let unsub;
@@ -71,9 +72,11 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
   };
 
   const handleDelete = async (doc) => {
-    if (!confirm('Delete this document?')) return;
-    try { await deleteDocument(doc.id); onToast('Document deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this document?', action: async () => {
+      try { await deleteDocument(doc.id); onToast('Document deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const formatBytes = (bytes) => {
@@ -168,6 +171,14 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
             </Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

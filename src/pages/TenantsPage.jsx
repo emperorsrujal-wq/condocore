@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Mail, Phone, Home, Calendar, DollarSign } from 'lucide-react';
 import { subscribeTenants, addTenant, updateTenant, deleteTenant, subscribeProperties, uploadFile, addDocument } from '../firebase';
-import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, Avatar } from '../components/UI';
+import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, Avatar, ConfirmModal } from '../components/UI';
 import { useHOAMode } from '../contexts/HOAModeContext';
 import { generateLeasePDF } from '../utils/pdfGenerator';
 
@@ -20,7 +20,8 @@ export default function TenantsPage({ onToast }) {
   const [saving, setSaving]     = useState(false);
   const [generating, setGenerating] = useState(false);
   const [properties, setProperties] = useState([]);
-  
+  const [confirmAction, setConfirmAction] = useState(null);
+
   // Temp states for new pet/occupant inline forms
   const [newPet, setNewPet] = useState({ name: '', type: '', breed: '' });
   const [newOcc, setNewOcc] = useState({ name: '', relation: '', phone: '' });
@@ -66,9 +67,11 @@ export default function TenantsPage({ onToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this tenant?')) return;
-    try { await deleteTenant(id); setSelected(null); onToast('Tenant deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this tenant?', action: async () => {
+      try { await deleteTenant(id); setSelected(null); onToast('Tenant deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const handleGenerateLease = async (t) => {
@@ -282,6 +285,14 @@ export default function TenantsPage({ onToast }) {
             </Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

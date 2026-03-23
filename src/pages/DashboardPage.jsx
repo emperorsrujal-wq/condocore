@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
-import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements, subscribeMeetings, subscribeVotes, submitVote, subscribeTenantPayments, subscribeTenantMaintenance, subscribeProperties } from '../firebase';
+import { subscribeTenants, subscribePayments, subscribeMaintenance, subscribeAnnouncements, subscribeMeetings, subscribeVotes, submitVote, subscribeTenantPayments, subscribeTenantMaintenance, subscribeProperties, subscribeManagers } from '../firebase';
 import { P, StatCard, Card, StatusBadge, Spinner, Btn, Table, TR, TD } from '../components/UI';
-import { Vote, CheckCircle2, XCircle, MinusCircle, Building2 } from 'lucide-react';
+import { Vote, CheckCircle2, XCircle, MinusCircle, Building2, Phone, Mail, MessageSquare } from 'lucide-react';
 import { useHOAMode } from '../contexts/HOAModeContext';
 
 export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
@@ -13,6 +13,7 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
   const [meetings, setMeetings] = useState([]);
   const [properties, setProperties] = useState([]);
   const [myVotes,  setMyVotes]  = useState([]);
+  const [managers, setManagers] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [init, setInit] = useState(false);
 
@@ -53,7 +54,8 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
         subscribeTenantPayments(tenantData?.id, data => handle(setPayments, data)),
         subscribeTenantMaintenance(tenantData?.id, data => handle(setMaint, data)),
         subscribeAnnouncements(data => handle(setNotices, data)),
-        subscribeMeetings(data => handle(setMeetings, data))
+        subscribeMeetings(data => handle(setMeetings, data)),
+        subscribeManagers(data => setManagers(data))
       ];
     }
 
@@ -184,6 +186,60 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
               ))}
           </Card>
         </div>
+
+        {/* Announcements for Tenants */}
+        {recentAnnounce.length > 0 && (
+          <Card style={{ padding: 22, marginTop: 18 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
+              <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 16, color: P.text }}>Building Announcements</div>
+              <button onClick={() => onNavigate('announcements')} style={{ fontSize: 12, color: P.gold, background: 'none', border: 'none', cursor: 'pointer', fontWeight: 600 }}>View all →</button>
+            </div>
+            {pinnedNotices.length > 0 && (
+              <div style={{ background: '#FFF9E6', border: `1px solid ${P.gold}30`, borderRadius: 10, padding: '12px 14px', marginBottom: 12 }}>
+                <div style={{ fontSize: 11, fontWeight: 700, color: P.gold, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Pinned</div>
+                {pinnedNotices.map(n => (
+                  <div key={n.id} style={{ fontSize: 13, fontWeight: 600, color: P.text, marginBottom: 4 }}>{n.title}</div>
+                ))}
+              </div>
+            )}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {recentAnnounce.map(a => (
+                <div key={a.id} style={{ background: P.bg, borderRadius: 10, padding: '12px 14px', border: `1px solid ${P.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <div style={{ fontSize: 13, fontWeight: 700, color: P.text }}>{a.title}</div>
+                    <div style={{ fontSize: 11, color: P.textMuted }}>{a.createdAt?.toDate ? a.createdAt.toDate().toLocaleDateString() : ''}</div>
+                  </div>
+                  <div style={{ fontSize: 12, color: P.textMuted, lineHeight: 1.4 }}>{a.body?.slice(0, 120)}{a.body?.length > 120 ? '...' : ''}</div>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
+
+        {/* Building Management Contact */}
+        {managers.length > 0 && (
+          <Card style={{ padding: 22, marginTop: 18 }}>
+            <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 16, color: P.text, marginBottom: 14 }}>Building Management</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {managers.map(m => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 14, background: P.bg, borderRadius: 10, padding: '14px 16px', border: `1px solid ${P.border}` }}>
+                  <div style={{ width: 42, height: 42, borderRadius: '50%', background: P.navyLight + '20', color: P.navy, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 15, flexShrink: 0 }}>
+                    {(m.name || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 14, fontWeight: 700, color: P.navy }}>{m.name}</div>
+                    <div style={{ fontSize: 12, color: P.textMuted, textTransform: 'capitalize' }}>{m.role === 'landlord' ? 'Property Owner' : 'Property Manager'}</div>
+                    {m.email && <div style={{ fontSize: 12, color: P.textMuted, display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}><Mail size={12} /> {m.email}</div>}
+                    {m.phone && <div style={{ fontSize: 12, color: P.textMuted, display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}><Phone size={12} /> {m.phone}</div>}
+                  </div>
+                  <button onClick={() => onNavigate('messages')} style={{ padding: '8px 14px', borderRadius: 8, background: P.navy, color: '#fff', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, fontWeight: 600 }}>
+                    <MessageSquare size={14} /> Message
+                  </button>
+                </div>
+              ))}
+            </div>
+          </Card>
+        )}
 
         {/* Governance & Voting Section */}
         {isHOAMode && meetings.filter(m => m.status === 'Active').length > 0 && (

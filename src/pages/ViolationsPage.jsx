@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, Search, FileText, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { subscribeViolations, addViolation, updateViolation, deleteViolation, subscribeTenants, uploadFile, addDocument } from '../firebase';
-import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 import { jsPDF } from 'jspdf';
 
 const VIOLATION_TYPES = [
@@ -84,6 +84,7 @@ export default function ViolationsPage({ userProfile, onToast }) {
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     if (!userProfile) return;
@@ -131,9 +132,11 @@ export default function ViolationsPage({ userProfile, onToast }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this violation record?')) return;
-    try { await deleteViolation(id); onToast('Record deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this violation record?', action: async () => {
+      try { await deleteViolation(id); onToast('Record deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const handlePrintNotice = async (v) => {
@@ -273,6 +276,14 @@ export default function ViolationsPage({ userProfile, onToast }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Log Violation'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { subscribeAllUsers, updateUserRole } from '../firebase';
-import { P, PageHeader, Table, TR, TD, Spinner, EmptyState, Avatar, StatusBadge } from '../components/UI';
+import { P, PageHeader, Table, TR, TD, Spinner, EmptyState, Avatar, StatusBadge, ConfirmModal } from '../components/UI';
 import { Users, Shield, ShieldAlert, Key } from 'lucide-react';
 
 export default function SuperAdminPage({ onToast }) {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     const unsub = subscribeAllUsers(data => {
@@ -17,13 +18,15 @@ export default function SuperAdminPage({ onToast }) {
   }, []);
 
   const handleRoleChange = async (uid, newRole, name) => {
-    if (!confirm(`Are you sure you want to change ${name}'s role to ${newRole.toUpperCase()}?`)) return;
-    try {
-      await updateUserRole(uid, newRole);
-      onToast(`Role updated to ${newRole}`, 'success');
-    } catch (e) {
-      onToast(`Failed to update role: ${e.message}`, 'error');
-    }
+    setConfirmAction({ message: `Are you sure you want to change ${name}'s role to ${newRole.toUpperCase()}?`, action: async () => {
+      try {
+        await updateUserRole(uid, newRole);
+        onToast(`Role updated to ${newRole}`, 'success');
+      } catch (e) {
+        onToast(`Failed to update role: ${e.message}`, 'error');
+      }
+    } });
+    return;
   };
 
   const ROLE_COLORS = {
@@ -99,6 +102,14 @@ export default function SuperAdminPage({ onToast }) {
           </Table>
         )}
       </div>
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
+      )}
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { PiggyBank, Plus, Search, TrendingUp, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { subscribeReserveFund, addReserveFundEntry, updateReserveFundEntry, deleteReserveFundEntry, subscribeReserveProjects, addReserveProject, updateReserveProject, deleteReserveProject } from '../firebase';
-import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 
 const CATEGORY_COLORS = {
   'Contribution':  { bg: '#D4EDDA', color: '#155724' },
@@ -27,6 +27,7 @@ export default function ReserveFundPage({ userProfile, onToast }) {
   const [form, setForm] = useState(FORM_DEFAULT);
   const [projectForm, setProjectForm] = useState(PROJECT_DEFAULT);
   const [saving, setSaving] = useState(false);
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     if (!userProfile) return;
@@ -84,15 +85,19 @@ export default function ReserveFundPage({ userProfile, onToast }) {
   };
 
   const handleDeleteProject = async (id) => {
-    if (!confirm('Delete this project?')) return;
-    try { await deleteReserveProject(id); onToast('Project deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this project?', action: async () => {
+      try { await deleteReserveProject(id); onToast('Project deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this fund entry?')) return;
-    try { await deleteReserveFundEntry(id); onToast('Entry deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this fund entry?', action: async () => {
+      try { await deleteReserveFundEntry(id); onToast('Entry deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k] || '', onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -233,6 +238,14 @@ export default function ReserveFundPage({ userProfile, onToast }) {
             <Btn onClick={handleSaveProject} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Save Project'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

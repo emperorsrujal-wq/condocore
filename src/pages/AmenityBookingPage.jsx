@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Calendar as CalendarIcon, Clock, ChevronLeft, ChevronRight, CheckCircle2, XCircle, Info, Trash2, User, Building } from 'lucide-react';
 import { subscribeBookings, addBooking, deleteBooking, subscribeProperties } from '../firebase';
-import { P, Btn, Modal, PageHeader, Spinner, EmptyState, StatusBadge, Select } from '../components/UI';
+import { P, Btn, Modal, PageHeader, Spinner, EmptyState, StatusBadge, Select, ConfirmModal } from '../components/UI';
 
 export default function AmenityBookingPage({ userProfile, tenantData, onToast }) {
   const [properties, setProperties] = useState([]);
@@ -11,6 +11,7 @@ export default function AmenityBookingPage({ userProfile, tenantData, onToast })
   const [selectedAmenity, setSelectedAmenity] = useState('');
   const [currentDate, setCurrentDate] = useState(new Date());
   const [showConfirm, setShowConfirm] = useState(null); // { date, amenity }
+  const [confirmAction, setConfirmAction] = useState(null);
 
   const isManager = ['manager', 'landlord', 'super_admin'].includes(userProfile?.role);
 
@@ -74,13 +75,15 @@ export default function AmenityBookingPage({ userProfile, tenantData, onToast })
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Cancel this booking?')) return;
-    try {
-      await deleteBooking(id);
-      onToast('Booking cancelled.');
-    } catch (e) {
-      onToast(e.message, 'error');
-    }
+    setConfirmAction({ message: 'Cancel this booking?', action: async () => {
+      try {
+        await deleteBooking(id);
+        onToast('Booking cancelled.');
+      } catch (e) {
+        onToast(e.message, 'error');
+      }
+    } });
+    return;
   };
 
   if (loading && properties.length === 0) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner size={32} /></div>;
@@ -214,6 +217,14 @@ export default function AmenityBookingPage({ userProfile, tenantData, onToast })
             </div>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Plus, Search, Dog, Car, User, MapPin, Hash, ShieldCheck, ShieldAlert, Edit, Trash2 } from 'lucide-react';
 import { subscribeRegistry, subscribeUserRegistry, addRegistryEntry, updateRegistryEntry, deleteRegistryEntry, subscribeProperties } from '../firebase';
-import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, StatusBadge } from '../components/UI';
+import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, StatusBadge, ConfirmModal } from '../components/UI';
 
 const FORM_DEFAULT = { type: 'pet', ownerName: '', unit: '', property: '', name: '', breed: '', vaccineStatus: 'up-to-date', make: '', model: '', color: '', plate: '', spot: '' };
 
@@ -15,6 +15,7 @@ export default function RegistryPage({ onToast, userProfile }) {
   const [form, setForm] = useState(FORM_DEFAULT);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+  const [confirmAction, setConfirmAction] = useState(null);
 
   useEffect(() => {
     const isAdmin = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
@@ -50,9 +51,11 @@ export default function RegistryPage({ onToast, userProfile }) {
   };
 
   const handleDelete = async (id) => {
-    if (!confirm('Delete this entry?')) return;
-    try { await deleteRegistryEntry(id); onToast('Entry deleted.'); }
-    catch (e) { onToast(e.message, 'error'); }
+    setConfirmAction({ message: 'Delete this entry?', action: async () => {
+      try { await deleteRegistryEntry(id); onToast('Entry deleted.'); }
+      catch (e) { onToast(e.message, 'error'); }
+    } });
+    return;
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
@@ -177,6 +180,14 @@ export default function RegistryPage({ onToast, userProfile }) {
             <Btn onClick={handleSave} disabled={saving} style={{ flex: 2 }}>{saving ? 'Saving...' : 'Save Record'}</Btn>
           </div>
         </Modal>
+      )}
+
+      {confirmAction && (
+        <ConfirmModal
+          message={confirmAction.message}
+          onConfirm={() => { confirmAction.action(); setConfirmAction(null); }}
+          onCancel={() => setConfirmAction(null)}
+        />
       )}
     </div>
   );
