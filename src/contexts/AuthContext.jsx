@@ -23,7 +23,7 @@ export function AuthProvider({ children }) {
     const { user } = await signInWithEmailAndPassword(auth, email, password);
     const snap = await getDoc(doc(db, 'users', user.uid));
     if (!snap.exists()) throw new Error('User profile not found. Contact your administrator.');
-    setUserProfile(snap.data());
+    setUserProfile({ ...snap.data(), uid: user.uid });
     return user;
   }
 
@@ -58,7 +58,7 @@ export function AuthProvider({ children }) {
       });
     }
 
-    setUserProfile(profile);
+    setUserProfile({ ...profile, uid: user.uid });
     return user;
   }
 
@@ -66,7 +66,7 @@ export function AuthProvider({ children }) {
     const { user } = await signInWithPopup(auth, provider);
     const userRef = doc(db, 'users', user.uid);
     const snap = await getDoc(userRef);
-    
+
     if (!snap.exists()) {
       const profile = {
         name: user.displayName || 'OAuth User',
@@ -77,9 +77,9 @@ export function AuthProvider({ children }) {
         initials: (user.displayName || 'O U').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
       };
       await setDoc(userRef, profile);
-      setUserProfile(profile);
+      setUserProfile({ ...profile, uid: user.uid });
     } else {
-      setUserProfile(snap.data());
+      setUserProfile({ ...snap.data(), uid: user.uid });
     }
     return user;
   }
@@ -113,7 +113,7 @@ export function AuthProvider({ children }) {
     if (!currentUser) return;
     try {
       const snap = await getDoc(doc(db, 'users', currentUser.uid));
-      if (snap.exists()) setUserProfile(snap.data());
+      if (snap.exists()) setUserProfile({ ...snap.data(), uid: currentUser.uid });
     } catch (e) { console.error('Refresh profile error:', e); }
   }
 
@@ -137,7 +137,7 @@ export function AuthProvider({ children }) {
           if (snap.exists()) {
             const data = snap.data();
             console.log('AuthProvider: Profile found. Role:', data.role, 'Data:', data);
-            setUserProfile(data);
+            setUserProfile({ ...data, uid: user.uid });
           } else {
             console.log('AuthProvider: Profile NOT found');
           }
