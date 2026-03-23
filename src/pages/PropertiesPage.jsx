@@ -4,7 +4,31 @@ import { subscribeProperties, addProperty, updateProperty, deleteProperty } from
 import { P, Btn, Modal, Input, Select, Textarea, PageHeader, Table, TR, TD, Spinner, EmptyState, StatCard, ConfirmModal } from '../components/UI';
 import { useHOAMode } from '../contexts/HOAModeContext';
 
-const FORM_DEFAULT = { name: '', address: '', type: 'Residential', units: '', description: '', amenities: '', bookableAmenities: [] };
+const FORM_DEFAULT = { name: '', address: '', type: 'Residential', units: '', description: '', amenities: '', bookableAmenities: [], province: '' };
+
+const PROVINCE_OPTIONS = [
+  { value: '', label: 'Select Province / State' },
+  { value: '', label: '── CANADA ──', disabled: true },
+  { value: 'ON', label: 'Ontario' },
+  { value: 'BC', label: 'British Columbia' },
+  { value: 'AB', label: 'Alberta' },
+  { value: 'QC', label: 'Quebec' },
+  { value: 'MB', label: 'Manitoba' },
+  { value: 'SK', label: 'Saskatchewan' },
+  { value: 'NS', label: 'Nova Scotia' },
+  { value: 'NB', label: 'New Brunswick' },
+  { value: '', label: '── UNITED STATES ──', disabled: true },
+  { value: 'NY', label: 'New York' },
+  { value: 'CA', label: 'California' },
+  { value: 'FL', label: 'Florida' },
+  { value: 'TX', label: 'Texas' },
+  { value: 'IL', label: 'Illinois' },
+  { value: 'NJ', label: 'New Jersey' },
+  { value: 'PA', label: 'Pennsylvania' },
+  { value: 'OH', label: 'Ohio' },
+  { value: 'GA', label: 'Georgia' },
+  { value: 'WA', label: 'Washington' }
+];
 
 export default function PropertiesPage({ onToast }) {
   const { label, isHOAMode } = useHOAMode();
@@ -29,12 +53,13 @@ export default function PropertiesPage({ onToast }) {
   const openEdit = (p) => { 
     setForm({ 
       name: p.name || '', 
-      address: p.address || '', 
-      type: p.type || 'Residential', 
-      units: String(p.units || ''), 
-      description: p.description || '', 
+      address: p.address || '',
+      type: p.type || 'Residential',
+      units: String(p.units || ''),
+      description: p.description || '',
       amenities: Array.isArray(p.amenities) ? p.amenities.join(', ') : (p.amenities || ''),
-      bookableAmenities: p.bookableAmenities || []
+      bookableAmenities: p.bookableAmenities || [],
+      province: p.province || ''
     }); 
     setEditing(p); 
     setShowForm(true); 
@@ -92,7 +117,7 @@ export default function PropertiesPage({ onToast }) {
                     <div style={{ fontWeight: 600, fontSize: 14, color: P.text }}>{p.name}</div>
                   </div>
                 </TD>
-                <TD><div style={{ fontSize: 13, color: P.textMuted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {p.address}</div></TD>
+                <TD><div style={{ fontSize: 13, color: P.textMuted, display: 'flex', alignItems: 'center', gap: 4 }}><MapPin size={12} /> {p.address}{p.province ? ` (${p.province})` : ''}</div></TD>
                 <TD><span style={{ fontSize: 12, fontWeight: 600, padding: '3px 10px', borderRadius: 20, background: P.bg, color: P.navyLight }}>{p.type}</span></TD>
                 <TD bold>{p.units || 0}</TD>
                 <TD>
@@ -123,6 +148,7 @@ export default function PropertiesPage({ onToast }) {
             <div style={{ gridColumn: 'span 2' }}>
               <Input label="Address *" helpText="The full legal address of the property." {...F('address')} placeholder="Full street address, city, province" />
             </div>
+            <Select label="Province / State *" helpText="Determines which legal forms and notices are available for this property." {...F('province')} options={PROVINCE_OPTIONS} />
             <Select label="Property Type" helpText="Governs which management modules (HOA, Condo, etc.) are available." {...F('type')} options={['Residential', 'Condo', 'HOA', 'Single Unit', 'Multi-Family', 'Commercial', 'Mixed-Use', 'Industrial']} />
             <Input label="Total Units" helpText="The total number of keys or individual property units." type="number" {...F('units')} />
           </div>
