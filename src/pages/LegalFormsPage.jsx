@@ -1,13 +1,13 @@
 import { useState, useEffect } from 'react';
-import { FileSignature, Download, ChevronRight, CheckCircle, Clock } from 'lucide-react';
+import { FileSignature, Download, ChevronRight, CheckCircle, Clock, AlertTriangle, Shield, Scale } from 'lucide-react';
 import { subscribeTenants, uploadFile, addDocument, subscribeDocuments, updateDocument } from '../firebase';
 import { generateLegalNoticePDF } from '../utils/pdfGenerator';
-import { P, Btn, Input, Select, PageHeader, Spinner } from '../components/UI';
+import { P, Btn, Input, Select, PageHeader, Spinner, Modal } from '../components/UI';
 
 // Forms requiring amountOwed field
-const AMOUNT_FORMS = ['N4','L1','RTB30','NY_14DAY','CA_3DAY','FL_3DAY','TX_3DAY','IL_5DAY','PA_10DAY','OH_3DAY','GA_DEMAND','WA_14DAY','NJ_QUIT','TAL_NP'];
+const AMOUNT_FORMS = ['N4','L1','RTB30','NY_14DAY','CA_3DAY','FL_3DAY','TX_3DAY','IL_5DAY','PA_10DAY','OH_3DAY','GA_DEMAND','WA_14DAY','NJ_QUIT','TAL_NP','SK_NONPAY'];
 // Forms requiring reason/description field
-const REASON_FORMS = ['N5','RTDRS','RTB1','TAL_NP','TAL_REP','RTB_TERM','NY_HOLD','CA_30DAY','NJ_CEASE','SK_TERM','NS_QUIT','NB_TERM'];
+const REASON_FORMS = ['N5','RTDRS','RTB1','TAL_NP','TAL_REP','RTB_TERM','NY_HOLD','CA_30DAY','NJ_CEASE','SK_TERM','NS_QUIT','NB_TERM','IL_10DAY','WA_10DAY'];
 // Forms that do NOT need deadline date (application forms)
 const NO_DEADLINE_FORMS = ['L1'];
 
@@ -82,11 +82,82 @@ const REGIONS = {
   ]
 };
 
+// ─── Legal Consent Modal ─────────────────────────────────────────────────────
+function LegalConsentModal({ onAccept, onDecline }) {
+  const [checks, setChecks] = useState({ draft: false, lawyer: false, liability: false, accuracy: false });
+  const allChecked = checks.draft && checks.lawyer && checks.liability && checks.accuracy;
+
+  const checkboxStyle = { width: 18, height: 18, accentColor: P.gold, cursor: 'pointer', flexShrink: 0, marginTop: 2 };
+  const labelStyle = { fontSize: 13, color: P.text, lineHeight: 1.5, cursor: 'pointer' };
+
+  return (
+    <div className="animate-fadeIn" style={{ position: 'fixed', inset: 0, background: 'rgba(11,30,61,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1200, padding: 20 }}>
+      <div className="animate-slideUp" style={{ background: P.card, borderRadius: 18, width: '100%', maxWidth: 560, boxShadow: '0 20px 60px rgba(11,30,61,0.4)', overflow: 'hidden' }}>
+        {/* Header */}
+        <div style={{ background: '#1a1a2e', padding: '24px 28px', display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ width: 48, height: 48, borderRadius: 12, background: 'rgba(212,175,55,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <Scale size={24} color={P.gold} />
+          </div>
+          <div>
+            <div style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 18, color: '#fff', fontWeight: 700 }}>Legal Document Disclaimer</div>
+            <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.6)', marginTop: 2 }}>Please read and acknowledge before proceeding</div>
+          </div>
+        </div>
+
+        {/* Warning Banner */}
+        <div style={{ margin: '20px 24px 0', padding: '14px 16px', background: '#FFF8E1', border: '1px solid #FFD54F', borderRadius: 10, display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+          <AlertTriangle size={20} color="#F57F17" style={{ flexShrink: 0, marginTop: 1 }} />
+          <div style={{ fontSize: 12, color: '#5D4037', lineHeight: 1.6 }}>
+            <strong>Important:</strong> CondoCore generates legal document <em>templates</em> based on publicly available government forms. These are <strong>not</strong> a substitute for professional legal advice. Laws vary by jurisdiction, change frequently, and individual circumstances may require specific modifications.
+          </div>
+        </div>
+
+        {/* Checkboxes */}
+        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <input type="checkbox" checked={checks.draft} onChange={e => setChecks(c => ({ ...c, draft: e.target.checked }))} style={checkboxStyle} />
+            <span style={labelStyle}>I understand that all generated documents are <strong>DRAFT templates only</strong> and are marked as such. They are not finalized legal documents until reviewed and approved.</span>
+          </label>
+
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <input type="checkbox" checked={checks.lawyer} onChange={e => setChecks(c => ({ ...c, lawyer: e.target.checked }))} style={checkboxStyle} />
+            <span style={labelStyle}>I agree to have all documents <strong>reviewed by a qualified legal professional</strong> (lawyer, paralegal, or licensed advocate) in my jurisdiction before serving them to any tenant or filing with any tribunal or court.</span>
+          </label>
+
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <input type="checkbox" checked={checks.accuracy} onChange={e => setChecks(c => ({ ...c, accuracy: e.target.checked }))} style={checkboxStyle} />
+            <span style={labelStyle}>I understand that I am <strong>solely responsible for verifying</strong> the accuracy of all information, dates, amounts, notice periods, and statutory references contained in these documents. Incorrect details may render the notice invalid.</span>
+          </label>
+
+          <label style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+            <input type="checkbox" checked={checks.liability} onChange={e => setChecks(c => ({ ...c, liability: e.target.checked }))} style={checkboxStyle} />
+            <span style={labelStyle}>I acknowledge that <strong>CondoCore and its developers assume no liability</strong> for any legal consequences arising from the use of these generated documents. By proceeding, I accept full responsibility for their use and any outcomes.</span>
+          </label>
+        </div>
+
+        {/* Separator */}
+        <div style={{ borderTop: `1px solid ${P.border}`, margin: '0 24px' }} />
+
+        {/* Actions */}
+        <div style={{ padding: '16px 24px 24px', display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
+          <Btn variant="ghost" onClick={onDecline} style={{ fontSize: 13 }}>I Do Not Agree</Btn>
+          <Btn onClick={onAccept} disabled={!allChecked} style={{ fontSize: 13, opacity: allChecked ? 1 : 0.5, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Shield size={16} /> I Understand & Accept
+          </Btn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ───────────────────────────────────────────────────────────────
 export default function LegalFormsPage({ userProfile, onToast }) {
   const [tenants, setTenants] = useState([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [allDocs, setAllDocs] = useState([]);
+  const [consentGiven, setConsentGiven] = useState(() => sessionStorage.getItem('legal_consent') === 'true');
+  const [showConsentModal, setShowConsentModal] = useState(false);
 
   const [form, setForm] = useState({
     tenantId: '',
@@ -106,26 +177,36 @@ export default function LegalFormsPage({ userProfile, onToast }) {
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
 
-  const handleGenerate = async () => {
+  const handleGenerateClick = () => {
     if (!form.tenantId) return onToast('Please select a tenant.', 'error');
     if (!form.province || !form.formType) return onToast('Please select province and form type.', 'error');
 
+    // If consent not yet given this session, show the modal first
+    if (!consentGiven) {
+      setShowConsentModal(true);
+      return;
+    }
+
+    doGenerate();
+  };
+
+  const handleConsentAccept = () => {
+    setConsentGiven(true);
+    sessionStorage.setItem('legal_consent', 'true');
+    setShowConsentModal(false);
+    doGenerate();
+  };
+
+  const doGenerate = async () => {
     const selectedTenant = tenants.find(t => t.id === form.tenantId);
     if (!selectedTenant) return onToast('Selected tenant not found.', 'error');
 
     setGenerating(true);
     try {
-      console.log('Generating PDF for:', selectedTenant.name, form.formType);
-
-      // Generate Blob
       const blob = await generateLegalNoticePDF(selectedTenant, form.province, form.formType, form, userProfile?.name);
-
       if (!blob || blob.size === 0) throw new Error('Failed to generate PDF content.');
 
-      // Generate filename for download
       const filename = `${form.formType}_Notice_${selectedTenant.name.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
-
-      // Trigger automatic local download
       const localUrl = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = localUrl;
@@ -137,7 +218,7 @@ export default function LegalFormsPage({ userProfile, onToast }) {
         URL.revokeObjectURL(localUrl);
       }, 100);
 
-      onToast(`${form.formType} Form Generated & Downloaded!`);
+      onToast(`${form.formType} Draft Notice Generated & Downloaded!`);
     } catch (e) {
       console.error('PDF Generation Error:', e);
       onToast(`Failed to generate notice: ${e.message}`, 'error');
@@ -151,20 +232,33 @@ export default function LegalFormsPage({ userProfile, onToast }) {
     <div>
       <PageHeader title="Government Forms & Legal Notices" subtitle="Auto-generate jurisdiction-specific compliance templates pre-filled with tenant data — 17 jurisdictions across Canada & USA" />
 
+      {/* Legal Disclaimer Banner — always visible */}
+      <div style={{ maxWidth: 700, marginBottom: 20, padding: '14px 18px', background: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)', borderRadius: 12, border: '1px solid rgba(212,175,55,0.3)', display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+        <Shield size={20} color={P.gold} style={{ flexShrink: 0, marginTop: 2 }} />
+        <div>
+          <div style={{ fontSize: 13, fontWeight: 700, color: P.gold, marginBottom: 4 }}>Legal Notice Templates — Draft Use Only</div>
+          <div style={{ fontSize: 11.5, color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
+            All documents generated by CondoCore are <strong style={{ color: '#fff' }}>draft templates</strong> intended for review by a qualified legal professional before service.
+            CondoCore does not provide legal advice. You are responsible for verifying all content, dates, amounts, and compliance with your local laws.
+            {consentGiven && <span style={{ color: P.gold, marginLeft: 6 }}>✓ Consent acknowledged this session</span>}
+          </div>
+        </div>
+      </div>
+
       <div style={{ background: P.card, borderRadius: 16, padding: '32px', border: `1px solid ${P.border}`, maxWidth: 700 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: `${P.gold}20`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             <FileSignature size={22} color={P.gold} />
           </div>
           <div>
-            <div style={{ fontSize: 18, fontWeight: 700, color: P.text }}>Provincial Form Generator</div>
-            <div style={{ fontSize: 13, color: P.textMuted }}>Select the explicit regional template required and populate the variables. It will be saved directly into the Tenant's document ledger.</div>
+            <div style={{ fontSize: 18, fontWeight: 700, color: P.text }}>Legal Form Generator</div>
+            <div style={{ fontSize: 13, color: P.textMuted }}>Select jurisdiction, form type, and populate required fields. Generated documents will be watermarked as DRAFT.</div>
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <Select label="Select Target Tenant *" helpText="The resident who will receive this legal notice." {...F('tenantId')} options={[{value:'', label:'Select Tenant'}, ...tenants.map(t => ({ value: t.id, label: `${t.name} (Unit ${t.unit})` }))]} />
-          
+
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ flex: 1 }}>
               <Select label="Province / Jurisdiction *" helpText="Determines the legal template used (LTB, RTB, etc.)" {...F('province')} options={[
@@ -223,8 +317,8 @@ export default function LegalFormsPage({ userProfile, onToast }) {
             </div>
           </div>
 
-          <Btn onClick={handleGenerate} disabled={generating || !form.tenantId} style={{ marginTop: 10, height: 48, fontSize: 15 }}>
-            {generating ? <Spinner size={20} color="#fff" /> : <><Download size={18} /> Generate Notice (Draft)</>}
+          <Btn onClick={handleGenerateClick} disabled={generating || !form.tenantId} style={{ marginTop: 10, height: 48, fontSize: 15 }}>
+            {generating ? <Spinner size={20} color="#fff" /> : <><Download size={18} /> Generate Draft Notice</>}
           </Btn>
         </div>
       </div>
@@ -264,6 +358,14 @@ export default function LegalFormsPage({ userProfile, onToast }) {
           </div>
         )}
       </div>
+
+      {/* Consent Modal */}
+      {showConsentModal && (
+        <LegalConsentModal
+          onAccept={handleConsentAccept}
+          onDecline={() => setShowConsentModal(false)}
+        />
+      )}
     </div>
   );
 }

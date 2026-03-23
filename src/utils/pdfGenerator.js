@@ -51,9 +51,29 @@ Landlord Signature                              Date
 
 export async function generateLegalNoticePDF(tenant, province, formType, data, landlordName = 'Management') {
   const doc = new jsPDF();
-  const dateStr = new Date().toLocaleDateString();
-  const addr = `Unit ${tenant.unit}, ${tenant.property || 'Property'}`;
+  const dateStr = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const streetAddr = tenant.address || tenant.propertyAddress || '';
+  const addr = streetAddr
+    ? `Unit ${tenant.unit}, ${tenant.property || 'Property'}, ${streetAddr}`
+    : `Unit ${tenant.unit}, ${tenant.property || 'Property'}`;
   const isUSA = ['NY','CA','FL','TX','IL','NJ','PA','OH','GA','WA'].includes(province);
+
+  // Format currency properly
+  const fmtCurrency = (val) => {
+    const num = parseFloat(val) || 0;
+    return num.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  };
+  const amountOwed = fmtCurrency(data.amountOwed);
+
+  // Format dates to readable format
+  const fmtDate = (val) => {
+    if (!val) return null;
+    const d = new Date(val + 'T00:00:00');
+    if (isNaN(d)) return val;
+    return d.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  };
+  const deadlineDate = fmtDate(data.deadlineDate);
+  const dateDue = fmtDate(data.dateDue);
 
   doc.setFont("helvetica", "bold");
 
@@ -71,9 +91,9 @@ To Tenant(s): ${tenant.name}
 Address of the Rental Unit: ${addr}
 From Landlord: ${landlordName}
 
-TAKE NOTICE that you owe $${data.amountOwed || 0} in rent.
+TAKE NOTICE that you owe $${amountOwed} in rent.
 
-The termination date for this notice is: ${data.deadlineDate || '(14 days from service date)'}.
+The termination date for this notice is: ${deadlineDate || '(14 days from service date)'}.
 NOTE: The termination date must be at least 14 days after the notice is given to the tenant.
 
 If you pay all the rent owing on or before the termination date, this notice is void and your tenancy will not be terminated.
@@ -91,7 +111,7 @@ From Landlord: ${landlordName}
 
 I am giving you this notice because I in good faith require possession of the rental unit for the purpose of residential occupation by myself, a member of my immediate family, or a person who provides or will provide care services to me or a family member.
 
-The termination date is: ${data.deadlineDate || '(at least 60 days from date of notice, on last day of rental period)'}.
+The termination date is: ${deadlineDate || '(at least 60 days from date of notice, on last day of rental period)'}.
 NOTE: The termination date must be at least 60 days after the notice is given and must fall on the last day of the rental period.
 
 COMPENSATION: Under s.48.1 of the RTA, I am required to pay you compensation equal to one month's rent no later than the termination date. This can be paid by cheque or by waiving one month's rent.
@@ -110,9 +130,9 @@ ${data.reason || 'Interference with reasonable enjoyment, damage to the rental u
 
 FIRST N5: This is the first N5 notice. Under s.64(3) of the RTA, you have 7 days after receiving this notice to correct the problem or stop the activity. If you do, this notice is void.
 
-If this is a SECOND N5 within 6 months of the first, the notice cannot be voided and you must vacate by the termination date: ${data.deadlineDate || '(at least 20 days from service)'}.
+If this is a SECOND N5 within 6 months of the first, the notice cannot be voided and you must vacate by the termination date: ${deadlineDate || '(at least 20 days from service)'}.
 
-The termination date is: ${data.deadlineDate || '(at least 20 days after service)'}.
+The termination date is: ${deadlineDate || '(at least 20 days after service)'}.
       `;
     } else if (formType === 'L1') {
        title = "FORM L1: APPLICATION TO EVICT A TENANT FOR NON-PAYMENT OF RENT AND TO COLLECT RENT THE TENANT OWES";
@@ -127,8 +147,8 @@ This is an application under s.87(1) of the Residential Tenancies Act, 2006 to:
 1. Evict the tenant for non-payment of rent; and
 2. Collect the rent the tenant owes.
 
-Amount of rent owing: $${data.amountOwed || 0}
-The tenant was served with an N4 Notice on: ${data.dateDue || '(the service date)'}.
+Amount of rent owing: $${amountOwed}
+The tenant was served with an N4 Notice on: ${dateDue || '(the service date)'}.
 
 NOTE: This application must be filed within 30 days of the termination date on the N4 notice.
 A $186 filing fee applies (subject to change per LTB fee schedule).
@@ -146,11 +166,11 @@ To Tenant(s): ${tenant.name}
 Rental Unit Address: ${addr}
 Landlord: ${landlordName}
 
-You have failed to pay rent in the amount of $${data.amountOwed || 0} that was due on ${data.dateDue || 'the due date'}.
+You have failed to pay rent in the amount of $${amountOwed} that was due on ${dateDue || 'the due date'}.
 
 You must either:
 (a) Pay the full amount of rent owing within 5 days of receiving this notice, OR
-(b) Move out by ${data.deadlineDate || '(10 days after receiving this notice)'}.
+(b) Move out by ${deadlineDate || '(10 days after receiving this notice)'}.
 
 If you disagree with this notice, you may apply for dispute resolution with the Residential Tenancy Branch (RTB) within 5 days of receiving it. Call 1-800-665-8779 or visit gov.bc.ca/landlordtenant.
 
@@ -163,7 +183,7 @@ To Tenant(s): ${tenant.name}
 Rental Unit Address: ${addr}
 Landlord: ${landlordName}
 
-The tenancy is hereby terminated effective: ${data.deadlineDate || 'the termination date'}.
+The tenancy is hereby terminated effective: ${deadlineDate || 'the termination date'}.
 
 Reason for Termination:
 ${data.reason || 'As per Residential Tenancy Branch guidelines.'}
@@ -182,7 +202,7 @@ To Tenant(s): ${tenant.name}
 Premises Address: ${addr}
 Landlord: ${landlordName}
 
-TAKE NOTICE that your tenancy of the above premises is terminated effective ${data.deadlineDate || '(14 days from notice for substantial breach)'}.
+TAKE NOTICE that your tenancy of the above premises is terminated effective ${deadlineDate || '(14 days from notice for substantial breach)'}.
 
 Reason for Notice:
 ${data.reason || 'Substantial breach of the Residential Tenancies Act (SA 2004, c. R-17.1).'}
@@ -202,7 +222,7 @@ If you wish to dispute this notice, you may apply to the RTDRS or Provincial Cou
 To Tenant(s) / Au locataire: ${tenant.name}
 Address / Adresse: ${addr}
 
-Amount Owed / Montant dû: $${data.amountOwed || 0}
+Amount Owed / Montant dû: $${amountOwed}
 
 You are hereby notified that you are in default of payment of rent. Under the Civil Code of Québec (art. 1971), the landlord may apply to the Tribunal administratif du logement (TAL) for the resiliation of the lease if rent remains unpaid for more than 3 weeks.
 
@@ -216,7 +236,7 @@ Contact TAL: 1-800-683-2245 or visit tal.gouv.qc.ca
 To Tenant(s) / Au locataire: ${tenant.name}
 Address / Adresse: ${addr}
 
-Under art. 1957-1970 of the Civil Code of Québec, the landlord hereby gives notice of repossession effective: ${data.deadlineDate || '(6 months before lease expiry)'}.
+Under art. 1957-1970 of the Civil Code of Québec, the landlord hereby gives notice of repossession effective: ${deadlineDate || '(6 months before lease expiry)'}.
 
 NOTE: This notice must be given at least 6 months before the end of a fixed-term lease. The tenant has one month after receiving this notice to respond. Failure to respond is deemed acceptance.
 
@@ -234,7 +254,7 @@ To Tenant(s): ${tenant.name}
 Address: ${addr}
 Landlord: ${landlordName}
 
-Notice of termination effective: ${data.deadlineDate || 'the termination date'}.
+Notice of termination effective: ${deadlineDate || 'the termination date'}.
 
 ${data.reason ? `Reason: ${data.reason}` : ''}
 
@@ -252,11 +272,11 @@ To Tenant(s): ${tenant.name}
 Address: ${addr}
 Landlord: ${landlordName}
 
-You are in arrears of rent in the amount of $${data.amountOwed || 0}.
+You are in arrears of rent in the amount of $${amountOwed}.
 
 Under s.56 of The Residential Tenancies Act, 2006 (Saskatchewan), you are given 15 days' notice to pay the full amount owing or vacate the premises.
 
-Termination date: ${data.deadlineDate || '(15 days from service)'}.
+Termination date: ${deadlineDate || '(15 days from service)'}.
 
 You may apply to the Office of Residential Tenancies (ORT) to dispute this notice. Contact: 1-888-215-2222 or visit saskatchewan.ca/residential-tenancies.
       `;
@@ -267,7 +287,7 @@ To Tenant(s): ${tenant.name}
 Address: ${addr}
 Landlord: ${landlordName}
 
-Your tenancy is terminated effective: ${data.deadlineDate || 'the termination date'}.
+Your tenancy is terminated effective: ${deadlineDate || 'the termination date'}.
 
 Reason: ${data.reason || 'As per The Residential Tenancies Act, 2006 (Saskatchewan).'}
 
@@ -285,7 +305,7 @@ To Tenant(s): ${tenant.name}
 Address: ${addr}
 Landlord: ${landlordName}
 
-Under the Residential Tenancies Act (Nova Scotia), you are hereby given notice to quit the premises by: ${data.deadlineDate || '(15 days for non-payment)'}.
+Under the Residential Tenancies Act (Nova Scotia), you are hereby given notice to quit the premises by: ${deadlineDate || '(15 days for non-payment)'}.
 
 Reason: ${data.reason || 'Non-payment of rent or breach of tenancy agreement.'}
 
@@ -304,7 +324,7 @@ To Tenant(s): ${tenant.name}
 Address: ${addr}
 Landlord: ${landlordName}
 
-Under the Residential Tenancies Act (New Brunswick), your tenancy is terminated effective: ${data.deadlineDate || 'the termination date'}.
+Under the Residential Tenancies Act (New Brunswick), your tenancy is terminated effective: ${deadlineDate || 'the termination date'}.
 
 Reason: ${data.reason || 'As per the Residential Tenancies Act (New Brunswick).'}
 
@@ -322,13 +342,13 @@ To Tenant(s): ${tenant.name}
 Address: ${addr}
 Landlord/Agent: ${landlordName}
 
-PLEASE TAKE NOTICE that you are in default in payment of rent for the above-described premises in the amount of $${data.amountOwed || 0}.
+PLEASE TAKE NOTICE that you are in default in payment of rent for the above-described premises in the amount of $${amountOwed}.
 
 Pursuant to Real Property Law §235-e, you are hereby demanded to pay the full amount of rent due within fourteen (14) days of service of this notice, or surrender possession of the premises.
 
 If you fail to pay or vacate within 14 days, the landlord may commence a summary proceeding under RPAPL Article 7 to recover possession and any rent owed.
 
-Termination date: ${data.deadlineDate || '(14 days from service)'}.
+Termination date: ${deadlineDate || '(14 days from service)'}.
       `;
     } else {
       title = "NEW YORK: NOTICE OF HOLDOVER PROCEEDING (RPAPL §713)";
@@ -341,7 +361,7 @@ PLEASE TAKE NOTICE that your tenancy has expired or been terminated, and you are
 
 Pursuant to RPAPL §713, the landlord intends to commence a holdover proceeding to recover possession of the premises.
 
-You must vacate the premises by: ${data.deadlineDate || 'the date specified'}.
+You must vacate the premises by: ${deadlineDate || 'the date specified'}.
 
 Reason: ${data.reason || 'Expiration of lease term / holdover without consent.'}
 
@@ -361,7 +381,7 @@ Address: ${addr}
 
 NOTICE TO PAY RENT OR QUIT
 
-WITHIN THREE (3) DAYS after the service of this notice, you are hereby required to pay the amount of $${data.amountOwed || 0} which is the rent due and owing for the above-described premises, OR quit the premises and deliver up possession to the landlord.
+WITHIN THREE (3) DAYS after the service of this notice, you are hereby required to pay the amount of $${amountOwed} which is the rent due and owing for the above-described premises, OR quit the premises and deliver up possession to the landlord.
 
 If you fail to perform or otherwise comply within the period specified, the landlord will institute legal proceedings against you to recover rent, damages, and possession of said premises pursuant to California Code of Civil Procedure §1161 et seq.
 
@@ -377,7 +397,7 @@ Address: ${addr}
 
 THIRTY (30) DAY NOTICE OF TERMINATION OF TENANCY
 
-You are hereby notified that your month-to-month tenancy of the above-described premises is terminated effective ${data.deadlineDate || '(30 days from service)'}.
+You are hereby notified that your month-to-month tenancy of the above-described premises is terminated effective ${deadlineDate || '(30 days from service)'}.
 
 You are required to quit and deliver up possession on or before that date.
 
@@ -398,11 +418,11 @@ Landlord/Agent: ${landlordName}
 To Tenant(s): ${tenant.name}
 Address: ${addr}
 
-You are hereby notified that you are indebted to the undersigned landlord in the amount of $${data.amountOwed || 0} for the rent of the above premises, and that the landlord demands payment of said rent or possession of the premises within three (3) days (excluding weekends and legal holidays) from the date of delivery of this notice.
+You are hereby notified that you are indebted to the undersigned landlord in the amount of $${amountOwed} for the rent of the above premises, and that the landlord demands payment of said rent or possession of the premises within three (3) days (excluding weekends and legal holidays) from the date of delivery of this notice.
 
 Pursuant to Florida Statutes §83.56(3), if you fail to pay or vacate, the landlord will institute legal proceedings to recover possession and rent.
 
-Termination date: ${data.deadlineDate || '(3 business days from service)'}.
+Termination date: ${deadlineDate || '(3 business days from service)'}.
 Landlord/Agent: ${landlordName}
     `;
   }
@@ -417,13 +437,13 @@ Address: ${addr}
 
 You are hereby notified to vacate and surrender possession of the above-described premises within three (3) days from the date this notice is delivered to you.
 
-Amount of rent currently due and unpaid: $${data.amountOwed || 0}.
+Amount of rent currently due and unpaid: $${amountOwed}.
 
 Pursuant to Texas Property Code §24.005, if you fail to vacate, the landlord may file a forcible detainer suit in Justice Court to recover possession.
 
 NOTE: Unless the lease specifies otherwise, a 3-day notice is the minimum required under Texas law.
 
-Termination date: ${data.deadlineDate || '(3 days from delivery)'}.
+Termination date: ${deadlineDate || '(3 days from delivery)'}.
 Landlord/Agent: ${landlordName}
     `;
   }
@@ -437,13 +457,13 @@ Landlord/Agent: ${landlordName}
 To Tenant(s): ${tenant.name}
 Address: ${addr}
 
-You are hereby notified that there is now due and unpaid rent in the amount of $${data.amountOwed || 0} for the premises described above.
+You are hereby notified that there is now due and unpaid rent in the amount of $${amountOwed} for the premises described above.
 
 You are hereby further notified that the landlord elects to declare the lease terminated and demands that you pay the rent in full within FIVE (5) DAYS or vacate and surrender the premises.
 
 If you fail to do so, legal proceedings will be instituted against you to recover possession, rent, court costs, and attorney fees as provided by law (735 ILCS 5/9-209).
 
-Termination date: ${data.deadlineDate || '(5 days from service)'}.
+Termination date: ${deadlineDate || '(5 days from service)'}.
 Landlord/Agent: ${landlordName}
       `;
     } else {
@@ -459,7 +479,7 @@ You have TEN (10) DAYS from service of this notice to cure the violation. If the
 
 Pursuant to 735 ILCS 5/9-210, failure to cure may result in eviction proceedings.
 
-Termination date: ${data.deadlineDate || '(10 days from service)'}.
+Termination date: ${deadlineDate || '(10 days from service)'}.
 Landlord/Agent: ${landlordName}
       `;
     }
@@ -474,7 +494,7 @@ Landlord/Agent: ${landlordName}
 To Tenant(s): ${tenant.name}
 Address: ${addr}
 
-PLEASE TAKE NOTICE that you are in arrears of rent in the amount of $${data.amountOwed || 0}.
+PLEASE TAKE NOTICE that you are in arrears of rent in the amount of $${amountOwed}.
 
 You are hereby demanded to pay the full amount of rent due or quit and surrender possession of the premises.
 
@@ -482,7 +502,7 @@ Under NJSA 2A:18-61.2, the landlord may file for eviction if rent remains unpaid
 
 NOTE: For month-to-month tenancies, one full month's notice is required. For non-payment, the landlord must provide a written demand and wait for the applicable notice period before filing.
 
-Termination date: ${data.deadlineDate || 'as required by statute'}.
+Termination date: ${deadlineDate || 'as required by statute'}.
 Landlord/Agent: ${landlordName}
       `;
     } else {
@@ -512,7 +532,7 @@ Landlord/Agent: ${landlordName}
 To Tenant(s): ${tenant.name}
 Address: ${addr}
 
-You are hereby notified that you are in default in the payment of rent in the amount of $${data.amountOwed || 0}.
+You are hereby notified that you are in default in the payment of rent in the amount of $${amountOwed}.
 
 Pursuant to 68 PS §250.501(b), you are hereby given TEN (10) DAYS' notice to vacate and surrender possession of the above-described premises.
 
@@ -520,7 +540,7 @@ If you fail to vacate within the notice period, the landlord may file a Landlord
 
 NOTE: For leases of one year or more, 30 days' notice is required for non-payment.
 
-Termination date: ${data.deadlineDate || '(10 days from service)'}.
+Termination date: ${deadlineDate || '(10 days from service)'}.
 Landlord/Agent: ${landlordName}
       `;
     } else {
@@ -533,7 +553,7 @@ Your month-to-month tenancy is hereby terminated. You are given FIFTEEN (15) DAY
 
 Pursuant to 68 PS §250.501(b), this notice is served in compliance with Pennsylvania's Landlord and Tenant Act.
 
-Termination date: ${data.deadlineDate || '(15 days from service)'}.
+Termination date: ${deadlineDate || '(15 days from service)'}.
 Landlord/Agent: ${landlordName}
       `;
     }
@@ -547,13 +567,13 @@ Landlord/Agent: ${landlordName}
 To Tenant(s): ${tenant.name}
 Address: ${addr}
 
-You are hereby notified that you are in default of rent in the amount of $${data.amountOwed || 0}.
+You are hereby notified that you are in default of rent in the amount of $${amountOwed}.
 
 Pursuant to Ohio Revised Code §1923.04, you are hereby given THREE (3) DAYS' notice to leave the premises.
 
 If you fail to vacate within the notice period, the landlord may file a forcible entry and detainer action in the appropriate Municipal or County Court.
 
-Termination date: ${data.deadlineDate || '(3 days from service)'}.
+Termination date: ${deadlineDate || '(3 days from service)'}.
 Landlord/Agent: ${landlordName}
     `;
   }
@@ -570,7 +590,7 @@ DEMAND FOR POSSESSION
 
 You are hereby demanded to deliver up possession of the above-described premises immediately.
 
-Amount of rent due and unpaid: $${data.amountOwed || 0}.
+Amount of rent due and unpaid: $${amountOwed}.
 
 Pursuant to OCGA §44-7-50, the landlord demands that you vacate the premises. Georgia law does not require a specific number of days' notice for non-payment — only a demand for possession is required before filing a dispossessory proceeding.
 
@@ -591,7 +611,7 @@ Address: ${addr}
 
 FOURTEEN-DAY NOTICE TO PAY RENT OR VACATE
 
-You are hereby notified that you owe $${data.amountOwed || 0} in unpaid rent.
+You are hereby notified that you owe $${amountOwed} in unpaid rent.
 
 Pursuant to RCW 59.18.057 (as amended by SB 5600, effective 2019), you are required to pay the rent in full within FOURTEEN (14) DAYS of service of this notice, or vacate the premises.
 
@@ -599,7 +619,7 @@ If you fail to pay or vacate, the landlord may file an unlawful detainer action 
 
 NOTE: Washington state law may provide additional protections. Contact Northwest Justice Project at 1-888-201-1014 for legal assistance.
 
-Termination date: ${data.deadlineDate || '(14 days from service)'}.
+Termination date: ${deadlineDate || '(14 days from service)'}.
 Landlord/Agent: ${landlordName}
       `;
     } else {
@@ -617,7 +637,7 @@ Pursuant to RCW 59.12.030(4), you are given TEN (10) DAYS to comply with the ter
 
 If you fail to comply or vacate, the landlord may file an unlawful detainer action.
 
-Termination date: ${data.deadlineDate || '(10 days from service)'}.
+Termination date: ${deadlineDate || '(10 days from service)'}.
 Landlord/Agent: ${landlordName}
       `;
     }
@@ -635,29 +655,123 @@ This is a formal notice regarding your tenancy. Please consult local laws for yo
     `;
   }
 
-  // Draw Title
-  doc.setFontSize(14);
-  const splitTitle = doc.splitTextToSize(title, 180);
-  doc.text(splitTitle, 15, 20);
+  // ─── PDF Layout & Rendering ───
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const margin = 15;
+  const contentW = pageW - margin * 2;
 
-  // Draw Body
-  doc.setFontSize(11);
+  // Generate reference number
+  const refNum = `CC-${province}-${formType}-${Date.now().toString(36).toUpperCase()}`;
+
+  // ── DRAFT Watermark (diagonal, light gray) ──
+  doc.setTextColor(230, 230, 230);
+  doc.setFontSize(72);
+  doc.setFont("helvetica", "bold");
+  doc.text("DRAFT", pageW / 2, pageH / 2, { angle: 45, align: 'center' });
+
+  // ── Page border ──
+  doc.setDrawColor(180, 180, 180);
+  doc.setLineWidth(0.5);
+  doc.rect(8, 8, pageW - 16, pageH - 16);
+
+  // ── Header line ──
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(8);
   doc.setFont("helvetica", "normal");
+  doc.text(`Ref: ${refNum}`, margin, 14);
+  doc.text(`Generated: ${dateStr}`, pageW - margin, 14, { align: 'right' });
+  doc.setDrawColor(212, 175, 55);
+  doc.setLineWidth(0.8);
+  doc.line(margin, 17, pageW - margin, 17);
+
+  // ── Title ──
+  doc.setTextColor(0, 0, 0);
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(13);
+  const splitTitle = doc.splitTextToSize(title, contentW);
+  doc.text(splitTitle, margin, 24);
+
+  // ── Date of Issue ──
+  let yPos = 26 + (splitTitle.length * 5.5);
+  doc.setFontSize(10);
+  doc.setFont("helvetica", "normal");
+  doc.text(`Date of Issue: ${dateStr}`, margin, yPos);
+  yPos += 4;
+
+  // ── Body content ──
+  doc.setFontSize(10.5);
+  doc.setFont("helvetica", "normal");
+  const splitBody = doc.splitTextToSize(body.trim(), contentW);
+  doc.text(splitBody, margin, yPos);
+  yPos += splitBody.length * 4.5 + 6;
+
+  // ── Signature block ──
+  if (yPos > pageH - 80) {
+    doc.addPage();
+    yPos = 20;
+    // Watermark on page 2
+    doc.setTextColor(230, 230, 230);
+    doc.setFontSize(72);
+    doc.setFont("helvetica", "bold");
+    doc.text("DRAFT", pageW / 2, pageH / 2, { angle: 45, align: 'center' });
+    doc.setTextColor(0, 0, 0);
+  }
+
+  doc.setDrawColor(0, 0, 0);
+  doc.setLineWidth(0.3);
+  doc.line(margin, yPos, margin + 80, yPos);
+  doc.line(margin + 110, yPos, margin + 155, yPos);
+  doc.setFontSize(8);
+  doc.text('Landlord / Agent Signature', margin, yPos + 4);
+  doc.text('Date', margin + 110, yPos + 4);
+  yPos += 12;
+
+  // ── Tenant Acknowledgment ──
+  doc.line(margin, yPos, margin + 80, yPos);
+  doc.line(margin + 110, yPos, margin + 155, yPos);
+  doc.text('Tenant Signature (if applicable)', margin, yPos + 4);
+  doc.text('Date', margin + 110, yPos + 4);
+  yPos += 16;
+
+  // ── Legal Disclaimer Box ──
   const legalType = isUSA ? 'state' : 'provincial';
-  const textContent = `
-Date of Issue: ${dateStr}
+  const disclaimerText = [
+    'IMPORTANT LEGAL DISCLAIMER:',
+    `This document is a DRAFT template generated by CondoCore for informational purposes only. It is NOT a finalized legal document.`,
+    `This template is intended to comply with applicable ${legalType} legislation but must be reviewed and approved by a qualified`,
+    `legal professional (lawyer, paralegal, or licensed advocate) before being served to any tenant or filed with any court or tribunal.`,
+    `Laws change frequently. You are solely responsible for verifying all content, dates, amounts, notice periods, and statutory`,
+    `references. CondoCore assumes no liability for any legal consequences arising from the use of this document.`,
+    `Reference: ${refNum}`
+  ];
 
-${body}
+  if (yPos + 40 > pageH - 20) {
+    doc.addPage();
+    yPos = 20;
+  }
 
-IMPORTANT LEGAL DISCLAIMER:
-This document is a template generated for informational purposes and should be reviewed by a qualified legal professional before service. This is intended to comply with applicable ${legalType} legislation. Laws change frequently — verify current requirements with your local ${isUSA ? 'housing court' : 'tenancy board'}.
+  doc.setDrawColor(200, 170, 50);
+  doc.setFillColor(255, 252, 235);
+  doc.setLineWidth(0.5);
+  doc.roundedRect(margin, yPos, contentW, 38, 2, 2, 'FD');
+  doc.setFontSize(7);
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(100, 80, 20);
+  doc.text(disclaimerText[0], margin + 4, yPos + 5);
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(6.5);
+  for (let i = 1; i < disclaimerText.length; i++) {
+    doc.text(disclaimerText[i], margin + 4, yPos + 5 + (i * 4.5));
+  }
 
-___________________________________             _________________
-Landlord / Agent Signature                      Date
-  `;
-  const splitBody = doc.splitTextToSize(textContent, 180);
-  doc.text(splitBody, 15, 40 + (splitTitle.length * 7));
+  // ── Footer ──
+  doc.setTextColor(150, 150, 150);
+  doc.setFontSize(7);
+  doc.text('Generated by CondoCore Management Suite — condocore.app', pageW / 2, pageH - 10, { align: 'center' });
+  doc.text('Page 1', pageW - margin, pageH - 10, { align: 'right' });
 
+  doc.setTextColor(0, 0, 0);
   return doc.output('blob');
 }
 
