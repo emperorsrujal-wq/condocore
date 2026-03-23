@@ -4,42 +4,81 @@ import { subscribeTenants, uploadFile, addDocument, subscribeDocuments, updateDo
 import { generateLegalNoticePDF } from '../utils/pdfGenerator';
 import { P, Btn, Input, Select, PageHeader, Spinner } from '../components/UI';
 
+// Forms requiring amountOwed field
+const AMOUNT_FORMS = ['N4','L1','RTB30','NY_14DAY','CA_3DAY','FL_3DAY','TX_3DAY','IL_5DAY','PA_10DAY','OH_3DAY','GA_DEMAND','WA_14DAY','NJ_QUIT','TAL_NP'];
+// Forms requiring reason/description field
+const REASON_FORMS = ['N5','RTDRS','RTB1','TAL_NP','TAL_REP','RTB_TERM','NY_HOLD','CA_30DAY','NJ_CEASE','SK_TERM','NS_QUIT','NB_TERM'];
+// Forms that do NOT need deadline date (application forms)
+const NO_DEADLINE_FORMS = ['L1'];
+
 const REGIONS = {
-  // CANADA
+  // ─── CANADA ───
   ON: [
-    { value: 'N4', label: 'N4 - End Tenancy for Non-payment of Rent' },
-    { value: 'N12', label: 'N12 - End Tenancy for Landlord Own Use' },
-    { value: 'N5', label: 'N5 - End Tenancy for Interference/Damage' },
-    { value: 'L1', label: 'L1 - Application to Evict (Non-payment)' },
+    { value: 'N4', label: 'N4 - End Tenancy for Non-payment (14-day notice)' },
+    { value: 'N12', label: 'N12 - End Tenancy for Landlord Own Use (60-day notice)' },
+    { value: 'N5', label: 'N5 - End Tenancy for Interference/Damage (20-day notice)' },
+    { value: 'L1', label: 'L1 - Application to LTB to Evict (Non-payment)' },
   ],
   BC: [
     { value: 'RTB30', label: 'RTB-30 - 10 Day Notice for Unpaid Rent' },
-    { value: 'RTB1', label: 'RTB-1 - Termination of Tenancy' }
+    { value: 'RTB1', label: 'RTB-1 - Termination of Tenancy (1 month notice)' }
   ],
   AB: [
-    { value: 'RTDRS', label: 'RTDRS - Notice to Vacate / Substantial Breach' }
+    { value: 'RTDRS', label: 'RTDRS - Notice to Vacate / Substantial Breach (14-day)' }
   ],
   QC: [
     { value: 'TAL_NP', label: 'TAL - Notice for Non-payment of Rent' },
-    { value: 'TAL_REP', label: 'TAL - Notice of Repossession' }
+    { value: 'TAL_REP', label: 'TAL - Notice of Repossession (6-month notice)' }
   ],
   MB: [
     { value: 'RTB_TERM', label: 'RTB - Notice of Termination' }
   ],
-  // USA
+  SK: [
+    { value: 'SK_TERM', label: 'Notice of Termination (Saskatchewan)' },
+    { value: 'SK_NONPAY', label: 'Notice for Non-payment (15-day)' }
+  ],
+  NS: [
+    { value: 'NS_QUIT', label: 'Notice to Quit (Nova Scotia - 15-day)' }
+  ],
+  NB: [
+    { value: 'NB_TERM', label: 'Notice to Vacate (New Brunswick)' }
+  ],
+  // ─── USA ───
   NY: [
-    { value: 'NY_14DAY', label: '14-Day Notice to Quit (Non-payment)' },
-    { value: 'NY_HOLD', label: 'Holdover Proceeding Notice' }
+    { value: 'NY_14DAY', label: '14-Day Notice to Pay Rent or Quit' },
+    { value: 'NY_HOLD', label: 'Holdover Proceeding Notice (RPAPL §713)' }
   ],
   CA: [
-    { value: 'CA_3DAY', label: '3-Day Notice to Pay or Quit' },
-    { value: 'CA_30DAY', label: '30-Day Notice to Terminate Tenancy' }
+    { value: 'CA_3DAY', label: '3-Day Notice to Pay Rent or Quit (CCP §1161)' },
+    { value: 'CA_30DAY', label: '30-Day Notice to Terminate Month-to-Month (CCP §1946.1)' }
   ],
   FL: [
-    { value: 'FL_3DAY', label: '3-Day Notice for Non-payment' }
+    { value: 'FL_3DAY', label: '3-Day Notice for Non-payment (FL Stat §83.56)' }
   ],
   TX: [
-    { value: 'TX_3DAY', label: '3-Day Notice to Vacate' }
+    { value: 'TX_3DAY', label: '3-Day Notice to Vacate (TX Prop Code §24.005)' }
+  ],
+  IL: [
+    { value: 'IL_5DAY', label: '5-Day Notice to Pay Rent or Quit (735 ILCS 5/9-209)' },
+    { value: 'IL_10DAY', label: '10-Day Notice for Lease Violation (735 ILCS 5/9-210)' }
+  ],
+  NJ: [
+    { value: 'NJ_QUIT', label: 'Notice to Quit for Non-payment (NJSA 2A:18-61.2)' },
+    { value: 'NJ_CEASE', label: 'Notice to Cease (Lease Violation)' }
+  ],
+  PA: [
+    { value: 'PA_10DAY', label: '10-Day Notice for Non-payment (68 PS §250.501)' },
+    { value: 'PA_15DAY', label: '15-Day Notice to Quit (Month-to-Month)' }
+  ],
+  OH: [
+    { value: 'OH_3DAY', label: '3-Day Notice to Leave Premises (ORC §1923.04)' }
+  ],
+  GA: [
+    { value: 'GA_DEMAND', label: 'Demand for Possession (OCGA §44-7-50)' }
+  ],
+  WA: [
+    { value: 'WA_14DAY', label: '14-Day Notice to Pay or Vacate (RCW 59.12.030)' },
+    { value: 'WA_10DAY', label: '10-Day Notice for Lease Violation (RCW 59.12.030)' }
   ]
 };
 
@@ -110,7 +149,7 @@ export default function LegalFormsPage({ userProfile, onToast }) {
 
   return (
     <div>
-      <PageHeader title="Government Forms & Legal Notices" subtitle="Auto-generate compliance templates (LTB, RTB, RTDRS) pre-filled with tenant data" />
+      <PageHeader title="Government Forms & Legal Notices" subtitle="Auto-generate jurisdiction-specific compliance templates pre-filled with tenant data — 17 jurisdictions across Canada & USA" />
 
       <div style={{ background: P.card, borderRadius: 16, padding: '32px', border: `1px solid ${P.border}`, maxWidth: 700 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
@@ -129,18 +168,30 @@ export default function LegalFormsPage({ userProfile, onToast }) {
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ flex: 1 }}>
               <Select label="Province / Jurisdiction *" helpText="Determines the legal template used (LTB, RTB, etc.)" {...F('province')} options={[
+                {value: '', label: '── CANADA ──', disabled: true},
                 {value: 'ON', label: 'Ontario (LTB)'},
                 {value: 'BC', label: 'British Columbia (RTB)'},
                 {value: 'AB', label: 'Alberta (RTDRS)'},
                 {value: 'QC', label: 'Quebec (TAL)'},
                 {value: 'MB', label: 'Manitoba (RTB)'},
-                {value: 'NY', label: 'New York (NYS)'},
-                {value: 'CA', label: 'California (CA-HM)'},
-                {value: 'FL', label: 'Florida (FL-ST)'},
-                {value: 'TX', label: 'Texas (TX-ST)'}
-              ]} 
+                {value: 'SK', label: 'Saskatchewan (ORT)'},
+                {value: 'NS', label: 'Nova Scotia (RAT)'},
+                {value: 'NB', label: 'New Brunswick (RTT)'},
+                {value: '', label: '── UNITED STATES ──', disabled: true},
+                {value: 'NY', label: 'New York'},
+                {value: 'CA', label: 'California'},
+                {value: 'FL', label: 'Florida'},
+                {value: 'TX', label: 'Texas'},
+                {value: 'IL', label: 'Illinois'},
+                {value: 'NJ', label: 'New Jersey'},
+                {value: 'PA', label: 'Pennsylvania'},
+                {value: 'OH', label: 'Ohio'},
+                {value: 'GA', label: 'Georgia'},
+                {value: 'WA', label: 'Washington'}
+              ]}
               onChange={e => {
                 const prov = e.target.value;
+                if (!prov || !REGIONS[prov]) return;
                 setForm(f => ({ ...f, province: prov, formType: REGIONS[prov][0].value }));
               }} />
             </div>
@@ -152,18 +203,21 @@ export default function LegalFormsPage({ userProfile, onToast }) {
           <div style={{ padding: 20, background: P.bg, border: `1px dashed ${P.border}`, borderRadius: 12, marginTop: 8 }}>
             <div style={{ fontSize: 13, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: P.textMuted, marginBottom: 12 }}>Dynamic Form Variables</div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
-              {(form.formType === 'N4' || form.formType === 'L1' || form.formType === 'RTB30') && (
+              {AMOUNT_FORMS.includes(form.formType) && (
                 <Input label="Total Amount Owed ($)" helpText="The total outstanding balance including utilities if applicable." {...F('amountOwed')} placeholder="0.00" type="number" />
               )}
               {form.formType === 'RTB30' && (
                 <Input label="Date Rent Was Due" helpText="The specific day the payment became late." {...F('dateDue')} type="date" />
               )}
-              {(form.formType !== 'L1') && (
+              {form.formType === 'L1' && (
+                <Input label="Date N4 Was Served" helpText="The date the N4 notice was given to the tenant." {...F('dateDue')} type="date" />
+              )}
+              {!NO_DEADLINE_FORMS.includes(form.formType) && (
                 <Input label="Deadline / Termination Date" helpText="The date by which the tenant must comply or vacate." {...F('deadlineDate')} type="date" />
               )}
-              {(form.formType === 'N5' || form.formType === 'RTDRS') && (
+              {REASON_FORMS.includes(form.formType) && (
                 <div style={{ gridColumn: '1 / -1' }}>
-                  <Input label="Reason / Description of Breach" helpText="Provide specific details about the damage or interference." {...F('reason')} placeholder="Describe the damages, interference, or breach explicitly..." />
+                  <Input label="Reason / Description of Breach" helpText="Provide specific details about the damage, interference, or violation." {...F('reason')} placeholder="Describe the damages, interference, or breach explicitly..." />
                 </div>
               )}
             </div>
