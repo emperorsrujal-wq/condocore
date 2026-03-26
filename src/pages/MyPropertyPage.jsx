@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import { Home, Banknote, Clock, CheckCircle2, AlertTriangle, FileText, Download } from 'lucide-react';
 import { subscribeTenantPayments, subscribeAssessments, subscribeOwnerAssessmentPayments } from '../firebase';
 import { P, PageHeader, StatCard, Table, TR, TD, Spinner, EmptyState } from '../components/UI';
+import { useHOAMode } from '../contexts/HOAModeContext';
 
 export default function MyPropertyPage({ userProfile, tenantData, onToast }) {
+  const { label, isHOAMode } = useHOAMode();
   const [payments, setPayments] = useState([]);
   const [assessments, setAssessments] = useState([]);
   const [unitPayments, setUnitPayments] = useState([]);
@@ -51,12 +53,12 @@ export default function MyPropertyPage({ userProfile, tenantData, onToast }) {
 
   return (
     <div>
-      <PageHeader title="My Property & Ledger" subtitle={`Unit ${tenantData.unit} · ${tenantData.property || 'Managed Complex'}`} />
+      <PageHeader title={isHOAMode ? "My Property & Ledger" : "My Lease & Ledger"} subtitle={`Unit ${tenantData.unit} · ${tenantData.property || 'Managed Complex'}`} />
 
       <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
-        <StatCard label="Monthly HOA Fee" value={`$${(tenantData.rentAmount || 0).toLocaleString()}`} color={P.navy} icon="🏢" />
-        <StatCard label="Outstanding Levies" value={`$${totalOutstanding.toLocaleString()}`} color={totalOutstanding > 0 ? P.danger : P.success} icon="⚠️" />
-        <StatCard label="Owner Status" value={totalOutstanding > 0 ? "Levy Owed" : "Good Standing"} sub={totalOutstanding > 0 ? "Outstanding balance" : "All fees paid"} color={totalOutstanding > 0 ? P.warning : P.success} icon={totalOutstanding > 0 ? "⏳" : "✅"} />
+        <StatCard label={isHOAMode ? "Monthly HOA Fee" : "Monthly Rent"} value={`$${(tenantData.rentAmount || 0).toLocaleString()}`} color={P.navy} icon="🏢" />
+        <StatCard label={isHOAMode ? "Outstanding Levies" : "Outstanding Rent"} value={`$${totalOutstanding.toLocaleString()}`} color={totalOutstanding > 0 ? P.danger : P.success} icon="⚠️" />
+        <StatCard label={isHOAMode ? "Owner Status" : "Tenant Status"} value={totalOutstanding > 0 ? (isHOAMode ? "Levy Owed" : "Rent Owed") : "Good Standing"} sub={totalIntermediate > 0 ? "Outstanding balance" : "All fees paid"} color={totalOutstanding > 0 ? P.warning : P.success} icon={totalOutstanding > 0 ? "⏳" : "✅"} />
       </div>
 
       <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>

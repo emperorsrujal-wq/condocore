@@ -16,7 +16,15 @@ const HOA_LABELS = {
   reports:     'Financial Reports',
   settings:    'Settings',
   properties:  'Buildings & Complexes',
-  dashboard:   'Portfolio Overview'
+  dashboard:   'Portfolio Overview',
+  violations:  'Bylaw Compliance',
+  'reserve-fund': 'Reserve Fund',
+  'board-meetings': 'Board Meetings',
+  assessments: 'Special Assessments',
+  vendors:     'Contractors & Vendors',
+  'my-property': 'My Unit & Ledger',
+  'keys-access': 'Access Control',
+  'legal-forms': 'Governance Documents'
 };
 
 export function HOAModeProvider({ children }) {

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, Search, FileText, CheckCircle2, Clock, XCircle } from 'lucide-react';
 import { subscribeViolations, addViolation, updateViolation, deleteViolation, subscribeTenants, uploadFile, addDocument } from '../firebase';
 import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
+import { useHOAMode } from '../contexts/HOAModeContext';
 import { jsPDF } from 'jspdf';
 
 const VIOLATION_TYPES = [
@@ -76,10 +77,12 @@ This notice has been delivered in accordance with the corporation's Declaration,
 const FORM_DEFAULT = { ownerId: '', unit: '', type: 'Noise Complaint', description: '', dateObserved: new Date().toISOString().split('T')[0], status: 'Open', escalationLevel: 'First Warning', fineAmount: 0, notes: '' };
 
 export default function ViolationsPage({ userProfile, onToast }) {
+  const { label, isHOAMode } = useHOAMode();
   const [violations, setViolations] = useState([]);
   const [owners, setOwners] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
+  const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
+  const [filterType, setFilterType] = useState('All');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
@@ -176,7 +179,7 @@ export default function ViolationsPage({ userProfile, onToast }) {
   return (
     <div>
       <PageHeader
-        title="Bylaw Violation Tracker"
+        title={isHOAMode ? "Bylaw Violation Tracker" : "Lease Violation Tracker"}
         subtitle={isPrivileged ? `${openViolations} open violations · ${violations.length} total` : `Violations recorded for your unit`}
         action={isPrivileged && <Btn onClick={openAdd}><Plus size={15} /> Log Violation</Btn>}
       />
@@ -201,14 +204,14 @@ export default function ViolationsPage({ userProfile, onToast }) {
 
       <div style={{ marginBottom: 16, position: 'relative' }}>
         <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: P.textMuted }} />
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by owner name, type, or status..."
-          style={{ width: '100%', padding: '9px 12px 9px 33px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 13, outline: 'none' }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder={`Search by ${label('tenant', 'tenant').toLowerCase()} name, type, or status...`}
+          style={{ width: '100%', padding: '9px 12px 9px 33px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 13, outline: 'none', background: P.card }} />
       </div>
 
       {filtered.length === 0 ? (
         <EmptyState icon="📋" title="No Violations Logged" body="Your corporation is fully compliant!" action={<Btn onClick={openAdd}>Log First Violation</Btn>} />
       ) : (
-        <Table headers={['Violation', 'Unit / Owner', 'Stage', 'Fine', 'Status', '']}>
+        <Table headers={['Violation', `Unit / ${label('tenant', 'Resident')}`, 'Stage', 'Fine', 'Status', '']}>
           {filtered.map((v, i) => {
             const owner = owners.find(o => o.id === v.ownerId);
             const ss = STATUS_STYLES[v.status] || STATUS_STYLES['Open'];
@@ -253,9 +256,9 @@ export default function ViolationsPage({ userProfile, onToast }) {
       )}
 
       {showForm && (
-        <Modal title={editing ? 'Edit Violation Record' : 'Log Bylaw Violation'} onClose={() => setShowForm(false)}>
+        <Modal title={editing ? 'Edit Violation Record' : 'Log Violation'} onClose={() => setShowForm(false)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-            <Select label="Owner / Unit" {...F('ownerId')} options={[{ value: '', label: 'Select Owner (optional)' }, ...owners.map(o => ({ value: o.id, label: `${o.name} (${o.unit})` }))]} />
+            <Select label={`${label('tenant', 'Resident')} / Unit`} {...F('ownerId')} options={[{ value: '', label: `Select ${label('tenant', 'Resident')} (optional)` }, ...owners.map(o => ({ value: o.id, label: `${o.name} (${o.unit})` }))]} />
             <Input label="Unit # (if unlisted)" {...F('unit')} placeholder="e.g. 403" />
             <Select label="Violation Type *" {...F('type')} options={VIOLATION_TYPES} />
             <Input label="Date Observed" type="date" {...F('dateObserved')} />

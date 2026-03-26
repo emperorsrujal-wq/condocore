@@ -61,7 +61,9 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
       const updates = [...(existing?.updates || []), { date: new Date().toLocaleDateString(), text: note }];
       await updateMaintenanceRequest(id, { status, updates });
       onToast(`Status updated to ${status}.`);
-    } catch (e) { onToast(e.message, 'error'); }
+    } catch (e) { 
+      onToast(`Failed to update status: ${e.message}`, 'error'); 
+    }
   };
 
   const PRIORITY_COLORS = { urgent: P.danger, high: '#D45B00', medium: P.warning, low: P.textMuted };
@@ -160,9 +162,13 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
                         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                           {r.status === 'open' && (
                             <div style={{ display: 'flex', gap: 8 }}>
-                              <Select value={r.vendorId || ''} onChange={e => {
-                                updateMaintenanceRequest(r.id, { vendorId: e.target.value, status: 'in-progress', updates: [...(r.updates || []), { date: new Date().toLocaleDateString(), text: 'Vendor assigned and work in progress.' }] });
-                                onToast('Vendor assigned and status updated!');
+                              <Select value={r.vendorId || ''} onChange={async e => {
+                                try {
+                                  await updateMaintenanceRequest(r.id, { vendorId: e.target.value, status: 'in-progress', updates: [...(r.updates || []), { date: new Date().toLocaleDateString(), text: 'Vendor assigned and work in progress.' }] });
+                                  onToast('Vendor assigned and status updated!');
+                                } catch (err) {
+                                  onToast('Failed to assign vendor: ' + err.message, 'error');
+                                }
                               }} options={[{ value: '', label: 'Assign Vendor...' }, ...vendors.map(v => ({ value: v.id, label: v.name }))]} style={{ marginBottom: 0, minWidth: 200 }} />
                               <button onClick={() => handleStatusChange(r.id, 'in-progress')} style={{ fontSize: 12, fontWeight: 600, padding: '6px 12px', borderRadius: 8, border: 'none', background: '#EAF0FB', color: P.info, cursor: 'pointer' }}>Just In Progress</button>
                             </div>
@@ -182,7 +188,7 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
       {showAdd && (
         <Modal title="New Maintenance Request" onClose={() => setShowAdd(false)}>
           <Input label="Issue Title *" {...F('title')} placeholder="e.g. Leaking kitchen faucet" />
-          {!isResident && (
+          {(!isResident || !tenantData) && (
             <>
               <Input label="Unit Number" {...F('unit')} placeholder="e.g. 1204" />
               <Input label="Tenant Name" {...F('tenantName')} />

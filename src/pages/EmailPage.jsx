@@ -733,9 +733,11 @@ export default function EmailPage({ userProfile, onToast }) {
                   </div>
 
                   {getRecipients().length > 1 && (
-                    <div style={{ marginTop: 14, padding: 12, background: P.info + '10', borderRadius: 10, border: `1px solid ${P.info}25`, fontSize: 12, color: P.info, display: 'flex', alignItems: 'center', gap: 8 }}>
-                      <AlertTriangle size={14} />
-                      Each recipient will receive a personalized email with their name, unit, and property filled in.
+                    <div style={{ marginTop: 14, padding: 12, background: '#FFF9E6', borderRadius: 10, border: `1.5px solid ${P.warning}40`, fontSize: 12, color: '#D45B00', display: 'flex', alignItems: 'center', gap: 8, lineHeight: 1.4 }}>
+                      <AlertTriangle size={16} flexShrink={0} />
+                      <div>
+                        <strong>Bulk Email Limitation:</strong> Because this email is sent via your default email client (BCC), individual personalization (like unit numbers or rent amounts) will be disabled. All recipients will see the same message.
+                      </div>
                     </div>
                   )}
                 </div>

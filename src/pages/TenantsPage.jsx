@@ -38,7 +38,7 @@ export default function TenantsPage({ onToast }) {
 
   const filtered = tenants.filter(t => {
     const q = search.toLowerCase();
-    const matchQ = t.name?.toLowerCase().includes(q) || t.unit?.toLowerCase().includes(q) || t.property?.toLowerCase().includes(q);
+    const matchQ = t.name?.toLowerCase().includes(q) || t.unit?.toLowerCase().includes(q) || t.email?.toLowerCase().includes(q) || t.property?.toLowerCase().includes(q);
     const matchF = filter === 'all' || t.status === filter;
     return matchQ && matchF;
   });
@@ -55,9 +55,17 @@ export default function TenantsPage({ onToast }) {
   };
 
   const handleSave = async () => {
-    if (!form.name || !form.email || !form.unit) return onToast('Please fill required fields.', 'error');
+    if (!form.name || !form.email) return onToast('Name and email are required.', 'error');
     setSaving(true);
     try {
+      // Robustness: Check for duplicate email (excluding current tenant if editing)
+      const emailExists = tenants.some(t => t.email?.toLowerCase() === form.email.toLowerCase() && t.id !== editing?.id);
+      if (emailExists) {
+        onToast('A tenant with this email address already exists.', 'error');
+        setSaving(false);
+        return;
+      }
+
       const data = { ...form, rent: parseFloat(form.rent) || 0 };
       if (editing) { await updateTenant(editing.id, data); onToast('Tenant updated.'); }
       else { await addTenant(data); onToast('Tenant added.'); }
@@ -99,28 +107,40 @@ export default function TenantsPage({ onToast }) {
 
   const handleAddPet = async () => {
     if(!newPet.name || !newPet.type) return;
-    const updated = [...(selected.pets || []), newPet];
-    await updateTenant(selected.id, { pets: updated });
-    setSelected({ ...selected, pets: updated });
-    setNewPet({ name: '', type: '', breed: '' });
+    try {
+      const updated = [...(selected.pets || []), newPet];
+      await updateTenant(selected.id, { pets: updated });
+      setSelected({ ...selected, pets: updated });
+      setNewPet({ name: '', type: '', breed: '' });
+      onToast('Pet added to registry.');
+    } catch (e) { onToast('Failed to add pet: ' + e.message, 'error'); }
   };
   const handleRemovePet = async (idx) => {
-    const updated = selected.pets.filter((_, i) => i !== idx);
-    await updateTenant(selected.id, { pets: updated });
-    setSelected({ ...selected, pets: updated });
+    try {
+      const updated = selected.pets.filter((_, i) => i !== idx);
+      await updateTenant(selected.id, { pets: updated });
+      setSelected({ ...selected, pets: updated });
+      onToast('Pet removed.');
+    } catch (e) { onToast('Failed to remove pet: ' + e.message, 'error'); }
   };
 
   const handleAddOcc = async () => {
     if(!newOcc.name) return;
-    const updated = [...(selected.occupants || []), newOcc];
-    await updateTenant(selected.id, { occupants: updated });
-    setSelected({ ...selected, occupants: updated });
-    setNewOcc({ name: '', relation: '', phone: '' });
+    try {
+      const updated = [...(selected.occupants || []), newOcc];
+      await updateTenant(selected.id, { occupants: updated });
+      setSelected({ ...selected, occupants: updated });
+      setNewOcc({ name: '', relation: '', phone: '' });
+      onToast('Occupant added to registry.');
+    } catch (e) { onToast('Failed to add occupant: ' + e.message, 'error'); }
   };
   const handleRemoveOcc = async (idx) => {
-    const updated = selected.occupants.filter((_, i) => i !== idx);
-    await updateTenant(selected.id, { occupants: updated });
-    setSelected({ ...selected, occupants: updated });
+    try {
+      const updated = selected.occupants.filter((_, i) => i !== idx);
+      await updateTenant(selected.id, { occupants: updated });
+      setSelected({ ...selected, occupants: updated });
+      onToast('Occupant removed.');
+    } catch (e) { onToast('Failed to remove occupant: ' + e.message, 'error'); }
   };
 
   const F = (k) => ({ value: form[k], onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });

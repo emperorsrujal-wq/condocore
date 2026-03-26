@@ -6,6 +6,7 @@ import { P, Btn, Modal, Input, Select, PageHeader, Spinner, EmptyState, ConfirmM
 export default function DocumentsPage({ onToast, userProfile, tenantData }) {
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading]     = useState(true);
+  const [search, setSearch]       = useState('');
   const [filterType, setFilterType] = useState('All');
   const [showUpload, setShowUpload] = useState(false);
   const [uploading, setUploading]  = useState(false);
@@ -46,7 +47,11 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
 
   const TYPES = ['All', 'Bylaws', 'Lease', 'Inspection', 'Notice', 'Insurance', 'Report', 'Other'];
   const filtered = (filterType === 'All' ? documents : documents.filter(d => d.type === filterType))
-    .filter(d => !isTenant || d.status !== 'pending_approval');
+    .filter(d => !isTenant || d.status !== 'pending_approval')
+    .filter(d => {
+      const q = search.toLowerCase();
+      return d.name?.toLowerCase().includes(q) || d.type?.toLowerCase().includes(q) || d.unit?.toLowerCase().includes(q) || d.uploadedBy?.toLowerCase().includes(q);
+    });
 
   const handleUpload = async () => {
     if (!file) return onToast('Please select a file.', 'error');
@@ -93,11 +98,18 @@ export default function DocumentsPage({ onToast, userProfile, tenantData }) {
         subtitle={`${documents.length} documents`}
         action={<Btn onClick={() => setShowUpload(true)}><Upload size={15} /> Upload Document</Btn>} />
 
-      {/* Type filters */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
-        {TYPES.map(t => (
-          <button key={t} onClick={() => setFilterType(t)} style={{ padding: '8px 14px', borderRadius: 9, border: `1.5px solid ${filterType === t ? P.navy : P.border}`, background: filterType === t ? P.navy : P.card, color: filterType === t ? '#fff' : P.textMuted, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{t}</button>
-        ))}
+      {/* Search & Filters */}
+      <div style={{ marginBottom: 20 }}>
+        <div style={{ position: 'relative', marginBottom: 12 }}>
+          <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: P.textMuted }} />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search documents by name, unit, or type..."
+            style={{ width: '100%', padding: '10px 12px 10px 34px', borderRadius: 10, border: `1.5px solid ${P.border}`, fontSize: 13, outline: 'none', background: P.card }} />
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {TYPES.map(t => (
+            <button key={t} onClick={() => setFilterType(t)} style={{ padding: '8px 14px', borderRadius: 9, border: `1.5px solid ${filterType === t ? P.navy : P.border}`, background: filterType === t ? P.navy : P.card, color: filterType === t ? '#fff' : P.textMuted, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{t}</button>
+          ))}
+        </div>
       </div>
 
       {filtered.length === 0

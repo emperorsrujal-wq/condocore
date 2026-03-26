@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { Plus, Download } from 'lucide-react';
 import { subscribePayments, addPayment, updatePayment } from '../firebase';
 import { P, StatusBadge, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, StatCard } from '../components/UI';
+import { useHOAMode } from '../contexts/HOAModeContext';
 
 const FORM_DEFAULT = { tenant: '', tenantId: '', unit: '', amount: '', due: '', month: '', method: 'E-Transfer', status: 'pending' };
 
 export default function PaymentsPage({ onToast, tenants = [] }) {
+  const { label } = useHOAMode();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading]   = useState(true);
   const [filter, setFilter]     = useState('all');
@@ -51,7 +53,7 @@ export default function PaymentsPage({ onToast, tenants = [] }) {
 
   return (
     <div>
-      <PageHeader title="Rent & Payments" subtitle="Track all rent collection"
+      <PageHeader title={label('rent', 'Rent') + " & Payments"} subtitle={`Track all ${label('rent', 'rent').toLowerCase()} collection`}
         action={<div style={{ display: 'flex', gap: 8 }}>
           <Btn variant="ghost" size="sm"><Download size={14} /> Export</Btn>
           <Btn onClick={() => setShowAdd(true)}><Plus size={15} /> Add Record</Btn>
@@ -75,9 +77,9 @@ export default function PaymentsPage({ onToast, tenants = [] }) {
       </div>
 
       {filtered.length === 0
-        ? <EmptyState icon="💰" title="No payment records" body="Add payment records to start tracking rent collection." action={<Btn onClick={() => setShowAdd(true)}><Plus size={14} /> Add Record</Btn>} />
+        ? <EmptyState icon="💰" title="No payment records" body={`Add payment records to start tracking ${label('rent', 'rent').toLowerCase()} collection.`} action={<Btn onClick={() => setShowAdd(true)}><Plus size={14} /> Add Record</Btn>} />
         : (
-          <Table headers={['Tenant', 'Unit', 'Amount', 'Due Date', 'Paid On', 'Method', 'Status', '']}>
+          <Table headers={[label('tenant', 'Tenant'), 'Unit', 'Amount', 'Due Date', 'Paid On', 'Method', 'Status', '']}>
             {filtered.map((p, i) => (
               <TR key={p.id} idx={i}>
                 <TD><span style={{ fontWeight: 600, color: P.text }}>{p.tenant}</span></TD>
@@ -102,12 +104,12 @@ export default function PaymentsPage({ onToast, tenants = [] }) {
         <Modal title="Add Payment Record" onClose={() => setShowAdd(false)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
             <div style={{ gridColumn: 'span 2', marginBottom: 14 }}>
-              <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>Tenant *</label>
+              <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: 5 }}>{label('tenant', 'Tenant')} *</label>
               <select value={form.tenant} onChange={e => {
                 const t = tenants.find(t => t.name === e.target.value);
                 setForm(f => ({ ...f, tenant: e.target.value, tenantId: t?.id || '', unit: t?.unit || '' }));
               }} style={{ width: '100%', padding: '10px 12px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', fontFamily: "'DM Sans', sans-serif" }}>
-                <option value="">Select tenant...</option>
+                <option value="">Select {label('tenant', 'tenant').toLowerCase()}...</option>
                 {tenants.map(t => <option key={t.id} value={t.name}>{t.name} — Unit {t.unit}</option>)}
               </select>
             </div>

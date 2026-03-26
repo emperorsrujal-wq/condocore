@@ -8,6 +8,7 @@ const FORM_DEFAULT = { name: '', category: 'Plumbing', contact: '', phone: '', e
 export default function VendorsPage({ onToast, userProfile }) {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch]   = useState('');
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState(FORM_DEFAULT);
@@ -22,6 +23,11 @@ export default function VendorsPage({ onToast, userProfile }) {
     });
     return () => unsub();
   }, []);
+  
+  const filtered = vendors.filter(v => {
+    const q = search.toLowerCase();
+    return v.name?.toLowerCase().includes(q) || v.category?.toLowerCase().includes(q) || v.contact?.toLowerCase().includes(q);
+  });
 
   const openAdd = () => { setForm(FORM_DEFAULT); setEditing(null); setShowForm(true); };
   const openEdit = (v) => { setForm({ ...v }); setEditing(v); setShowForm(true); };
@@ -54,11 +60,17 @@ export default function VendorsPage({ onToast, userProfile }) {
       <PageHeader title="Vendor & Contractor Directory" subtitle={`${vendors.length} registered service providers`}
         action={<Btn onClick={openAdd}><Plus size={15} /> Add Vendor</Btn>} />
 
-      {vendors.length === 0
-        ? <EmptyState icon="👷" title="No vendors found" body="Start by adding your preferred contractors and service providers." action={<Btn onClick={openAdd}><Plus size={14} /> Add Vendor</Btn>} />
+      <div style={{ marginBottom: 16, position: 'relative' }}>
+        <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: P.textMuted }} />
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by title or meeting type..."
+          style={{ width: '100%', padding: '9px 12px 9px 33px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 13, outline: 'none', background: P.card }} />
+      </div>
+
+      {filtered.length === 0
+        ? <EmptyState icon="👷" title="No vendors found" body={search ? "Adjust your search to find a provider." : "Start by adding your preferred contractors and service providers."} action={!search && <Btn onClick={openAdd}><Plus size={14} /> Add Vendor</Btn>} />
         : (
           <Table headers={['Vendor', 'Category', 'Contact Info', 'Rating', '']}>
-            {vendors.map((v, i) => (
+            {filtered.map((v, i) => (
               <TR key={v.id} idx={i}>
                 <TD>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>

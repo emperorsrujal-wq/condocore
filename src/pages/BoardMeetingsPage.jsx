@@ -176,7 +176,7 @@ export default function BoardMeetingsPage({ userProfile, onToast }) {
       <div style={{ marginBottom: 16, position: 'relative' }}>
         <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: P.textMuted }} />
         <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by title or meeting type..."
-          style={{ width: '100%', padding: '9px 12px 9px 33px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 13, outline: 'none' }} />
+          style={{ width: '100%', padding: '9px 12px 9px 33px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 13, outline: 'none', background: P.card }} />
       </div>
 
       {filtered.length === 0 ? (
