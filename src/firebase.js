@@ -399,4 +399,14 @@ export const updateVisitorStatus = (id, status) =>
 
 export const deleteVisitor = (id) => deleteDoc(doc(db, 'visitors', id));
 
+// Email
+export const subscribeEmails = (callback) =>
+  onSnapshot(query(collection(db, 'emails'), orderBy('createdAt', 'desc')), snap =>
+    callback(snap.docs.map(d => ({ id: d.id, ...d.data() }))), err => console.warn('Listener error:', err.code));
+
+export const addEmail = (data) =>
+  addDoc(collection(db, 'emails'), { ...data, createdAt: serverTimestamp() });
+
+export const deleteEmail = (id) => deleteDoc(doc(db, 'emails', id));
+
 export default app;

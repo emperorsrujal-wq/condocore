@@ -42,7 +42,8 @@ const translations = {
     amenities: 'Amenity Bookings',
     visitors: 'Visitor Management',
     my_property: 'My Property',
-    property: 'Property'
+    property: 'Property',
+    email: 'Email'
   },
   es: {
     dashboard: 'Panel de Control',
@@ -85,7 +86,8 @@ const translations = {
     amenities: 'Reserva de Amenidades',
     visitors: 'Gestión de Visitantes',
     my_property: 'Mi Propiedad',
-    property: 'Propiedad'
+    property: 'Propiedad',
+    email: 'Correo Electrónico'
   },
   fr: {
     dashboard: 'Tableau de Bord',
@@ -128,7 +130,8 @@ const translations = {
     amenities: 'Réservation d\'Équipements',
     visitors: 'Gestion des Visiteurs',
     my_property: 'Ma Propriété',
-    property: 'Propriété'
+    property: 'Propriété',
+    email: 'Courriel'
   }
 };
 

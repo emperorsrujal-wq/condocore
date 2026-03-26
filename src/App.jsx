@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare, Key, Package, AlertTriangle, PiggyBank, ClipboardList, Banknote, BookOpen, Calendar, UserPlus } from 'lucide-react';
+import { Building2, LayoutDashboard, Users, DollarSign, Wrench, FileText, Bell, Paperclip, Home, ChevronRight, Search, LogOut, X, Menu, Shield, PieChart, MessageSquare, Key, Package, AlertTriangle, PiggyBank, ClipboardList, Banknote, BookOpen, Calendar, UserPlus, Mail } from 'lucide-react';
 import { useAuth } from './contexts/AuthContext';
 import { getTenantByUserId, subscribeTenants } from './firebase';
 import { P, ROLE_COLORS, Toast, Spinner } from './components/UI';
@@ -33,6 +33,7 @@ import RegistryPage from './pages/RegistryPage';
 import MyPropertyPage from './pages/MyPropertyPage';
 import AmenityBookingPage from './pages/AmenityBookingPage';
 import VisitorManagementPage from './pages/VisitorManagementPage';
+import EmailPage from './pages/EmailPage';
 import NotificationsMenu from './components/NotificationsMenu';
 
 const SUPER_ADMIN_EMAIL = 'emperorsrujal@gmail.com';
@@ -64,17 +65,18 @@ const ALL_PAGES = [
   { id: 'settings',      label: 'settings',         icon: Shield },
   { id: 'amenity-bookings', label: 'amenities',      icon: Calendar },
   { id: 'visitor-management', label: 'visitors',      icon: UserPlus },
+  { id: 'email',           label: 'email',            icon: Mail },
   { id: 'my-property',    label: 'my_property',      icon: Home },
   { id: 'super-admin',   label: 'admin_panel',      icon: Shield },
 ];
 
 const ROLE_NAV = {
-  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management'],
-  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management'],
+  manager:  ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'email', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management'],
+  landlord: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'email', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management'],
   tenant:   ['dashboard', 'maintenance', 'my-documents', 'announcements', 'messages', 'settings', 'amenity-bookings', 'visitor-management'],
   owner:    ['dashboard', 'maintenance', 'my-property', 'announcements', 'messages', 'settings', 'amenity-bookings', 'visitor-management'],
-  super_admin: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management', 'super-admin'],
-  'super-admin': ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management', 'super-admin'],
+  super_admin: ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'email', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management', 'super-admin'],
+  'super-admin': ['dashboard', 'properties', 'tenants', 'rent', 'maintenance', 'documents', 'announcements', 'messages', 'email', 'reports', 'settings', 'vendors', 'registry', 'amenity-bookings', 'visitor-management', 'super-admin'],
 };
 
 const ROLE_GROUPS = {
@@ -83,7 +85,7 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
+    { label: 'communication', pages: ['messages', 'email', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
   ],
@@ -92,7 +94,7 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
+    { label: 'communication', pages: ['messages', 'email', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',       pages: ['settings'] },
   ],
   tenant: [
@@ -113,7 +115,7 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
+    { label: 'communication', pages: ['messages', 'email', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
   ],
@@ -122,7 +124,7 @@ const ROLE_GROUPS = {
     { label: 'tenants',       pages: ['tenants', 'properties'] },
     { label: 'finance',       pages: ['rent', 'deposits', 'reserve-fund', 'assessments', 'reports'] },
     { label: 'operations',    pages: ['maintenance', 'vendors', 'registry', 'legal-forms', 'evictions', 'violations', 'board-meetings', 'keys', 'packages', 'documents'] },
-    { label: 'communication', pages: ['messages', 'announcements', 'amenity-bookings', 'visitor-management'] },
+    { label: 'communication', pages: ['messages', 'email', 'announcements', 'amenity-bookings', 'visitor-management'] },
     { label: 'account',       pages: ['settings'] },
     { label: 'system',        pages: ['super-admin'] },
   ],
@@ -133,7 +135,7 @@ const PAGE_TITLES = {
   'my-payments': 'my_payments', deposits: 'deposits', maintenance: 'maintenance', documents: 'documents',
   'my-documents': 'my_documents', announcements: 'announcements', 'legal-forms': 'legal_forms', evictions: 'evictions',
   violations: 'violations', 'reserve-fund': 'reserve_fund', 'board-meetings': 'board_meetings', assessments: 'assessments',
-  messages: 'messages', keys: 'keys_access', packages: 'packages', vendors: 'vendors', registry: 'registry', reports: 'reports', settings: 'settings', 'amenity-bookings': 'amenities', 'visitor-management': 'visitors', 'super-admin': 'admin_panel'
+  messages: 'messages', email: 'email', keys: 'keys_access', packages: 'packages', vendors: 'vendors', registry: 'registry', reports: 'reports', settings: 'settings', 'amenity-bookings': 'amenities', 'visitor-management': 'visitors', 'super-admin': 'admin_panel'
 };
 
 // ──────────────────────────────────────────────────────────────────────────────
@@ -327,6 +329,7 @@ export default function App() {
       case 'my-property':   return <MyPropertyPage    {...props} />;
       case 'announcements': return <AnnouncementsPage {...props} />;
       case 'messages':      return <MessagesPage      {...props} />;
+      case 'email':         return <EmailPage         {...props} />;
       case 'keys':          return <KeysPage          {...props} />;
       case 'packages':      return <PackagesPage      {...props} />;
       case 'legal-forms':   return <LegalFormsPage    {...props} />;
