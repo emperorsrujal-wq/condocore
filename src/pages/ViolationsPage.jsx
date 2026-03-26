@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { AlertTriangle, Plus, Search, FileText, CheckCircle2, Clock, XCircle } from 'lucide-react';
-import { subscribeViolations, addViolation, updateViolation, deleteViolation, subscribeTenants, uploadFile, addDocument } from '../firebase';
+import { subscribeViolations, subscribeUserViolations, addViolation, updateViolation, deleteViolation, subscribeTenants, uploadFile, addDocument } from '../firebase';
 import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, EmptyState, ConfirmModal } from '../components/UI';
 import { useHOAMode } from '../contexts/HOAModeContext';
 import { jsPDF } from 'jspdf';
@@ -78,6 +78,7 @@ const FORM_DEFAULT = { ownerId: '', unit: '', type: 'Noise Complaint', descripti
 
 export default function ViolationsPage({ userProfile, onToast }) {
   const { label, isHOAMode } = useHOAMode();
+  const isPrivileged = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
   const [violations, setViolations] = useState([]);
   const [owners, setOwners] = useState([]);
   const [loading, setLoading]     = useState(true);
@@ -91,7 +92,6 @@ export default function ViolationsPage({ userProfile, onToast }) {
 
   useEffect(() => {
     if (!userProfile) return;
-    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
     
     let unsub1;
     if (isPrivileged) {
@@ -209,7 +209,7 @@ export default function ViolationsPage({ userProfile, onToast }) {
       </div>
 
       {filtered.length === 0 ? (
-        <EmptyState icon="📋" title="No Violations Logged" body="Your corporation is fully compliant!" action={<Btn onClick={openAdd}>Log First Violation</Btn>} />
+        <EmptyState icon="📋" title="No Violations Logged" body={isPrivileged ? "Your corporation is fully compliant!" : "No violations on your record."} action={isPrivileged ? <Btn onClick={openAdd}>Log First Violation</Btn> : null} />
       ) : (
         <Table headers={['Violation', `Unit / ${label('tenant', 'Resident')}`, 'Stage', 'Fine', 'Status', '']}>
           {filtered.map((v, i) => {
@@ -255,7 +255,7 @@ export default function ViolationsPage({ userProfile, onToast }) {
         </Table>
       )}
 
-      {showForm && (
+      {showForm && isPrivileged && (
         <Modal title={editing ? 'Edit Violation Record' : 'Log Violation'} onClose={() => setShowForm(false)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <Select label={`${label('tenant', 'Resident')} / Unit`} {...F('ownerId')} options={[{ value: '', label: `Select ${label('tenant', 'Resident')} (optional)` }, ...owners.map(o => ({ value: o.id, label: `${o.name} (${o.unit})` }))]} />

@@ -36,7 +36,7 @@ export default function RegistryPage({ onToast, userProfile }) {
   }, [userProfile]);
 
   const openAdd = () => { setForm({ ...FORM_DEFAULT, type: tab }); setEditing(null); setShowForm(true); };
-  const openEdit = (e) => { setForm({ ...e }); setEditing(e); setShowForm(true); };
+  const openEdit = (e) => { setForm({ type: e.type, ownerName: e.ownerName, unit: e.unit, property: e.property, name: e.name || '', breed: e.breed || '', vaccineStatus: e.vaccineStatus || 'up-to-date', make: e.make || '', model: e.model || '', color: e.color || '', plate: e.plate || '', spot: e.spot || '' }); setEditing(e); setShowForm(true); };
 
   const handleSave = async () => {
     if (!form.ownerName || !form.unit || !form.property) return onToast('Owner, Unit, and Property are required.', 'error');
@@ -104,8 +104,8 @@ export default function RegistryPage({ onToast, userProfile }) {
                       {tab === 'pet' ? <Dog size={20} color={P.navyLight} /> : <Car size={20} color={P.navyLight} />}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: P.text }}>{tab === 'pet' ? e.name : `${e.color} ${e.make} ${e.model}`}</div>
-                      <div style={{ fontSize: 12, color: P.textMuted }}>{tab === 'pet' ? e.breed : e.model}</div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: P.text }}>{tab === 'pet' ? e.name : `${e.make} ${e.model}`}</div>
+                      <div style={{ fontSize: 12, color: P.textMuted }}>{tab === 'pet' ? e.breed : (e.color || 'No color specified')}</div>
                     </div>
                   </div>
                 </TD>
@@ -144,7 +144,7 @@ export default function RegistryPage({ onToast, userProfile }) {
               <Input label="Owner Name *" helpText="The primary resident responsible." {...F('ownerName')} placeholder="e.g. John Doe" />
             </div>
             <Input label="Unit Number *" {...F('unit')} placeholder="e.g. 101" />
-            <Select label="Property *" {...F('property')} options={['Select Property', ...properties.map(p => p.name)]} />
+            <Select label="Property *" {...F('property')} options={[{ value: '', label: 'Select Property' }, ...properties.map(p => ({ value: p.name, label: p.name }))]} />
           </div>
 
           <div style={{ borderTop: `1px solid ${P.border}`, margin: '14px 0', paddingTop: 14 }}>

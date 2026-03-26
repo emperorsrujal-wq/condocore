@@ -16,6 +16,7 @@ const PROJECT_DEFAULT = { item: '', year: new Date().getFullYear() + 1, estimate
 const FORM_DEFAULT = { description: '', category: 'Contribution', amount: '', date: new Date().toISOString().split('T')[0], notes: '' };
 
 export default function ReserveFundPage({ userProfile, onToast }) {
+  const isPrivileged = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
   const [entries, setEntries] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,7 +32,6 @@ export default function ReserveFundPage({ userProfile, onToast }) {
 
   useEffect(() => {
     if (!userProfile) return;
-    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
     if (!isPrivileged) { setLoading(false); return; }
 
     const unsubE = subscribeReserveFund(data => { 
@@ -103,6 +103,15 @@ export default function ReserveFundPage({ userProfile, onToast }) {
   const F = (k) => ({ value: form[k] || '', onChange: e => setForm(f => ({ ...f, [k]: e.target.value })) });
 
   if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner size={32} /></div>;
+
+  if (!isPrivileged) {
+    return (
+      <div>
+        <PageHeader title="Reserve Fund Manager" subtitle="Capital reserve tracking for major planned expenditures" />
+        <EmptyState icon="🔒" title="Access Restricted" body="Reserve fund management is available to property managers and administrators only." />
+      </div>
+    );
+  }
 
   return (
     <div>

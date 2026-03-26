@@ -18,6 +18,7 @@ const FORM_DEFAULT = {
 
 export default function SpecialAssessmentsPage({ userProfile, onToast }) {
   const { label, isHOAMode } = useHOAMode();
+  const isPrivileged = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
   const [assessments, setAssessments] = useState([]);
   const [owners, setOwners] = useState([]);
   const [properties, setProperties] = useState([]);
@@ -44,7 +45,6 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
     });
     const uP = subscribeProperties(data => setProperties(data));
     
-    const isPrivileged = ['manager', 'landlord', 'super_admin'].includes(userProfile.role);
     let u2;
     if (isPrivileged) {
       u2 = subscribeTenants(data => setOwners(data));
@@ -210,7 +210,7 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
   return (
     <div>
       <PageHeader title={label('assessments', 'Special Assessments')} subtitle={`One-time charges levied across ${isHOAMode ? 'homeowners' : 'tenants'}`}
-        action={<Btn onClick={openAdd}><Plus size={15} /> New Assessment</Btn>} />
+        action={isPrivileged ? <Btn onClick={openAdd}><Plus size={15} /> New Assessment</Btn> : null} />
 
       <div style={{ marginBottom: 16, position: 'relative' }}>
         <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: P.textMuted }} />
@@ -222,7 +222,7 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
         {/* Left: Assessment list */}
         <div style={{ flex: 1.4 }}>
           {filtered.length === 0 ? (
-            <EmptyState icon="📬" title="No Special Assessments" body="Levy a new assessment when unexpected capital expenses arise." action={<Btn onClick={openAdd}>New Assessment</Btn>} />
+            <EmptyState icon="📬" title="No Special Assessments" body={isPrivileged ? "Levy a new assessment when unexpected capital expenses arise." : "No assessments for your property."} action={isPrivileged ? <Btn onClick={openAdd}>New Assessment</Btn> : null} />
           ) : (
             <Table headers={['Assessment', 'Building', 'Per Unit', 'Collected', 'Status', '']}>
               {filtered.map((a, i) => {
@@ -262,9 +262,9 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
                     </TD>
                     <TD>
                       <div style={{ display: 'flex', gap: 6 }}>
-                        <button onClick={() => setViewing(a)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: viewing?.id === a.id ? P.navy : '#fff', color: viewing?.id === a.id ? '#fff' : P.text, cursor: 'pointer' }}>Payments</button>
-                        <button onClick={() => openEdit(a)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer' }}>Edit</button>
-                        <button onClick={() => handleDelete(a.id)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer' }}>Del</button>
+                        {isPrivileged && <button onClick={() => setViewing(a)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: viewing?.id === a.id ? P.navy : '#fff', color: viewing?.id === a.id ? '#fff' : P.text, cursor: 'pointer' }}>Payments</button>}
+                        {isPrivileged && <button onClick={() => openEdit(a)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer' }}>Edit</button>}
+                        {isPrivileged && <button onClick={() => handleDelete(a.id)} style={{ fontSize: 12, padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer' }}>Del</button>}
                       </div>
                     </TD>
                   </TR>
@@ -314,7 +314,7 @@ export default function SpecialAssessmentsPage({ userProfile, onToast }) {
         )}
       </div>
 
-      {showForm && (
+      {showForm && isPrivileged && (
         <Modal title={editing ? 'Edit Special Assessment' : 'Levy Special Assessment'} onClose={() => setShowForm(false)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={{ gridColumn: '1/-1' }}><Input label="Assessment Title *" {...F('title')} placeholder="e.g. Emergency Roof Repair 2025" /></div>
