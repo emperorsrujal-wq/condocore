@@ -4,10 +4,12 @@ import { useAuth } from '../contexts/AuthContext';
 import { useHOAMode } from '../contexts/HOAModeContext';
 import { P, Btn, Card, Input, PageHeader, Spinner } from '../components/UI';
 
+const ROLE_LABELS = { manager: 'Property Manager', landlord: 'Landlord', tenant: 'Tenant', owner: 'Unit Owner', super_admin: 'Super Administrator', 'super-admin': 'Super Administrator' };
+
 export default function SettingsPage({ onToast }) {
   const { userProfile, updateUserPassword, updateProfile } = useAuth();
   const { isHOAMode, toggleMode } = useHOAMode();
-  const isManager = ['manager', 'landlord', 'super_admin'].includes(userProfile?.role);
+  const isManager = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
   const [profileForm, setProfileForm] = useState({
     name: userProfile?.name || '',
     phone: userProfile?.phone || '',
@@ -18,9 +20,9 @@ export default function SettingsPage({ onToast }) {
     confirm: ''
   });
   const [notifs, setNotifs] = useState({
-    emailAnnounce: true,
-    emailMaint: true,
-    smsUrgent: false
+    emailAnnounce: userProfile?.notifs?.emailAnnounce !== false,
+    emailMaint: userProfile?.notifs?.emailMaint !== false,
+    smsUrgent: userProfile?.notifs?.smsUrgent || false
   });
   
   const [savingProfile, setSavingProfile] = useState(false);
@@ -89,8 +91,8 @@ export default function SettingsPage({ onToast }) {
               <Input label="Phone Number" value={profileForm.phone} onChange={e => setProfileForm(f => ({ ...f, phone: e.target.value }))} placeholder="e.g. +1 555-0123" />
               <div style={{ marginBottom: 16 }}>
                 <label style={{ fontSize: 11, fontWeight: 700, color: P.textMuted, textTransform: 'uppercase', display: 'block', marginBottom: 6 }}>Role</label>
-                <div style={{ padding: '12px 14px', borderRadius: 10, background: '#F8FAFC', border: `1.5px solid ${P.border}`, color: P.textMuted, fontSize: 14, textTransform: 'capitalize' }}>
-                   {userProfile?.role}
+                <div style={{ padding: '12px 14px', borderRadius: 10, background: '#F8FAFC', border: `1.5px solid ${P.border}`, color: P.textMuted, fontSize: 14 }}>
+                   {ROLE_LABELS[userProfile?.role] || userProfile?.role || 'Unknown'}
                 </div>
               </div>
             </div>
@@ -141,7 +143,7 @@ export default function SettingsPage({ onToast }) {
                 <div style={{ fontSize: 14, fontWeight: 600, color: P.text }}>{n.label}</div>
                 <div style={{ fontSize: 12, color: P.textMuted }}>{n.desc}</div>
               </div>
-              <div onClick={() => setNotifs(prev => ({ ...prev, [n.id]: !prev[n.id] }))}
+              <div onClick={() => { const updated = { ...notifs, [n.id]: !notifs[n.id] }; setNotifs(updated); updateProfile({ notifs: updated }).catch(() => {}); }}
                 style={{ width: 44, height: 24, borderRadius: 12, background: notifs[n.id] ? P.success : P.border, position: 'relative', cursor: 'pointer', transition: 'background 0.2s' }}>
                 <div style={{ position: 'absolute', top: 3, left: notifs[n.id] ? 23 : 3, width: 18, height: 18, borderRadius: '50%', background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.1)' }} />
               </div>

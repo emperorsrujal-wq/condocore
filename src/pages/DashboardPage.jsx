@@ -145,8 +145,8 @@ export default function DashboardPage({ onNavigate, userProfile, tenantData }) {
           <div style={{ position: 'absolute', right: -30, top: -30, width: 180, height: 180, borderRadius: '50%', background: 'rgba(200,169,110,0.08)' }} />
           <div style={{ position: 'relative' }}>
             <div style={{ fontSize: 11, color: P.gold, fontWeight: 700, letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 6 }}>Welcome back</div>
-            <h1 style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 26, color: '#fff', margin: '0 0 4px' }}>{userProfile.name}</h1>
-            <p style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 18px', fontSize: 13 }}>Unit {tenantData.unit} · {tenantData.property}</p>
+            <h1 style={{ fontFamily: "'Libre Baskerville', serif", fontSize: 26, color: '#fff', margin: '0 0 4px' }}>{userProfile?.name || 'Resident'}</h1>
+            <p style={{ color: 'rgba(255,255,255,0.5)', margin: '0 0 18px', fontSize: 13 }}>Unit {tenantData?.unit || '—'} · {tenantData?.property || '—'}</p>
             <div style={{ display: 'flex', gap: 10 }}>
               <button onClick={() => onNavigate('my-payments')} style={{ padding: '9px 18px', borderRadius: 9, background: P.gold, border: 'none', color: P.navy, fontWeight: 700, fontSize: 13, cursor: 'pointer' }}>
                 {label('my-payments', 'Pay Rent')}

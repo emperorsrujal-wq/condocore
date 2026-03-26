@@ -53,7 +53,7 @@ export default function PackagesPage({ userProfile, onToast }) {
   });
 
   const openAdd = () => { setForm(FORM_DEFAULT); setEditing(null); setShowForm(true); };
-  const openEdit = (p) => { setForm(p); setEditing(p); setShowForm(true); };
+  const openEdit = (p) => { setForm({ tenantId: p.tenantId || '', courier: p.courier || '', tracking: p.tracking || '', status: p.status || 'pending', notes: p.notes || '' }); setEditing(p); setShowForm(true); };
 
   const handleSave = async () => {
     if (!form.tenantId || !form.courier) return onToast('Tenant and Courier are required.', 'error');
@@ -118,7 +118,7 @@ export default function PackagesPage({ userProfile, onToast }) {
                     </div>
                   </div>
                 </TD>
-                <TD bold>{isTenant ? (p.createdAt?.toDate().toLocaleDateString() || 'Today') : (tenant ? `${tenant.name} (${tenant.unit})` : 'Unknown')}</TD>
+                <TD bold>{isTenant ? (p.createdAt?.toDate ? p.createdAt.toDate().toLocaleDateString() : 'Today') : (tenant ? `${tenant.name} (${tenant.unit})` : 'Unknown')}</TD>
                 <TD><StatusBadge status={p.status === 'picked up' ? 'active' : 'pending'} /></TD>
                 <TD>
                   <div style={{ display: 'flex', gap: 6 }}>

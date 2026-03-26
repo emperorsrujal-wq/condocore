@@ -78,7 +78,7 @@ export default function DepositsPage({ userProfile, onToast }) {
   const aggregateEscrow = filtered.reduce((acc, curr) => curr.status === 'Held in Escrow' ? acc + (Number(curr.amount) || 0) : acc, 0);
 
   const openAdd = () => { setForm({ ...FORM_DEFAULT, dateCollected: new Date().toISOString().split('T')[0] }); setEditing(null); setShowForm(true); };
-  const openEdit = (d) => { setForm(d); setEditing(d); setShowForm(true); };
+  const openEdit = (d) => { setForm({ tenantId: d.tenantId || '', property: d.property || '', type: d.type || 'Security Deposit', amount: d.amount || '', status: d.status || 'Held in Escrow', dateCollected: d.dateCollected || '', notes: d.notes || '' }); setEditing(d); setShowForm(true); };
 
   const handleSave = async () => {
     if (!form.tenantId || !form.amount) return onToast('Tenant and Amount are required.', 'error');
@@ -174,7 +174,7 @@ export default function DepositsPage({ userProfile, onToast }) {
                     </div>
                     <div>
                       <div style={{ fontWeight: 600, fontSize: 14 }}>{d.type}</div>
-                      <div style={{ fontSize: 12, color: P.textMuted }}>{d.dateCollected || d.createdAt?.toDate().toLocaleDateString() || '--'}</div>
+                      <div style={{ fontSize: 12, color: P.textMuted }}>{d.dateCollected || (d.createdAt?.toDate ? d.createdAt.toDate().toLocaleDateString() : '--')}</div>
                     </div>
                   </div>
                 </TD>

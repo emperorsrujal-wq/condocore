@@ -33,7 +33,7 @@ export default function MaintenancePage({ onToast, userProfile, tenantData }) {
       });
     }
     const unsubV = subscribeVendors(data => setVendors(data));
-    return () => { if (unsub) unsub(); unsubV(); };
+    return () => { if (unsub) unsub(); if (unsubV) unsubV(); };
   }, [isResident, tenantData?.id]);
 
   const filtered = filter === 'all' ? requests : requests.filter(r => r.status === filter);

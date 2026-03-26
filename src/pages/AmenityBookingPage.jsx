@@ -58,7 +58,7 @@ export default function AmenityBookingPage({ userProfile, tenantData, onToast })
   const bookableAmenities = rawAmenities.map(getAmenityName);
 
   const handleBook = async () => {
-    if (!showConfirm) return;
+    if (!showConfirm || !activeProperty) return;
     const isTaken = bookings.some(b => b.date === showConfirm.date && b.amenityName === selectedAmenity);
     if (isTaken) return onToast('This slot has already been reserved. Please refresh or pick another date.', 'error');
 

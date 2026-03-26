@@ -6,7 +6,7 @@ import { useHOAMode } from '../contexts/HOAModeContext';
 
 const FORM_DEFAULT = { tenant: '', tenantId: '', unit: '', amount: '', due: '', month: '', method: 'E-Transfer', status: 'pending' };
 
-export default function PaymentsPage({ onToast, tenants = [] }) {
+export default function PaymentsPage({ onToast, tenants = [], myOnly, tenantData, userProfile }) {
   const { label } = useHOAMode();
   const [payments, setPayments] = useState([]);
   const [loading, setLoading]   = useState(true);
@@ -16,15 +16,19 @@ export default function PaymentsPage({ onToast, tenants = [] }) {
   const [form, setForm]         = useState(FORM_DEFAULT);
   const [saving, setSaving]     = useState(false);
 
+  const isManager = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
+
   useEffect(() => {
     const unsub = subscribePayments(data => { setPayments(data); setLoading(false); });
     return unsub;
   }, []);
 
-  const filtered = filter === 'all' ? payments : payments.filter(p => p.status === filter);
-  const total      = payments.reduce((s, p) => s + (p.amount || 0), 0);
-  const collected  = payments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
-  const outstanding= payments.filter(p => p.status !== 'paid').reduce((s, p) => s + (p.amount || 0), 0);
+  // Filter payments: tenants/owners only see their own
+  const myPayments = myOnly && tenantData ? payments.filter(p => p.tenantId === tenantData.id || p.tenant === tenantData.name) : payments;
+  const filtered = filter === 'all' ? myPayments : myPayments.filter(p => p.status === filter);
+  const total      = myPayments.reduce((s, p) => s + (p.amount || 0), 0);
+  const collected  = myPayments.filter(p => p.status === 'paid').reduce((s, p) => s + (p.amount || 0), 0);
+  const outstanding= myPayments.filter(p => p.status !== 'paid').reduce((s, p) => s + (p.amount || 0), 0);
   const rate       = total > 0 ? Math.round(collected / total * 100) : 0;
 
   const handleAddPayment = async () => {
@@ -53,11 +57,11 @@ export default function PaymentsPage({ onToast, tenants = [] }) {
 
   return (
     <div>
-      <PageHeader title={label('rent', 'Rent') + " & Payments"} subtitle={`Track all ${label('rent', 'rent').toLowerCase()} collection`}
-        action={<div style={{ display: 'flex', gap: 8 }}>
+      <PageHeader title={myOnly ? 'My Payments' : label('rent', 'Rent') + " & Payments"} subtitle={myOnly ? 'View your payment history' : `Track all ${label('rent', 'rent').toLowerCase()} collection`}
+        action={isManager ? <div style={{ display: 'flex', gap: 8 }}>
           <Btn variant="ghost" size="sm"><Download size={14} /> Export</Btn>
           <Btn onClick={() => setShowAdd(true)}><Plus size={15} /> Add Record</Btn>
-        </div>} />
+        </div> : null} />
 
       {/* Stats */}
       <div style={{ display: 'flex', gap: 14, marginBottom: 24, flexWrap: 'wrap' }}>
@@ -90,7 +94,7 @@ export default function PaymentsPage({ onToast, tenants = [] }) {
                 <TD muted>{p.method || '—'}</TD>
                 <TD><StatusBadge status={p.status} /></TD>
                 <TD>
-                  {p.status !== 'paid' && (
+                  {isManager && p.status !== 'paid' && (
                     <button onClick={() => setRecordModal({ ...p })} style={{ background: '#EAF7F2', color: P.success, border: `1px solid ${P.success}30`, borderRadius: 7, padding: '5px 10px', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>Record</button>
                   )}
                 </TD>

@@ -5,7 +5,7 @@ import { subscribeProperties } from '../firebase';
 import { P } from '../components/UI';
 
 export default function LoginPage() {
-  const { login, createAccount, loginWithGoogle, loginWithApple } = useAuth();
+  const { login, createAccount, loginWithGoogle, loginWithApple, resetPassword } = useAuth();
   const [mode, setMode]         = useState('login'); // 'login' | 'register' | 'reset'
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
@@ -264,7 +264,7 @@ export default function LoginPage() {
                 <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="you@example.com"
                   style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: `1.5px solid ${P.border}`, fontSize: 14, outline: 'none', boxSizing: 'border-box', fontFamily: "'DM Sans', sans-serif" }} />
               </div>
-              <button onClick={async () => { setError(''); setLoading(true); try { const { resetPassword } = useAuth(); await resetPassword(email); setSuccess('Reset email sent! Check your inbox.'); } catch(e){ setError(e.message); } setLoading(false); }} disabled={loading}
+              <button onClick={async () => { setError(''); setLoading(true); try { await resetPassword(email); setSuccess('Reset email sent! Check your inbox.'); } catch(e){ setError(e.message); } setLoading(false); }} disabled={loading}
                 style={{ width: '100%', padding: '13px', borderRadius: 11, border: 'none', background: P.navy, color: '#fff', cursor: 'pointer', fontWeight: 700, fontSize: 15, fontFamily: "'DM Sans', sans-serif", marginBottom: 16 }}>
                 Send Reset Email
               </button>

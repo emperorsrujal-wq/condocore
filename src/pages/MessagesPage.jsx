@@ -14,9 +14,10 @@ export default function MessagesPage({ userProfile, onToast }) {
   
   // New thread modal
   const [showNew, setShowNew] = useState(false);
-  const [contacts, setContacts] = useState([]); // List of people we can message
+  const [contacts, setContacts] = useState([]);
   const [selectedContact, setSelectedContact] = useState('');
-  
+  const [threadSearch, setThreadSearch] = useState('');
+
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -123,6 +124,16 @@ export default function MessagesPage({ userProfile, onToast }) {
   };
 
 
+  const filteredThreads = threadSearch
+    ? threads.filter(t => {
+        const name = getOtherParticipantName(t).toLowerCase();
+        const msg = (t.lastMessage || '').toLowerCase();
+        return name.includes(threadSearch.toLowerCase()) || msg.includes(threadSearch.toLowerCase());
+      })
+    : threads;
+
+  if (loading) return <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}><Spinner size={32} /></div>;
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
       <PageHeader
@@ -138,19 +149,19 @@ export default function MessagesPage({ userProfile, onToast }) {
           <div style={{ padding: '16px', borderBottom: `1px solid ${P.border}` }}>
             <div style={{ position: 'relative' }}>
               <Search size={16} color={P.textMuted} style={{ position: 'absolute', left: 12, top: 12 }} />
-              <input type="text" placeholder="Search conversations..." 
-                style={{ width: '100%', padding: '10px 10px 10px 38px', borderRadius: 8, border: `1.5px solid ${P.border}`, outline: 'none', fontFamily: "'DM Sans', sans-serif" }} 
+              <input type="text" placeholder="Search conversations..." value={threadSearch} onChange={e => setThreadSearch(e.target.value)}
+                style={{ width: '100%', padding: '10px 10px 10px 38px', borderRadius: 8, border: `1.5px solid ${P.border}`, outline: 'none', fontFamily: "'DM Sans', sans-serif" }}
               />
             </div>
           </div>
           <div style={{ flex: 1, overflowY: 'auto' }}>
-            {threads.length === 0 ? (
+            {filteredThreads.length === 0 ? (
               <div style={{ padding: 30, textAlign: 'center', color: P.textMuted }}>
                 <MessageSquare size={32} style={{ opacity: 0.3, marginBottom: 12 }} />
-                <div style={{ fontSize: 13 }}>No active conversations</div>
+                <div style={{ fontSize: 13 }}>{threadSearch ? 'No matching conversations' : 'No active conversations'}</div>
               </div>
             ) : (
-              threads.map(t => {
+              filteredThreads.map(t => {
                 const active = activeThreadId === t.id;
                 const otherName = getOtherParticipantName(t);
                 return (
@@ -257,7 +268,7 @@ export default function MessagesPage({ userProfile, onToast }) {
             />
           </div>
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end' }}>
-            <Btn onClick={() => setShowNew(false)} secondary>Cancel</Btn>
+            <Btn onClick={() => setShowNew(false)} variant="ghost">Cancel</Btn>
             <Btn onClick={handleStartThread}>Start Chat</Btn>
           </div>
         </Modal>

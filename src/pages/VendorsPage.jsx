@@ -6,6 +6,7 @@ import { P, Btn, Modal, Input, Select, PageHeader, Table, TR, TD, Spinner, Empty
 const FORM_DEFAULT = { name: '', category: 'Plumbing', contact: '', phone: '', email: '', rating: '5' };
 
 export default function VendorsPage({ onToast, userProfile }) {
+  const isManager = ['manager', 'landlord', 'super_admin', 'super-admin'].includes(userProfile?.role);
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
@@ -58,16 +59,16 @@ export default function VendorsPage({ onToast, userProfile }) {
   return (
     <div>
       <PageHeader title="Vendor & Contractor Directory" subtitle={`${vendors.length} registered service providers`}
-        action={<Btn onClick={openAdd}><Plus size={15} /> Add Vendor</Btn>} />
+        action={isManager ? <Btn onClick={openAdd}><Plus size={15} /> Add Vendor</Btn> : null} />
 
       <div style={{ marginBottom: 16, position: 'relative' }}>
         <Search size={15} style={{ position: 'absolute', left: 11, top: '50%', transform: 'translateY(-50%)', color: P.textMuted }} />
-        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search by title or meeting type..."
+        <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search vendors..."
           style={{ width: '100%', padding: '9px 12px 9px 33px', borderRadius: 9, border: `1.5px solid ${P.border}`, fontSize: 13, outline: 'none', background: P.card }} />
       </div>
 
       {filtered.length === 0
-        ? <EmptyState icon="👷" title="No vendors found" body={search ? "Adjust your search to find a provider." : "Start by adding your preferred contractors and service providers."} action={!search && <Btn onClick={openAdd}><Plus size={14} /> Add Vendor</Btn>} />
+        ? <EmptyState icon="👷" title="No vendors found" body={search ? "Adjust your search to find a provider." : "Start by adding your preferred contractors and service providers."} action={isManager && !search ? <Btn onClick={openAdd}><Plus size={14} /> Add Vendor</Btn> : null} />
         : (
           <Table headers={['Vendor', 'Category', 'Contact Info', 'Rating', '']}>
             {filtered.map((v, i) => (
@@ -93,18 +94,18 @@ export default function VendorsPage({ onToast, userProfile }) {
                     <Star size={12} fill={P.gold} /> <span style={{ fontSize: 13, fontWeight: 700 }}>{v.rating}</span>
                   </div>
                 </TD>
-                <TD>
+                {isManager && <TD>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button onClick={() => openEdit(v)} style={{ padding: '5px 10px', borderRadius: 7, border: `1px solid ${P.border}`, background: 'none', cursor: 'pointer', color: P.text, fontSize: 12 }}>Edit</button>
                     <button onClick={() => handleDelete(v.id)} style={{ padding: '5px 10px', borderRadius: 7, border: 'none', background: '#FDECEA', color: P.danger, cursor: 'pointer', fontSize: 12 }}>Del</button>
                   </div>
-                </TD>
+                </TD>}
               </TR>
             ))}
           </Table>
         )}
 
-      {showForm && (
+      {showForm && isManager && (
         <Modal title={editing ? 'Edit Vendor' : 'Add New Vendor'} onClose={() => setShowForm(false)}>
           <Input label="Vendor / Company Name *" helpText="e.g. Reliable Plumbing Services" {...F('name')} />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0 12px' }}>
